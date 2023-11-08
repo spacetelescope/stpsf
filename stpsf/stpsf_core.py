@@ -1385,7 +1385,12 @@ class JWInstrument(SpaceTelescopeInstrument):
             return 0, 0, None
 
         if not lookup_key:
-            lookup_key = self.name + '_' + self.pupil_mask
+            if self.name == 'NIRCam':
+                # This is complicated. Depends on the channel, and the image plane mask used...
+                # TODO more work needed here.
+                lookup_key = f'{self.name}_{self.channel[0].upper()}W{self.module}_' + self.pupil_mask
+            else:
+                lookup_key = self.name + '_' + self.pupil_mask
 
         values = []
         for param in ('pupil_shift_x', 'pupil_shift_y', 'pupil_rotation'):
