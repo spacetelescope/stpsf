@@ -961,9 +961,10 @@ class JWInstrument(SpaceTelescopeInstrument):
         # Only update if new value is different
         if self._aperturename != value:
             if ap.AperType == 'SLIT':
-                # Special case for SLIT apertures (NIRSpec and MIRI)
+                # Special case for SLIT apertures (NIRSpec or MIRI). Note, this includes all IFU apertures for NIRSpec
                 # apertures of type SLIT define V2,V3 position, but not pixel coordinates and pixelscale. So we
                 # still have to use a full-detector aperturename for that subset of apertures
+                # This code path also supports MIRI LRS
                 detector_apername = self.detector + '_FULL'
                 _log.info(f'Aperture {value} is of type SLIT; using {detector_apername} for detector geometry.')
 
@@ -984,6 +985,15 @@ class JWInstrument(SpaceTelescopeInstrument):
                     _log.debug(
                         f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {detector_apername}'
                     )
+            elif ap.AperType == 'COMPOUND' and self.name=='MIRI':
+                # For MIRI, many of the relevant IFU apertures are of COMPOUND type.
+                has_custom_pixelscale = False  # custom scales not supported for MIRI IFU (yet?)
+                # Unlike NIRSpec, there simply do not exist full-detector SIAF apertures for the MIRI IFU detectors
+                _log.info(f'Aperture {value} is of type COMPOUND for MIRI; There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.')
+
+                # Now apply changes:
+                self._aperturename = value
+
             else:
                 if self.detector not in value:
                     raise ValueError(
@@ -1057,23 +1067,35 @@ class JWInstrument(SpaceTelescopeInstrument):
             # setting the detector must happen -before- we set the position
             detname = aperture_name.split('_')[0]
 
-            if detname != 'NRS':  # Many NIRSpec slit apertures are defined generally, not for a specific detector
+            if detname.startswith('MIRIFU'):
+                if 'CHANNEL1' in aperture_name or 'CHANNEL2' in aperture_name:
+                    self.detector = 'MIRIFUSHORT'
+                else:
+                    self.detector = 'MIRIFULONG'
+
+            elif detname != 'NRS':  # Many NIRSpec slit apertures are defined generally, not for a specific detector
                 self.detector = detname  # As a side effect this auto reloads SIAF info, see detector.setter
 
             self.aperturename = aperture_name
 
-            if self.name != 'NIRSpec' and ap.AperType != 'SLIT':
-                # Regular imaging apertures, so we can just look up the reference coords directly
-                self.detector_position = (ap.XSciRef, ap.YSciRef)  # set this AFTER the SIAF reload
-            else:
+            if (self.name == 'NIRSpec' or self.name=='MIRI') and ap.AperType == 'SLIT':
                 # NIRSpec slit apertures need some separate handling, since they don't map directly to detector pixels
                 # In this case the detector position is not uniquely defined, but we ensure to get reasonable values by
                 # using one of the full-detector NIRspec apertures
-                _log.debug('Inferring detector position using V coords for SLIT aperture: {ap.V2Ref, ap.V3Ref}')
+                # This code path also supports MIRI LRS SLIT
+                _log.debug(f'Inferring detector position using V coords for SLIT aperture: {ap.V2Ref, ap.V3Ref}')
                 ref_in_tel = ap.V2Ref, ap.V3Ref
                 nrs_full_aperture = self.siaf[self.detector + '_FULL']
                 ref_in_sci = nrs_full_aperture.tel_to_sci(*ref_in_tel)
                 self.detector_position = ref_in_sci
+            elif self.name == 'MIRI' and ap.AperType == 'COMPOUND':
+                # MIRI IFU compound apertures need separate handling, since they don't map directoy to detector pixels
+                # In this case the detector position is not uniquely defined, and there do not exist
+                # in SIAF any full-detector MIRIFU apertures, so just set values to (512,512) as a placeholder.
+                self.detector_position = [512, 512]
+            else:
+                # Regular imaging apertures, so we can just look up the reference coords directly
+                self.detector_position = (ap.XSciRef, ap.YSciRef)  # set this AFTER the SIAF reload
 
             _log.debug('From {} set det. pos. to {} {}'.format(aperture_name, detname, self.detector_position))
 
@@ -1938,6 +1960,10 @@ class MIRI(JWInstrument_with_IFU):
         self._rotation = 4.83544897  # V3IdlYAngle, Source: SIAF PRDOPSSOC-059
         # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
+        # Modes and default SIAF apertures for each
+        self._modes_list = {'imaging': 'MIRIM_FULL',
+                            'IFU': 'MIRIFU_CHANNEL1A'}
+
         # Coordinate system note: The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
         # and is thus flipped in Y relative to the V frame entrance pupil. Therefore flip sign of pupil_shift_y
         self.options['pupil_shift_x'] = -0.0068  # In flight measurement. See Wright, Sabatke, Telfer 2022, Proc SPIE
@@ -1964,8 +1990,10 @@ class MIRI(JWInstrument_with_IFU):
         # The above tuples give the pixel resolution (perpendicular to the slice, along the slice).
         # The pixels are not square.
 
-        self._detectors = {'MIRIM': 'MIRIM_FULL'}  # Mapping from user-facing detector names to SIAF entries.
-        self.detector = self.detector_list[0]
+        self._detectors = {'MIRIM': 'MIRIM_FULL',  # Mapping from user-facing detector names to SIAF entries.
+                           'MIRIFUSHORT': 'MIRIFU_CHANNEL1A',   # only applicable in IFU mode
+                           'MIRIFULONG': 'MIRIFU_CHANNEL3A'}    # ditto
+        self.detector = 'MIRIM'
         self._detector_npixels = (1032, 1024)  # MIRI detector is not square
         self.detector_position = (512, 512)
 
@@ -2222,6 +2250,14 @@ class MIRI(JWInstrument_with_IFU):
         if self.image_mask is not None:
             hdulist[0].header['TACQNAME'] = ('None', 'Target acquisition file name')
 
+    def _get_pixelscale_from_apername(self, apername):
+        """Simple utility function to look up pixelscale from apername"""
+
+        if 'MIRIFU' in apername:
+            print('special case for MIRI IFU pixelscales')
+            return 0.1
+        else:
+            return super()._get_pixelscale_from_apername(apername)
 
 class NIRCam(JWInstrument):
     """A class modeling the optics of NIRCam.
@@ -3026,6 +3062,13 @@ class NIRSpec(JWInstrument_with_IFU):
         else:
             return super()._tel_coords()
 
+    def _get_pixelscale_from_apername(self, apername):
+        """Simple utility function to look up pixelscale from apername"""
+        if 'IFU' in apername:
+            print('DEBUG - special case for NIRSpec IFU pixelscales')
+            return super()._get_pixelscale_from_apername('NRS1_FULL')
+        else:
+            return super()._get_pixelscale_from_apername(apername)
 
 
 class NIRISS(JWInstrument):
