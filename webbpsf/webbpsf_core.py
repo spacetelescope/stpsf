@@ -2443,17 +2443,26 @@ class NIRCam(JWInstrument):
             # directly as the offset. Otherwise assume it's a filter name and try passing
             # that in to the auto offset. (that allows for selecting the narrow position, or
             # for simulating using a given filter at some other filter's position.)
+            # This code is somewhat convoluted, for historical reasons and back-compatibility
             if bar_offset is None:
                 # Try to use the SIAF aperture name to determine the offset
                 # This can help better automate simulations matching data, since match_data.py will
                 # have copied the aperturename from the header, like NRCA5_MASKLWB_NARROW or similar
                 if 'MASK' in self.aperturename:
-                    try:
-                        auto_offset = self.aperturename.split('_')[-1].replace('NARROW', 'narrow') # set to lower case for consistency with existing code in optics.py
+                    apname_last_part = self.aperturename.split('_')[-1]
+                    if apname_last_part=='NARROW':
+                        auto_offset = 'narrow'   # set to lower case for consistency with existing code in optics.py
                         _log.info(f"Set bar offset to {auto_offset} based on current aperture name {self.aperturename}")
-                    except:
+                    elif apname_last_part.startswith('F'):
+                        auto_offset = apname_last_part
+                        _log.info(f"Set bar offset to {auto_offset} based on current aperture name {self.aperturename}")
+                    else:
                         auto_offset = self.filter
                         _log.info(f"Set bar offset to {auto_offset} based on current filter {self.filter}")
+                else:
+                    auto_offset = self.filter
+                    _log.info(f"Set bar offset to {auto_offset} based on current filter {self.filter}")
+
             else:
                 try:
                     _ = float(bar_offset)
