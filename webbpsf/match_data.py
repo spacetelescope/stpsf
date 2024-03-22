@@ -38,6 +38,10 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
         # webbpsf doesn't model the MIRI LRS prism spectral response
         print("Please note, webbpsf does not currently model the LRS spectral response. Setting filter to F770W instead.")
         inst.filter='F770W'
+    elif (inst.name == 'NIRCam') and (header['PUPIL'][0] == 'F') and (header['PUPIL'][-1] in ['N', 'M']):
+        # These NIRCam filters are physically in the pupil wheel, but still act as filters.
+        # Grab the filter name from the PUPIL keyword in this case.
+        inst.filter = header['PUPIL']
     else:
         inst.filter=header['filter']
     inst.set_position_from_aperture_name(header['APERNAME'])
