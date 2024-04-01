@@ -1713,7 +1713,11 @@ def show_wfs_during_program(program, verbose=False, ax = None, ref_wavefront_dat
     opds = []
     for row_index in range(len(opdtable)):
         opd_fn = opdtable[row_index]['fileName']
-        opd, opd_hdul = webbpsf.trending._read_opd(opd_fn)
+        try:
+            opd, opd_hdul = webbpsf.trending._read_opd(opd_fn)
+        except FileNotFoundError:
+            webbpsf.mast_wss.mast_retrieve_opd(opd_fn, verbose=verbose)
+            opd, opd_hdul = webbpsf.trending._read_opd(opd_fn)
 
         opds.append(opd)
         wfs_dates.append(opdtable[row_index]['date'])
