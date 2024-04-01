@@ -22,3 +22,11 @@ def test_monthly_trending_plot_opdtable_param():
     opdtable = webbpsf.mast_wss.filter_opd_table(opdtable0, start_time=pre_start_date, end_time=end_date2)
     trend_table = webbpsf.trending.monthly_trending_plot(2023, 6, opdtable=opdtable, instrument='NIRISS', filter='F380M')
     assert(len(trend_table) == 15)
+
+
+def test_delta_wfe_around_time():
+    """Very basic test - does this hand back something that could be an OPD array
+    Does not check the value in any significant way.
+    """
+    opd = webbpsf.trending.delta_wfe_around_time('2024-02-26')
+    assert opd.shape==(256,256), 'this function should return an OPD with the expected size'
