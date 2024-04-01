@@ -1162,10 +1162,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
             # Edit the variable to match if input didn't request distortion
             # (cannot set result = psf_distorted due to return method)
-
             [result.append(fits.ImageHDU()) for i in np.arange(len(psf_distorted) - len(result))]
             for ext in np.arange(len(psf_distorted)): result[ext] = psf_distorted[ext]
-
 
 
         # Rewrite result variable based on output_mode; this includes binning down to detector sampling.

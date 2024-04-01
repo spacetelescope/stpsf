@@ -59,18 +59,15 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
                 inst.pupil_mask = header['PUPIL']
             inst.image_mask = header['CORONMSK'].replace('MASKA', 'MASK')  # note, have to modify the value slightly for
                                                                            # consistency with the labels used in webbpsf
-
             # The apername keyword is not always correct for cases with dual-channel coronagraphy
             # in some such cases, APERNAME != PPS_APER. Let's ensure we have the proper apername for this channel:
-            apername = get_coron_apname(header)
+            apername = get_nrc_coron_apname(header)
             inst.set_position_from_aperture_name(apername)
-
 
         elif header['PUPIL'].startswith('F'):
             inst.filter = header['PUPIL']
         else:
             inst.pupil_mask = header['PUPIL']
-
 
     elif inst.name == 'MIRI':
         if inst.filter in ['F1065C', 'F1140C', 'F1550C']:
@@ -100,8 +97,8 @@ Configured simulation instrument for:
 
 
 
-def get_coron_apname(input):
-    """Get aperture name from header or data model
+def get_nrc_coron_apname(input):
+    """Get NIRCam coronagraph aperture name from header or data model
 
     Handles edge cases for dual-channel coronagraphy.
 
@@ -137,7 +134,7 @@ def get_coron_apname(input):
         # Should only get here if coron mask and apname doesn't match PPS
         apname_str_split = apname.split('_')
         sca = apname_str_split[0]
-        image_mask = get_mask_from_pps(apname_pps)
+        image_mask = get_nrc_coron_mask_from_pps_apername(apname_pps)
 
         # Get subarray info
         # Sometimes apname erroneously has 'FULL' in it
@@ -178,11 +175,11 @@ def get_coron_apname(input):
         return apname
 
 
-def get_mask_from_pps(apname_pps):
-    """Get mask name from PPS aperture name
-    
+def get_nrc_coron_mask_from_pps_apername(apname_pps):
+    """Get NIRCam coronagraph mask name from PPS aperture name
+
     The PPS aperture name is of the form:
-        NRC[A/B][1-5]_[FULL]_[MASK]
+        NRC[A/B][1-5]_[FULL]_[TA][MASK]
     where MASK is the name of the coronagraphic mask used.
 
     For target acquisition apertures the mask name can be
