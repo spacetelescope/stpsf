@@ -291,10 +291,11 @@ class CreatePSFLibrary:
                 if self.verbose is True:
                     print("    Position {}/{}: {} pixels".format(i+1, len(self.location_list), loc))
 
-                add_ipc_gridded = self.webb.options.get('add_ipc', False)   # add variable to keep track of the user's IPC input
+                add_ipc_gridded = False   # add variable to keep track of if this function locally changed the user's IPC input
                 # Deactivate IPC corrections, if any, before calc_psf as we are applying them later
                 if self.webb.options.get('add_ipc', True):
                     self.webb.options['add_ipc'] = False
+                    add_ipc_gridded = True   # we should reset the IPC flag below, after computing the PSF
 
                 # Create PSF
                 psf = self.webb.calc_psf(**self._kwargs)
@@ -309,7 +310,7 @@ class CreatePSFLibrary:
                 # Convolve PSF with a model for interpixel capacitance
                 if self.add_distortion and add_ipc_gridded:
                     webbpsf.detectors.apply_detector_ipc(psf, extname=ext)
-                    self.webb.options['add_ipc'] = add_ipc_gridded# restore the user's value for the IPC option
+                    self.webb.options['add_ipc'] = True  # restore the user's value for the IPC option
 
                 # Add PSF to 5D array
                 psf_arr[i, :, :] = psf[ext].data
