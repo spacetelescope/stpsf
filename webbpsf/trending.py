@@ -17,9 +17,12 @@ import scipy.interpolate
 import poppy
 import webbpsf
 
-def _read_opd(filename):
-    """Trivial utilty function to read OPD from a WSS-output FITS file"""
+def _read_opd(filename, auto_download=True):
+    """Trivial utilty function to read OPD from a WSS-output FITS file
+    If the file does not exist locally, try to retrieve it from MAST automatically."""
     full_file_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', filename)
+    if not os.path.exists(full_file_path) and auto_download:
+        webbpsf.mast_wss.mast_retrieve_opd(filename)
     opdhdu = fits.open(full_file_path)
     opd = opdhdu[1].data.copy()
     return opd, opdhdu
@@ -1778,6 +1781,49 @@ def show_wfs_during_program(program, verbose=False, ax = None, ref_wavefront_dat
     ax.set_ylabel("Measured Wavefront Error RMS [nm]")
     ax.set_xlim(start_date.plot_date, end_date.plot_date)
 
+
+def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filenames=False):
+    """Return the delta OPD in the period around some specified time
+
+    Inferred from the available WFS measurements before and after that time.
+
+    Parameters
+    ----------
+    datetime : string
+        date time in ISO8601 format, or similar
+    plot : bool
+        make plot?
+    vmax : float
+        vmax for plot, in microns.
+
+    Returns the delta OPD, in units of microns.
+
+    """
+
+    prev_opd_fn, post_opd_fn, prev_delta_t, post_delta_t = webbpsf.mast_wss.mast_wss_opds_around_date_query(datetime,
+                                                                                                            verbose=False)
+
+    prev_opd, prev_hdul = _read_opd(prev_opd_fn)
+    post_opd, post_hdul = _read_opd(post_opd_fn)
+
+    delta_opd = post_opd - prev_opd
+    mask = prev_opd != 0
+
+    nanmask = np.ones_like(prev_opd)
+    nanmask[~mask] = np.nan
+
+    if plot:
+        if ax is None:
+            ax = plt.gca()
+        show_opd_image(delta_opd * nanmask, ax=ax, vmax=vmax)
+        plt.colorbar(mappable=ax.images[0], label='WFE [microns]')
+
+        ax.set_title(f"$\Delta$WFE in the {post_delta_t - prev_delta_t:.2f} d around {datetime}")
+        ax.set_xlabel(f'{post_opd_fn} - \n{prev_opd_fn}')
+        ax.set_xticks([])
+        ax.xaxis.set_visible(True)
+
+    return delta_opd
 
 
 #### Functions for image comparisons
