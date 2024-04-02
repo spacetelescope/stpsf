@@ -22,6 +22,7 @@ Code by Marshall Perrin <mperrin@stsci.edu>
 import os
 import glob
 from collections import namedtuple, OrderedDict
+import functools
 import numpy as np
 import scipy.interpolate, scipy.ndimage
 
@@ -753,7 +754,7 @@ class JWInstrument(SpaceTelescopeInstrument):
     def __init__(self, *args, **kwargs):
         super(JWInstrument, self).__init__(*args, **kwargs)
 
-        self.siaf = pysiaf.Siaf(self.name)
+        self.siaf = get_siaf_with_caching(self.name)
 
         opd_path = os.path.join(self._datapath, 'OPD')
         self.opd_list = []
@@ -2932,6 +2933,13 @@ def calc_or_load_PSF(filename, inst, overwrite=False, **kwargs):
 
 #########################
 
+@functools.lru_cache
+def get_siaf_with_caching(instrname):
+    """ Parsing and loading the SIAF information is particularly time consuming,
+    (can be >0.1 s per call, so multiple invokations can be a large overhead)
+    Therefore avoid unnecessarily reloading it by caching results.
+    This is a small speed optimization. """
+    return pysiaf.Siaf(instrname)
 
 class DetectorGeometry(object):
     """ Utility class for converting between detector coordinates

@@ -1226,7 +1226,7 @@ class OTE_Linear_Model_WSS(OPD):
         elif 'nrs' in control_point_detector:
                 control_point_instr = 'nirspec'
 
-        self.ote_control_point = pysiaf.Siaf(control_point_instr)[self.control_point_fieldpoint.upper()].reference_point('tel')*u.arcsec
+        self.ote_control_point = webbpsf.webbpsf_core.get_siaf_with_caching(control_point_instr)[self.control_point_fieldpoint.upper()].reference_point('tel')*u.arcsec
         
         if zero:
             self.zero()

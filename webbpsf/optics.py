@@ -12,6 +12,7 @@ import astropy.units as units
 from scipy.interpolate import griddata, RegularGridInterpolator
 from scipy.ndimage import rotate
 
+from . import webbpsf_core
 from . import utils
 from . import constants
 
@@ -735,7 +736,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             raise NotImplementedError("invalid name for NIRCam occulter: " + self.name)
 
         # EDIT: updated on 8 Dec 2021 to grab offsets directly from pySIAF
-        self.siaf = pysiaf.Siaf('NIRCAM')
+        self.siaf = webbpsf_core.get_siaf_with_caching('NIRCAM')
         self.offset_swb = {filt: self.get_bar_offset_from_siaf(filt, channel='SW')
                            for filt in ["F182M", "F187N", "F210M", "F212N", "F200W", 'narrow']}
         self.offset_lwb = {filt: self.get_bar_offset_from_siaf(filt, channel='LW')
