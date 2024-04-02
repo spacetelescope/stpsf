@@ -1856,7 +1856,7 @@ def show_nrc_ta_img(visitid, ax=None, return_handles=False):
         return hdul, ax, norm, cmap, bglevel
 
 
-def nrc_ta_image_comparison(visitid, verbose=False, show_centroid=False):
+def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
     """ Retrieve a NIRCam target acq image and compare to a simulation
 
     Parameters:
@@ -1902,7 +1902,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroid=False):
     im_sim_scaled_aligned = im_sim_shifted*scalefactor
 
     # Plot
-    if show_centroid:
+    if show_centroids:
         ### OSS CENTROIDS ###
         # First, see if we can retrieve the on-board TA centroid measurment from the OSS engineering DB in MAST
         try:
