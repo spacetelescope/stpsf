@@ -170,11 +170,15 @@ def apply_detector_ipc(psf_hdulist, extname = 'DET_DIST'):
         webbpsf.webbpsf_core._log.debug(f"Skipping IPC simulation since ext {extname} is not found")
         return
 
+    # This avoid applying IPC effect simulations twice
+    keyword = 'IPCINST'
+    if keyword in psf_hdulist[extname].header._keyword_indices:
+        return
+
     inst = psf_hdulist[extname].header['INSTRUME'].upper()
     oversample = psf_hdulist[extname].header['OVERSAMP']
 
     kernel, meta = get_detector_ipc_model(inst, psf_hdulist[extname].header)
-
     if kernel is not None:
 
         if inst.upper()=='NIRCAM':

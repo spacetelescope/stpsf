@@ -7,6 +7,7 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import rotate
 
 from soc_roman_tools.siaf.siaf import RomanSiaf
+import webbpsf.webbpsf_core
 
 def _get_default_siaf(instrument, aper_name):
     """
@@ -39,7 +40,7 @@ def _get_default_siaf(instrument, aper_name):
         siaf = RomanSiaf()
         aper = siaf[aper_name]
     else:
-        siaf = pysiaf.Siaf(siaf_name)
+        siaf = webbpsf.webbpsf_core.get_siaf_with_caching(siaf_name)
         aper = siaf.apertures[aper_name]
 
     return aper

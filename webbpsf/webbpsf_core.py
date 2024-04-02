@@ -22,6 +22,7 @@ Code by Marshall Perrin <mperrin@stsci.edu>
 import os
 import glob
 from collections import namedtuple, OrderedDict
+import functools
 import numpy as np
 import scipy.interpolate, scipy.ndimage
 
@@ -753,7 +754,7 @@ class JWInstrument(SpaceTelescopeInstrument):
     def __init__(self, *args, **kwargs):
         super(JWInstrument, self).__init__(*args, **kwargs)
 
-        self.siaf = pysiaf.Siaf(self.name)
+        self.siaf = get_siaf_with_caching(self.name)
 
         opd_path = os.path.join(self._datapath, 'OPD')
         self.opd_list = []
@@ -1118,6 +1119,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         # Pull values from options dictionary
         add_distortion = options.get('add_distortion', True)
         crop_psf = options.get('crop_psf', True)
+        # you can turn on/off IPC corrections via the add_ipc option, default True.
+        add_ipc = options.get('add_ipc', True)
 
         # Add distortion if set in calc_psf
         if add_distortion:
@@ -1166,11 +1169,11 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         # Rewrite result variable based on output_mode; this includes binning down to detector sampling.
         SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
-        # you can turn on/off IPC corrections via the add_ipc option, default True.
-        add_ipc = options.get('add_ipc', True)
-        if add_ipc and add_distortion:
-            result = detectors.apply_detector_ipc(result)  # apply detector IPC model (after binning to detector sampling)
 
+        if add_ipc and add_distortion and ('DET_DIST' in result):
+            result = detectors.apply_detector_ipc(result)  # apply detector IPC model (after binning to detector sampling)
+        if add_ipc and add_distortion and ('OVERDIST' in result):
+            result = detectors.apply_detector_ipc(result, extname = 'OVERDIST')  # apply detector IPC model to oversampled PSF
 
     def interpolate_was_opd(self, array, newdim):
         """ Interpolates an input 2D  array to any given size.
@@ -2434,13 +2437,31 @@ class NIRCam(JWInstrument):
             SAM_box_size = 5.0
         elif ((self.image_mask == 'MASKSWB') or (self.image_mask == 'MASKLWB')):
             bar_offset = self.options.get('bar_offset', None)
-            # If the bar offset is not provided, use the filter name to lookup the default
+            # If the bar offset is not provided, use the SIAF aperture name, or else the filter name to lookup the default
             # position. If an offset is provided and is a floating point value, use that
             # directly as the offset. Otherwise assume it's a filter name and try passing
             # that in to the auto offset. (that allows for selecting the narrow position, or
             # for simulating using a given filter at some other filter's position.)
+            # This code is somewhat convoluted, for historical reasons and back-compatibility
             if bar_offset is None:
-                auto_offset = self.filter
+                # Try to use the SIAF aperture name to determine the offset
+                # This can help better automate simulations matching data, since match_data.py will
+                # have copied the aperturename from the header, like NRCA5_MASKLWB_NARROW or similar
+                if 'MASK' in self.aperturename:
+                    apname_last_part = self.aperturename.split('_')[-1]
+                    if apname_last_part=='NARROW':
+                        auto_offset = 'narrow'   # set to lower case for consistency with existing code in optics.py
+                        _log.info(f"Set bar offset to {auto_offset} based on current aperture name {self.aperturename}")
+                    elif apname_last_part.startswith('F'):
+                        auto_offset = apname_last_part
+                        _log.info(f"Set bar offset to {auto_offset} based on current aperture name {self.aperturename}")
+                    else:
+                        auto_offset = self.filter
+                        _log.info(f"Set bar offset to {auto_offset} based on current filter {self.filter}")
+                else:
+                    auto_offset = self.filter
+                    _log.info(f"Set bar offset to {auto_offset} based on current filter {self.filter}")
+
             else:
                 try:
                     _ = float(bar_offset)
@@ -2912,6 +2933,13 @@ def calc_or_load_PSF(filename, inst, overwrite=False, **kwargs):
 
 #########################
 
+@functools.lru_cache
+def get_siaf_with_caching(instrname):
+    """ Parsing and loading the SIAF information is particularly time consuming,
+    (can be >0.1 s per call, so multiple invokations can be a large overhead)
+    Therefore avoid unnecessarily reloading it by caching results.
+    This is a small speed optimization. """
+    return pysiaf.Siaf(instrname)
 
 class DetectorGeometry(object):
     """ Utility class for converting between detector coordinates

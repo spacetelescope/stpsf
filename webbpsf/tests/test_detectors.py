@@ -169,3 +169,27 @@ def test_ipc_oversampling_equivalence(oversamp = 2):
     psf_detdist_v2 = poppy.utils.rebin_array(testpsf['OVERDIST'].data, (oversamp,oversamp))
 
     assert np.allclose(psf_detdist, psf_detdist_v2), "PSFs calculated should be equivalent for IPC convolution and binning in either order"
+
+
+def test_ipc_basic_effect_on_psf_fwhm():
+    """A basic test that the IPC model has the expected effect: making PSFs slightly broader.
+
+    Tests that (a) there is no change to the first two extensions, which are 'pure optical PSF'
+               (b) that the FWHM increases for the other two extensions, which are distortion+detector effects
+    """
+    nrc = webbpsf_core.NIRCam()
+    psf_withipc = nrc.calc_psf(nlambda=1, fov_pixels=101)
+    nrc.options['add_ipc'] = False
+    psf_noipc = nrc.calc_psf(nlambda=1, fov_pixels=101)
+
+    for extname in ['OVERSAMP', 'DET_SAMP']:
+        fwhm_ipc = poppy.measure_fwhm(psf_withipc, ext=extname)
+        fwhm_noipc = poppy.measure_fwhm(psf_noipc, ext=extname)
+        assert fwhm_ipc==fwhm_noipc, f'Adding IPC should not have any effect on the {extname} data.'
+        print(f'test ok for {extname}')
+
+    for extname in ['OVERDIST', 'DET_DIST']:
+        fwhm_ipc = poppy.measure_fwhm(psf_withipc, ext=extname)
+        fwhm_noipc = poppy.measure_fwhm(psf_noipc, ext=extname)
+        assert fwhm_ipc>fwhm_noipc, f'Adding IPC should not blur and increase the FWHM in the {extname} data.'
+        print(f'test ok for {extname}')
