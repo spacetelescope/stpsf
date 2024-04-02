@@ -17,9 +17,12 @@ import scipy.interpolate
 import poppy
 import webbpsf
 
-def _read_opd(filename):
-    """Trivial utilty function to read OPD from a WSS-output FITS file"""
+def _read_opd(filename, auto_download=True):
+    """Trivial utilty function to read OPD from a WSS-output FITS file
+    If the file does not exist locally, try to retrieve it from MAST automatically."""
     full_file_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', filename)
+    if not os.path.exists(full_file_path) and auto_download:
+        webbpsf.mast_wss.mast_retrieve_opd(filename)
     opdhdu = fits.open(full_file_path)
     opd = opdhdu[1].data.copy()
     return opd, opdhdu
