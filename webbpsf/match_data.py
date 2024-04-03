@@ -54,19 +54,21 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
     if inst.name == 'NIRCam':
         if header['PUPIL'].startswith('MASK'):
             if header['PUPIL'] == 'MASKBAR':
-                inst.pupil_mask = header['CORONMSK'].replace('MASKA', 'MASK')
+                # the FITS header is just 'BAR' but the value needed in webbpsf is either
+                # 'MASKLWB' or "MASKSWB' depending on channel.
+                inst.pupil_mask = 'MASKLWB' if  header['CHANNEL']=='LONG' else 'MASKSWB'
             else:
                 inst.pupil_mask = header['PUPIL']
-            inst.image_mask = header['CORONMSK'].replace('MASKA', 'MASK')  # note, have to modify the value slightly for
-                                                                           # consistency with the labels used in webbpsf
+            if 'CORONMSK' in header:
+                inst.image_mask = header['CORONMSK'].replace('MASKA', 'MASK')  # note, have to modify the value slightly for
+                                                                               # consistency with the labels used in webbpsf
             # The apername keyword is not always correct for cases with dual-channel coronagraphy
             # in some such cases, APERNAME != PPS_APER. Let's ensure we have the proper apername for this channel:
             apername = get_nrc_coron_apname(header)
             inst.set_position_from_aperture_name(apername)
 
-        elif header['PUPIL'].startswith('F'):
-            inst.filter = header['PUPIL']
-        else:
+        elif header['PUPIL'] != 'CLEAR' and not header['PUPIL'].startswith('F'):  # no action needed for these
+                                            # note that filters in the pupil wheel were handled already above
             inst.pupil_mask = header['PUPIL']
 
     elif inst.name == 'MIRI':
