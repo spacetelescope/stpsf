@@ -1823,8 +1823,10 @@ class MIRI(JWInstrument):
         self._rotation = 4.83544897  # V3IdlYAngle, Source: SIAF PRDOPSSOC-059
                                 # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
-        self.options['pupil_shift_x'] = -0.0069 # CV3 on-orbit estimate (RPT028027) + OTIS delta from predicted (037134)
-        self.options['pupil_shift_y'] = -0.0027
+        # Coordinate system note: The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
+        # and is thus flipped in Y relative to the V frame entrance pupil. Therefore flip sign of pupil_shift_y
+        self.options['pupil_shift_x'] = -0.0068  # In flight measurement. See Wright, Sabatke, Telfer 2022, Proc SPIE 
+        self.options['pupil_shift_y'] = -0.0110  # Sign intentionally flipped relative to that paper!! See note above.
 
         self.image_mask_list = ['FQPM1065', 'FQPM1140', 'FQPM1550', 'LYOT2300', 'LRS slit']
         self.pupil_mask_list = ['MASKFQPM', 'MASKLYOT', 'P750L']
