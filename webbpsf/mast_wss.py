@@ -11,6 +11,8 @@ import astropy.units as u
 import numpy as np
 from astropy.time import Time, TimeDelta
 
+from astroquery.mast import Mast, Observations
+
 import webbpsf.utils
 
 ### Login and authentication
@@ -23,7 +25,6 @@ def mast_retrieve_opd(filename, output_path=None, verbose=False, redownload=Fals
     If file is already present locally, the download is skipped and the cached file is used.
     """
 
-    from astroquery.mast import Mast
     if output_path is None:
         output_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs')
     else:
@@ -63,7 +64,6 @@ def download_all_opds(opdtable, verbose=False):
 def mast_wss_date_query(date, tdelta):
     """Search for OPDs within a specified range of a given date"""
 
-    from astroquery.mast import Mast
     t_start, t_stop = date - tdelta, date + tdelta
 
     params = {"columns": "*",
@@ -343,8 +343,6 @@ def retrieve_mast_opd_table(aperture_list=['NRCA3_FP1'], verbose=False):
     Returns : Astropy table listing available OPDs and metadata such as dates and sensing type.
 
     """
-    from astroquery.mast import Mast
-
 
     # Construct the query and execute the search to retrieve available OPDs in MAST
     params = {"columns": '*',
@@ -587,6 +585,100 @@ def get_corrections(opdtable):
 
 # Functions for retrieving images
 
+def set_params(parameters):
+    """ Helper function for setting up the dicts needed to call Mast.service_request """
+    return [{"paramName" : p, "values" : v} for p, v in parameters.items()]
+
+def query_wfsc_images_by_program(prog, obs, detector='NRCA3', productlevel=3):
+    """MAST query to get filenames of WFSC images from a given program and observation
+
+    Returns table of MAST query results
+    """
+    # Query MAST for level-3 WFSC combined products
+    keywords = {
+        'program': [str(prog)],
+        'observtn': [str(obs)],
+        'detector': [detector],
+        'productLevel': [str(productlevel)],
+    }
+
+    # Restructuring the keywords dictionary to the MAST syntax
+    params = {'columns': '*',
+              'filters': set_params(keywords)
+              }
+    service = 'Mast.Jwst.Filtered.Nircam'
+    tab = Mast.service_request(service, params)
+    return tab
+
+
+def query_wfsc_images_latest(detector='NRCA3', productlevel=3):
+    """MAST query to get filenames of the most recent WFSC images
+
+    Returns table of MAST query results
+    """
+    # Query MAST for the most recent level-3 WFSC combined products
+    now = astropy.time.Time.now()
+    keywords = {
+        'template': ['WFSC NIRCam Fine Phasing'],
+        'detector': [detector],
+        'date_obs_mjd': [{"min": now.mjd - 7, "max": now.mjd}],
+        'productLevel': [str(productlevel)],
+    }
+
+    # Restructuring the keywords dictionary to the MAST syntax
+    params = {
+        'columns': 'filename, apername, program, observtn, visit_id, act_id,  date_obs_mjd, date_obs, productLevel',
+        'filters': set_params(keywords)
+        }
+    service = 'Mast.Jwst.Filtered.Nircam'
+    tab = Mast.service_request(service, params)
+    tab.sort(keys=['date_obs_mjd'], reverse=True)
+
+    # some sanity checking:
+    if tab[0]['visit_id'] != tab[1]['visit_id']:
+        raise RuntimeError("The latest two images in MAST are not from the same visit")
+        # these are indeed two files from the same visi
+    else:
+        return tab[0:2]  # Just return that most recent pair
+
+
+def download_wfsc_images(program=None, obs=None, verbose=False, **kwargs):
+    """Download to current directory some WFSC weak lens images.
+    Either specify a WFSC program and observation number, or else by default
+    the most recent WFSC images available will be retrieved.
+
+    Parameters
+    ----------
+    program, obs : int or str
+        Program and observation numbers.
+    verbose : bool
+        Be more verbose?
+
+    Other kwargs for detector and productlevel are passed through
+    to the query functions.
+    """
+
+    if program is None and obs is None:
+        if verbose:
+            print("Querying latest available WFSC images")
+        filetable = query_wfsc_images_latest()
+    else:
+        if verbose:
+            print(f"Querying WFSC images from program {prog}, observation {obs}")
+        filetable = query_wfsc_images_by_program(program, obs)
+
+    # If we found > 0 available files for that visit, then we're done searching and can go on to download
+    if verbose:
+        date_obs = astropy.time.Time(filetable[0]['date_obs_mjd'], format='mjd')
+        print(
+            f"Found {len(filetable)} level 3 data products from {filetable[0]['program']}:{filetable[0]['observtn']} around {date_obs.iso[0:16]}")
+    if len(filetable) > 0:
+        for row in filetable:
+            data_uri = f"mast:JWST/product/{row['filename']}"
+            Observations.download_file(data_uri)
+    else:
+        raise RuntimeError("Error, could not find any WFSC image data matching the specified search parameters.")
+
 
 @functools.lru_cache
 def get_visit_nrc_ta_image(visitid, verbose=True):
@@ -596,15 +688,12 @@ def get_visit_nrc_ta_image(visitid, verbose=True):
     without writing to disk.
     """
 
-    from astroquery.mast import Mast
     keywords = {
             'visit_id': [visitid[1:]], # note: drop the initial character 'V'
             'category': ['CAL'],
             'exp_type': ['NRC_TACQ']
            }
 
-    def set_params(parameters):
-        return [{"paramName" : p, "values" : v} for p, v in parameters.items()]
 
 
     # Restructuring the keywords dictionary to the MAST syntax
@@ -657,9 +746,6 @@ def _query_program_visit_times_by_inst(program, instrument, verbose=False):
 
     collist = 'filename, program, observtn, visit_id, vststart_mjd, visitend_mjd, bstrtime'
     all_columns = False
-
-    def set_params(parameters):
-        return [{"paramName" : p, "values" : v} for p, v in parameters.items()]
 
 
     keywords = {'program': [str(program),]}
