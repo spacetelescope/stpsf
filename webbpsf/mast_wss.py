@@ -656,16 +656,18 @@ def download_wfsc_images(program=None, obs=None, verbose=False, **kwargs):
 
     Other kwargs for detector and productlevel are passed through
     to the query functions.
+
+    Returns list of image filenames
     """
 
     if program is None and obs is None:
         if verbose:
             print("Querying latest available WFSC images")
-        filetable = query_wfsc_images_latest()
+        filetable = query_wfsc_images_latest(**kwargs)
     else:
         if verbose:
             print(f"Querying WFSC images from program {prog}, observation {obs}")
-        filetable = query_wfsc_images_by_program(program, obs)
+        filetable = query_wfsc_images_by_program(program, obs, **kwargs)
 
     # If we found > 0 available files for that visit, then we're done searching and can go on to download
     if verbose:
@@ -673,9 +675,12 @@ def download_wfsc_images(program=None, obs=None, verbose=False, **kwargs):
         print(
             f"Found {len(filetable)} level 3 data products from {filetable[0]['program']}:{filetable[0]['observtn']} around {date_obs.iso[0:16]}")
     if len(filetable) > 0:
+        file_list = []
         for row in filetable:
+            file_list.append(row['filename'])
             data_uri = f"mast:JWST/product/{row['filename']}"
             Observations.download_file(data_uri)
+        return file_list
     else:
         raise RuntimeError("Error, could not find any WFSC image data matching the specified search parameters.")
 
