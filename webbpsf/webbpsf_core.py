@@ -3055,7 +3055,18 @@ class NIRSpec(JWInstrument_with_IFU):
     is added to the optical system. This is an estimate of the pupil stop imposed by the outer edge of the grating
     clear aperture, estimated based on optical modeling by Erin Elliot and Marshall Perrin.
 
-    **Note: IFU to be implemented later**
+    Notes on IFU support:
+        Additional features for modeling NRS IFU PSFs are enabled by setting the .mode attribute to 'IFU'.
+
+        The pipeline-output data products, assuming the 'ifualign' frame is used in the cube build step, which
+        is rotated relative to the typical 'sci' output frame used in all other webbpsf sim outputs.
+        For convenience, for IFU-mode simulations an extra rotation is included in the PSF calculation
+        such that the output product orientation matches the IFUalign s3d cube orientation. This happens
+        automatically and transparently to the user (and source offset parameters, e.g. options['source_offset_x']
+        will automatically be interpreted as X and Y position in that output frame, including the effects of the
+        rotation). If the rotation to ifualign frame is for some reason not desired, it can be disabled by
+        setting nrs.options['ifualign_rotation'] = False
+
     """
 
     def __init__(self):
@@ -3165,6 +3176,11 @@ class NIRSpec(JWInstrument_with_IFU):
         # collimator and camera.
         if self.include_si_wfe:
             optsys.add_pupil(optic=self._si_wfe_class(self, where='spectrograph'))
+
+        if self.mode == 'IFU' and self.options.get('ifualign_rotation',True):
+            optsys.add_rotation(90, hide=True)  # Rotate by 90 degrees clockwise to match the IFUalign output convention, with slices horizontal.
+            optsys.planes[-1].wavefront_display_hint = 'intensity'
+
 
         return (optsys, trySAM, SAM_box_size)
 
