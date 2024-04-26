@@ -1960,8 +1960,13 @@ class MIRI(JWInstrument):
             # Per Klaus Pontoppidan: The LRS slit is aligned with the detector x-axis, so that the
             # dispersion direction is along the y-axis.
             # Slit width and height values derived from SIAF PRDOPSSOC-063, 2024 January
+            # Undocumented options allow for offsetting the slit relative to the output pixel grid, to
+            # more precisely match the actual instrument alignment
             optsys.add_image(optic=poppy.RectangularFieldStop(width=4.72345, height=0.51525,
-                                                              rotation=self._rotation, name=self.image_mask))
+                                                              rotation=self._rotation, name=self.image_mask,
+                                                              shift_x=self.options.get('lrs_slit_offset_x', None),
+                                                              shift_y=self.options.get('lrs_slit_offset_y', None),
+                                                              ))
             trySAM = False
         else:
             optsys.add_image()
