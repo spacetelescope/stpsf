@@ -2019,6 +2019,21 @@ class MIRI(JWInstrument):
             # *after* the rotation by ~5 degrees to that frame.
             optsys.add_pupil(miri_aberrations)
 
+        # Special case for MIRI LRS slit spectroscopy. For this, we want to force the use of
+        # MFT rather than FFT, for a small region, to ensure fine pixel sampling around the slit.
+        # We can do this using poppy's MatrixFTCoronagraph class. No, the LRS is not a coronagraph;
+        # but the desired handling of propagation steps and transforms is the same, so we can efficiently
+        # reuse that existing poppy code path here.
+        # The undocumented option for toggling this on/off mostly exists for testing as part of implementing
+        # this enhancement, and could be removed from the code later.
+        if self.image_mask == 'LRS slit' and self.options.get('lrs_use_mft',True):
+            _log.info("Setting up special propagator for Matrix DFTs around MIRI LRS slit")
+
+            # hard-coded values here are for a box encompassing the LRS slit, and sampled
+            # sufficiently finely (8x Nyquist) to yield relatively precise and accurate results
+            optsys = poppy.MatrixFTCoronagraph(optsys, occulter_box=[1,3], oversample=8)
+            trySAM = False
+
         return (optsys, trySAM, SAM_box_size if trySAM else None)
 
 
