@@ -1962,11 +1962,19 @@ class MIRI(JWInstrument):
             # Slit width and height values derived from SIAF PRDOPSSOC-063, 2024 January
             # Undocumented options allow for offsetting the slit relative to the output pixel grid, to
             # more precisely match the actual instrument alignment
-            optsys.add_image(optic=poppy.RectangularFieldStop(width=4.72345, height=0.51525,
+            lrs_slit = poppy.RectangularFieldStop(width=4.72345, height=0.51525,
                                                               rotation=self._rotation, name=self.image_mask,
                                                               shift_x=self.options.get('lrs_slit_offset_x', None),
                                                               shift_y=self.options.get('lrs_slit_offset_y', None),
-                                                              ))
+                                                              )
+            if self.options.get('lrs_use_mft',True):
+                # Force the LRS slit to be rasterized onto a fine spatial sampling with gray subpixels
+                # let's do a 3 arcsec box, sampled to 0.02 arcsec, with gray subpixels; note poppy does not support non-square wavefront here
+                lrs_pixscale = 0.02 # implicitly u.arcsec/u.pixel
+                sampling = poppy.Wavefront(npix=int(5.5/lrs_pixscale), pixelscale=lrs_pixscale)
+                lrs_slit = poppy.fixed_sampling_optic(lrs_slit, sampling, oversample=8)
+
+            optsys.add_image(optic=lrs_slit)
             trySAM = False
         else:
             optsys.add_image()
