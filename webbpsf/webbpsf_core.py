@@ -1124,9 +1124,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         # Add distortion if set in calc_psf
         if add_distortion:
-            _log.debug("Adding PSF distortion(s)")
-            if self.image_mask == "LRS slit" and self.pupil_mask == "P750L":
-                raise NotImplementedError("Distortion is not implemented yet for MIRI LRS mode.")
+            _log.debug("Adding PSF distortion(s) and detector effects")
 
             # Set up new extensions to add distortion to:
             n_exts = len(result)
@@ -1147,8 +1145,11 @@ class JWInstrument(SpaceTelescopeInstrument):
             elif self.name == "MIRI":
                 # Apply distortion effects to MIRI psf: Distortion and MIRI Scattering
                 _log.debug("MIRI: Adding optical distortion and Si:As detector internal scattering")
-                psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion
-                psf_siaf_rot = detectors.apply_miri_scattering(psf_siaf)  # apply scattering effect
+                if self.image_mask != "LRS slit" and self.pupil_mask != "P750L":
+                    psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion
+                else:
+                    psf_siaf = result  # distortion model in SIAF not available for LRS
+                psf_siaf_rot = detectors.apply_miri_scattering(psf_siaf)  # apply scattering effect (cruciform artifact)
                 psf_distorted = detectors.apply_detector_charge_diffusion(psf_siaf_rot,options)  # apply detector charge transfer model
             elif self.name == "NIRSpec":
                 # Apply distortion effects to NIRSpec psf: Distortion only
@@ -1822,8 +1823,10 @@ class MIRI(JWInstrument):
         self._rotation = 4.83544897  # V3IdlYAngle, Source: SIAF PRDOPSSOC-059
                                 # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
-        self.options['pupil_shift_x'] = -0.0069 # CV3 on-orbit estimate (RPT028027) + OTIS delta from predicted (037134)
-        self.options['pupil_shift_y'] = -0.0027
+        # Coordinate system note: The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
+        # and is thus flipped in Y relative to the V frame entrance pupil. Therefore flip sign of pupil_shift_y
+        self.options['pupil_shift_x'] = -0.0068  # In flight measurement. See Wright, Sabatke, Telfer 2022, Proc SPIE 
+        self.options['pupil_shift_y'] = -0.0110  # Sign intentionally flipped relative to that paper!! See note above.
 
         self.image_mask_list = ['FQPM1065', 'FQPM1140', 'FQPM1550', 'LYOT2300', 'LRS slit']
         self.pupil_mask_list = ['MASKFQPM', 'MASKLYOT', 'P750L']
@@ -1956,8 +1959,22 @@ class MIRI(JWInstrument):
             #
             # Per Klaus Pontoppidan: The LRS slit is aligned with the detector x-axis, so that the
             # dispersion direction is along the y-axis.
-            optsys.add_image(optic=poppy.RectangularFieldStop(width=4.7, height=0.51,
-                                                              rotation=self._rotation, name=self.image_mask))
+            # Slit width and height values derived from SIAF PRDOPSSOC-063, 2024 January
+            # Undocumented options allow for offsetting the slit relative to the output pixel grid, to
+            # more precisely match the actual instrument alignment
+            lrs_slit = poppy.RectangularFieldStop(width=4.72345, height=0.51525,
+                                                              rotation=self._rotation, name=self.image_mask,
+                                                              shift_x=self.options.get('lrs_slit_offset_x', None),
+                                                              shift_y=self.options.get('lrs_slit_offset_y', None),
+                                                              )
+            if self.options.get('lrs_use_mft',True):
+                # Force the LRS slit to be rasterized onto a fine spatial sampling with gray subpixels
+                # let's do a 3 arcsec box, sampled to 0.02 arcsec, with gray subpixels; note poppy does not support non-square wavefront here
+                lrs_pixscale = 0.02 # implicitly u.arcsec/u.pixel
+                sampling = poppy.Wavefront(npix=int(5.5/lrs_pixscale), pixelscale=lrs_pixscale)
+                lrs_slit = poppy.fixed_sampling_optic(lrs_slit, sampling, oversample=8)
+
+            optsys.add_image(optic=lrs_slit)
             trySAM = False
         else:
             optsys.add_image()
@@ -1985,9 +2002,15 @@ class MIRI(JWInstrument):
                              name=self.pupil_mask,
                              flip_y=True, shift_x=shift_x, shift_y=shift_y, rotation=rotation)
             optsys.planes[-1].wavefront_display_hint = 'intensity'
-        elif self.pupil_mask == 'P750L':
+        elif self.pupil_mask == 'P750L' or self.image_mask == 'LRS slit':
+            # This oversized pupil stop is present on all MIRI imaging filters, thus should
+            # implicitly be included in all MIRI imager calculations, but in practice for
+            # normal imaging modes, the system pupil stop is defined by the OTE primary, so this
+            # stop has no effect. However for any light passing through the LRS slit, the spatial
+            # filtering leads to diffractive spreading in the subsequen pupil which this should
+            # be included for, in order to model slit losses correctly.
             optsys.add_pupil(transmission=self._datapath + "/optics/MIRI_LRS_Pupil_Stop.fits.gz",
-                             name=self.pupil_mask,
+                             name=self.pupil_mask if self.pupil_mask else 'MIRI internal pupil stop',
                              flip_y=True, shift_x=shift_x, shift_y=shift_y, rotation=rotation)
             optsys.planes[-1].wavefront_display_hint = 'intensity'
         else:  # all the MIRI filters have a tricontagon outline, even the non-coron ones.
@@ -1995,12 +2018,29 @@ class MIRI(JWInstrument):
                              name='filter cold stop', shift_x=shift_x, shift_y=shift_y, rotation=rotation)
             # FIXME this is probably slightly oversized? Needs to have updated specifications here.
 
-        if self.include_si_wfe:
-            # now put back in the aberrations we grabbed above.
-            optsys.add_pupil(miri_aberrations)
-
         optsys.add_rotation(-self._rotation, hide=True)
         optsys.planes[-1].wavefront_display_hint = 'intensity'
+
+        if self.include_si_wfe:
+            # now put back in the aberrations we grabbed above.
+            # Note, the SI WFE models are in the detector coordinate frame, so this has to be added
+            # *after* the rotation by ~5 degrees to that frame.
+            optsys.add_pupil(miri_aberrations)
+
+        # Special case for MIRI LRS slit spectroscopy. For this, we want to force the use of
+        # MFT rather than FFT, for a small region, to ensure fine pixel sampling around the slit.
+        # We can do this using poppy's MatrixFTCoronagraph class. No, the LRS is not a coronagraph;
+        # but the desired handling of propagation steps and transforms is the same, so we can efficiently
+        # reuse that existing poppy code path here.
+        # The undocumented option for toggling this on/off mostly exists for testing as part of implementing
+        # this enhancement, and could be removed from the code later.
+        if self.image_mask == 'LRS slit' and self.options.get('lrs_use_mft',True):
+            _log.info("Setting up special propagator for Matrix DFTs around MIRI LRS slit")
+
+            # hard-coded values here are for a box encompassing the LRS slit, and sampled
+            # sufficiently finely (8x Nyquist) to yield relatively precise and accurate results
+            optsys = poppy.MatrixFTCoronagraph(optsys, occulter_box=[1,3], oversample=8)
+            trySAM = False
 
         return (optsys, trySAM, SAM_box_size if trySAM else None)
 
