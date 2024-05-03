@@ -246,6 +246,8 @@ def wfe_histogram_plot(opdtable, start_date=None, end_date=None, thresh=None, pi
     for row in opdtable1:
         if download_opds:
             full_file_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
+        else:
+            full_file_path = row['fileName']
         if 'rms_wfe' not in opdtable1.colnames:
 
             if ote_only == False:
@@ -1441,7 +1443,7 @@ def plot_phase_retrieval_crosscheck(fn, vmax_fraction=1.0):
     return fig
 
 
-def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0):
+def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     """ Display comparison of two weak lens observations
 
     This compares the actual measured WL data, not the derived wavefronts.
@@ -1462,17 +1464,18 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0):
     """
     from skimage.registration import phase_cross_correlation
 
-    _ = webbpsf.mast_wss.mast_retrieve_opd(fn1)
-    _ = webbpsf.mast_wss.mast_retrieve_opd(fn2)
+    if download_opds == True:
+        _ = webbpsf.mast_wss.mast_retrieve_opd(fn1)
+        _ = webbpsf.mast_wss.mast_retrieve_opd(fn2)
 
-    opd, hdul1 = webbpsf.trending._read_opd(fn1)
+    opd, hdul1 = webbpsf.trending._read_opd(fn1, auto_download=download_opds)
 
     wlm8_m1 = hdul1[5].data
     wlp8_m1 = hdul1[10].data
     wlm8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[6].data, wlm8_m1.shape)
     wlp8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[11].data, wlm8_m1.shape)
 
-    opd, hdul2 = webbpsf.trending._read_opd(fn2)
+    opd, hdul2 = webbpsf.trending._read_opd(fn2, auto_download=download_opds)
 
     wlm8_m2 = hdul2[5].data
     wlp8_m2 = hdul2[10].data
@@ -1519,8 +1522,8 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0):
 
     axes[0,0].set_ylabel("WLM8", fontsize=18)
     axes[1,0].set_ylabel("WLP8", fontsize=18)
-    axes[0,0].set_title(f"Measured: \n{fn1}", fontsize=18)
-    axes[0,1].set_title(f"Measured: \n{fn2}", fontsize=18)
+    axes[0,0].set_title(f"Measured: \n{os.path.basename(fn1)}", fontsize=18)
+    axes[0,1].set_title(f"Measured: \n{os.path.basename(fn2)}", fontsize=18)
     axes[0,2].set_title("Difference\n ", fontsize=18)
 
     fig.suptitle(f"{hdul1[0].header['CORR_ID']}, {hdul1[0].header['TSTAMP'][:-3]}   vs.   {hdul2[0].header['CORR_ID']},  {hdul2[0].header['TSTAMP'][:-3]}", fontsize=20, fontweight='bold')
