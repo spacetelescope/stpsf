@@ -338,11 +338,33 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
     kernel_x[np.abs(x) < constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX] *= 0.5
     kernel_y[np.abs(y) < constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX] *= 0.5
 
-    # Add in the offset copies of the main 1d kernels
+    # add in the extra diffraction peaks into each 1d kernel, as seen in Gaspar et al. 2021
+    # but first, save the total flux for normalization later
+    normfactor = kernel_x.sum()
+
     # Empirically, the 'center' of the cruciform shifts inwards towards the center of the detector
-    # i.e. for the upper right corner, the cruciform shifts down and left a bit, etc.
+    # i.e. for the upper right corner, the cruciform shifts down and left a bit, etc. 
+    # Turns out the centers of the peaks in each cruciform arm also seem to shift a bit, so
+    # let's use the same shifts to try to model those, with some scale factor
     yshift = cruciform_yshifts(detector_position[1])
     xshift = cruciform_xshifts(detector_position[0])
+
+    for loc, amp in zip(constants.MIRI_CRUCIFORM_PEAKS_LOC, constants.MIRI_CRUCIFORM_PEAKS_AMP):
+        # Empirically, the locations of the peaks shift slightly around the FOV, in the opposite sign as the cruciform itself shifts
+        # we model this ad hoc based on comparisons iwth the ePSF data.
+        # The scale factors here are a bit of a handwave by eye, not yet a rigorous fit...
+        scaled_loc_x = loc * wavelength / constants.MIRI_CRUCIFORM_PEAK_REFWAVE * 1.1
+        scaled_loc_y = loc * wavelength / constants.MIRI_CRUCIFORM_PEAK_REFWAVE * 1.1
+
+        scaled_amp = amp * constants.MIRI_CRUCIFORM_PEAKS_AMP_ADJUST  # ad hoc, to make it work; basically a units scale factor from the plot in Andras' paper 
+        peak_x = scaled_amp * np.exp(-(x-scaled_loc_x + xshift/2)**2) + scaled_amp * np.exp(-(x+scaled_loc_x + xshift/2)**2)
+        peak_y = scaled_amp * np.exp(-(y-scaled_loc_y + yshift/2)**2) + scaled_amp * np.exp(-(y+scaled_loc_y + yshift/2)**2)
+        kernel_x += peak_x
+        kernel_y += peak_y
+    kernel_x *= normfactor/kernel_x.sum()
+    kernel_y *= normfactor/kernel_y.sum()
+
+    # Add in the offset copies of the main 1d kernels
     kernel_2d[cen + int(round(yshift * oversample))] = kernel_x
     kernel_2d[:, cen + int(round(xshift * oversample))] = kernel_y
 

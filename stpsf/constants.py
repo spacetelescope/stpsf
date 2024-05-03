@@ -407,3 +407,11 @@ INSTRUMENT_IFU_BROADENING_PARAMETERS = {
     'NIRSPEC': {'sigma': 0.05},
     'MIRI': {'sigma': 0.05},
 }
+
+# Various parameters to model the more complex parts of the cruciform
+# There's a fair amount of ad-hoc tuning still needed here to match real data
+MIRI_CRUCIFORM_PEAK_REFWAVE = 5.5  #  # See Gaspar et al. sections 4.2 and 4.3
+MIRI_CRUCIFORM_PEAKS_LOC = [12/1.1, 16.5,   19.5, 23.5, 27.9, 33, 39.6]  # pixels, at 5.5 microns, for the centered PSF; slightly tuned to in-flight ePSFs
+MIRI_CRUCIFORM_PEAKS_AMP = [1.8e-4, 1.0e-4, 1.0e-4, 9e-5, 4e-5, 2e-5, 1e-5]  # read off from fig 12 in Gaspar et al.  Slightly tuned to in-flight ePSFs.
+MIRI_CRUCIFORM_PEAKS_AMP_ADJUST = 20        # ad hoc scale factor, for units conversion from fig 12 to how it's normalized here 
+MIRI_CRUCIFORM_PEAKS_SIGMA = 1              # how wide are the peaks/bumps along the crucifor
