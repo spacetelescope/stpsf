@@ -1464,7 +1464,7 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     """
     from skimage.registration import phase_cross_correlation
 
-    if download_opds == True:
+    if download_opds:
         _ = webbpsf.mast_wss.mast_retrieve_opd(fn1)
         _ = webbpsf.mast_wss.mast_retrieve_opd(fn2)
 
