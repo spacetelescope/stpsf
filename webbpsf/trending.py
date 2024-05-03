@@ -1468,14 +1468,14 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
         _ = webbpsf.mast_wss.mast_retrieve_opd(fn1)
         _ = webbpsf.mast_wss.mast_retrieve_opd(fn2)
 
-    opd, hdul1 = webbpsf.trending._read_opd(fn1, auto_download=download_opds)
+    opd, hdul1 = webbpsf.trending._read_opd(fn1)
 
     wlm8_m1 = hdul1[5].data
     wlp8_m1 = hdul1[10].data
     wlm8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[6].data, wlm8_m1.shape)
     wlp8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[11].data, wlm8_m1.shape)
 
-    opd, hdul2 = webbpsf.trending._read_opd(fn2, auto_download=download_opds)
+    opd, hdul2 = webbpsf.trending._read_opd(fn2)
 
     wlm8_m2 = hdul2[5].data
     wlp8_m2 = hdul2[10].data
