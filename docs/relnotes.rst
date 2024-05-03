@@ -216,7 +216,6 @@ Please note, the minimum supported version of Python is increaed to Python 3.10,
 
 **Full Changelog**: https://github.com/spacetelescope/stpsf/compare/v1.2.1...v1.3.0.rc1
 
-
 Version 1.2.1
 =============
 Minor documentation updates
