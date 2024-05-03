@@ -27,6 +27,14 @@ See https://github.com/spacetelescope/webbpsf/issues for currently open issues a
 Version History and Change Log
 -------------------------------
 
+Version 1.3.0
+===============
+
+
+ - Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
+
+
+
 Version 1.2.1
 =============
 Minor documentation updates
