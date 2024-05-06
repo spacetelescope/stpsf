@@ -694,7 +694,7 @@ def get_visit_nrc_ta_image(visitid, verbose=True, kind='cal'):
     """
 
     keywords = {
-            'visit_id': [visitid[1:]], # note: drop the initial character 'V'
+            'visit_id': [visitid.lstrip('V')], # note: drop the initial character 'V'
             'exp_type': ['NRC_TACQ']
            }
 
