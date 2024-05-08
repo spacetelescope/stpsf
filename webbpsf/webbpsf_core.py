@@ -2291,8 +2291,7 @@ class NIRCam(JWInstrument):
             'WLP8',
             'WLM8',
             'WLP12',
-            'DHS0_07'
-        ]
+        ] + [f'DHS_{i+1:02d}' for i in range(10)]
 
         self._detectors = dict()
         det_list = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5']
@@ -2780,8 +2779,8 @@ class NIRCam(JWInstrument):
 
         elif self.pupil_mask is None and self.image_mask is not None:
             optsys.add_pupil(poppy.ScalarTransmission(name='No Lyot Mask Selected!'), index=3)
-        elif self.pupil_mask == 'DHS0_07':
-            optsys.add_pupil(transmission=self._datapath + "/optics/NIRCam_DHS0_07_npix1024.fits.gz", name=self.pupil_mask,
+        elif self.pupil_mask.startswith('DHS'):
+            optsys.add_pupil(transmission=self._datapath + f"/optics/NIRCam_{self.pupil_mask}_npix1024.fits.gz", name=self.pupil_mask,
                              flip_y=True, shift_x=shift_x, shift_y=shift_y, rotation=rotation, index=3)
             optsys.planes[3].wavefront_display_hint = 'intensity'
 
