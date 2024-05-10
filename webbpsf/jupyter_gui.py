@@ -11,7 +11,6 @@ from . import utils
 _log = logging.getLogger('webbpsf')
 
 
-
 def show_notebook_interface(instrumentname):
     """
     Show Jupyter notebook widget interface
@@ -23,13 +22,12 @@ def show_notebook_interface(instrumentname):
         or 'WFI'
     """
 
-    if instrumentname.upper()=='WFI':
+    if instrumentname.upper() == 'WFI':
         instrument = roman.WFI()
         show_notebook_interface_wfi(instrument)
     else:
         instrument = webbpsf_core.instrument(instrumentname)
         show_notebook_interface_jwst(instrument)
-
 
 
 def show_notebook_interface_wfi(instrument):
@@ -43,28 +41,23 @@ def show_notebook_interface_wfi(instrument):
     try:
         import synphot
     except ImportError:
-        raise ImportError(f"For now, synphot must be installed to use the notebook interface")
+        raise ImportError(f'For now, synphot must be installed to use the notebook interface')
 
     # Clean up some warnings we know about so as not to scare the users
     import warnings
     from matplotlib.cbook import MatplotlibDeprecationWarning
+
     warnings.simplefilter('ignore', MatplotlibDeprecationWarning)
     warnings.simplefilter('ignore', fits.verify.VerifyWarning)
 
     def make_binding_for_attribute(attribute):
         def callback(trait_name, new_value):
             setattr(instrument, attribute, new_value)
+
         return callback
 
-    filter_selection = widgets.ToggleButtons(
-        options=instrument.filter_list,
-        value=instrument.filter,
-        description='Filter:'
-    )
-    filter_selection.on_trait_change(
-        make_binding_for_attribute('filter'),
-        name='selected_label'
-    )
+    filter_selection = widgets.ToggleButtons(options=instrument.filter_list, value=instrument.filter, description='Filter:')
+    filter_selection.on_trait_change(make_binding_for_attribute('filter'), name='selected_label')
     display(filter_selection)
 
     monochromatic_wavelength = widgets.BoundedFloatText(
@@ -81,27 +74,31 @@ def show_notebook_interface_wfi(instrument):
 
     monochromatic_toggle.on_trait_change(update_monochromatic, name='value')
 
-    display(widgets.HTML(value='''<p style="padding: 1em 0;">
+    display(
+        widgets.HTML(
+            value="""<p style="padding: 1em 0;">
     <span style="font-style:italic; font-size:1.0em">
     Monochromatic calculations can be performed for any wavelength in the 0.6 to 2.0 &micro;m range.
-    </span></p>'''))  # kludge
-    monochromatic_controls = widgets.HBox(children=(
+    </span></p>"""
+        )
+    )  # kludge
+    monochromatic_controls = widgets.HBox(
+        children=(
             monochromatic_toggle,
             widgets.HTML(value='<span style="display: inline-block; width: 0.6em;"></span>'),
             monochromatic_wavelength,
             widgets.HTML(value='<span style="display: inline-block; width: 0.25em;"></span> &micro;m '),
-    ))
+        )
+    )
     display(monochromatic_controls)
 
-    display(widgets.HTML(value="<hr>"))
+    display(widgets.HTML(value='<hr>'))
 
     source_selection = widgets.Select(
-        options=poppy.specFromSpectralType('', return_list=True),
-        value='G0V',
-        description="Source spectrum"
+        options=poppy.specFromSpectralType('', return_list=True), value='G0V', description='Source spectrum'
     )
     display(source_selection)
-    display(widgets.HTML(value="<hr>"))
+    display(widgets.HTML(value='<hr>'))
 
     sca_selection = widgets.Dropdown(
         options=instrument.detector_list,
@@ -128,30 +125,20 @@ def show_notebook_interface_wfi(instrument):
     def set_field_position(trait_name, new_value):
         instrument.detector_position = detector_field_points[new_value]
 
-    field_position = widgets.ToggleButtons(options=detector_field_point_labels, value='Center', description='Detector field point:')
+    field_position = widgets.ToggleButtons(
+        options=detector_field_point_labels, value='Center', description='Detector field point:'
+    )
     field_position.on_trait_change(set_field_position, name='selected_label')
     display(field_position)
 
     calculate_button = widgets.Button(
-        description="Calculate PSF",
-        width='10em',
-        color='white',
-        background_color='#00c403',
-        border_color='#318732'
+        description='Calculate PSF', width='10em', color='white', background_color='#00c403', border_color='#318732'
     )
     display_osys_button = widgets.Button(
-        description="Display Optical System",
-        width='13em',
-        color='white',
-        background_color='#005fc4',
-        border_color='#224A75'
+        description='Display Optical System', width='13em', color='white', background_color='#005fc4', border_color='#224A75'
     )
     clear_button = widgets.Button(
-        description="Clear Output",
-        width='10em',
-        color='white',
-        background_color='#ed4747',
-        border_color='#911C1C'
+        description='Clear Output', width='10em', color='white', background_color='#ed4747', border_color='#911C1C'
     )
     progress = widgets.HTML(value='<progress>')
 
@@ -201,7 +188,7 @@ def show_notebook_interface_wfi(instrument):
     calculate_button.on_click(calc)
     display_osys_button.on_click(disp)
     clear_button.on_click(clear)
-    display(widgets.HTML(value="<br/>"))  # kludge
+    display(widgets.HTML(value='<br/>'))  # kludge
     buttons = widgets.HBox(children=[calculate_button, display_osys_button, clear_button])
     display(buttons)
 
@@ -212,8 +199,9 @@ def show_notebook_interface_wfi(instrument):
     display(download_link)
     download_link.visible = None
 
+
 def show_notebook_interface_jwst(instrument):
-    """ Show Jupyter Notebook interface, for a JWST instrument
+    """Show Jupyter Notebook interface, for a JWST instrument
 
     Parameters
     -------------
@@ -234,18 +222,18 @@ def show_notebook_interface_jwst(instrument):
     from IPython.display import display, clear_output
     from matplotlib import pyplot as plt
 
-
     if isinstance(instrument, str):
         instrument = instrument(instrument)
 
     try:
         import synphot
     except ImportError:
-        raise ImportError(f"For now, synphot must be installed to use the notebook interface")
+        raise ImportError(f'For now, synphot must be installed to use the notebook interface')
 
     # Clean up some warnings we know about so as not to scare the users
     import warnings
     from matplotlib.cbook import MatplotlibDeprecationWarning
+
     warnings.simplefilter('ignore', MatplotlibDeprecationWarning)
     warnings.simplefilter('ignore', fits.verify.VerifyWarning)
 
@@ -255,27 +243,24 @@ def show_notebook_interface_jwst(instrument):
                 setattr(instrument, attribute, None)
             else:
                 setattr(instrument, attribute, new_value)
+
         return callback
 
-    display(widgets.HTML(value='''<p style="padding: 1em 0;">
+    display(
+        widgets.HTML(
+            value="""<p style="padding: 1em 0;">
     <span style="font-weight:bold; font-size:1.0em">
     Notebook Interface for {} PSF sims
-    </span></p>'''.format(instrument.name)))
-
-
-    filter_selection = widgets.Dropdown(
-        options=instrument.filter_list,
-        value=instrument.filter,
-        description='Filter:')
-
-    filter_selection.on_trait_change(
-        make_binding_for_attribute('filter'),
-        name='selected_label'
+    </span></p>""".format(instrument.name)
+        )
     )
+
+    filter_selection = widgets.Dropdown(options=instrument.filter_list, value=instrument.filter, description='Filter:')
+
+    filter_selection.on_trait_change(make_binding_for_attribute('filter'), name='selected_label')
     display(filter_selection)
 
-
-    wl_bounds = (5., 30., 10.0) if instrument.name=='MIRI' else (0.6, 5.3, 2.0)
+    wl_bounds = (5.0, 30.0, 10.0) if instrument.name == 'MIRI' else (0.6, 5.3, 2.0)
     monochromatic_wavelength = widgets.BoundedFloatText(
         value=wl_bounds[2],
         min=wl_bounds[0],
@@ -290,75 +275,56 @@ def show_notebook_interface_jwst(instrument):
 
     monochromatic_toggle.on_trait_change(update_monochromatic, name='value')
 
-    display(widgets.HTML(value='''<p style="padding: 1em 0;">
+    display(
+        widgets.HTML(
+            value="""<p style="padding: 1em 0;">
     <span style="font-style:italic; font-size:1.0em">
     Monochromatic calculations can be performed for any wavelength in the {} to {} &micro;m range.
-    </span></p>'''.format(*wl_bounds)))  # kludge
-    monochromatic_controls = widgets.HBox(children=(
+    </span></p>""".format(*wl_bounds)
+        )
+    )  # kludge
+    monochromatic_controls = widgets.HBox(
+        children=(
             monochromatic_toggle,
             widgets.HTML(value='<span style="display: inline-block; width: 0.6em;"></span>'),
             monochromatic_wavelength,
             widgets.HTML(value='<span style="display: inline-block; width: 0.25em;"></span> &micro;m '),
-    ))
+        )
+    )
     display(monochromatic_controls)
-    display(widgets.HTML(value="<hr>"))
-
+    display(widgets.HTML(value='<hr>'))
 
     if instrument.name != 'FGS':
         image_selection = widgets.Dropdown(
-            options=['None'] + instrument.image_mask_list,
-            value=str(instrument.image_mask),
-            description='Image Mask:')
-
-        image_selection.on_trait_change(
-            make_binding_for_attribute('image_mask'),
-            name='selected_label'
+            options=['None'] + instrument.image_mask_list, value=str(instrument.image_mask), description='Image Mask:'
         )
+
+        image_selection.on_trait_change(make_binding_for_attribute('image_mask'), name='selected_label')
         display(image_selection)
 
-
         pupil_selection = widgets.Dropdown(
-            options=['None'] + instrument.pupil_mask_list,
-            value=str(instrument.pupil_mask),
-            description='Pupil Mask: ')
-
-        pupil_selection.on_trait_change(
-            make_binding_for_attribute('pupil_mask'),
-            name='selected_label'
+            options=['None'] + instrument.pupil_mask_list, value=str(instrument.pupil_mask), description='Pupil Mask: '
         )
+
+        pupil_selection.on_trait_change(make_binding_for_attribute('pupil_mask'), name='selected_label')
         display(pupil_selection)
 
-
-    display(widgets.HTML(value="<hr>"))
+    display(widgets.HTML(value='<hr>'))
 
     source_selection = widgets.Dropdown(
-        options=poppy.specFromSpectralType('', return_list=True),
-        value='G0V',
-        description="Source spectrum"
+        options=poppy.specFromSpectralType('', return_list=True), value='G0V', description='Source spectrum'
     )
     display(source_selection)
-    display(widgets.HTML(value="<hr>"))
+    display(widgets.HTML(value='<hr>'))
 
     calculate_button = widgets.Button(
-        description="Calculate PSF",
-        width='10em',
-        color='white',
-        background_color='#00c403',
-        border_color='#318732'
+        description='Calculate PSF', width='10em', color='white', background_color='#00c403', border_color='#318732'
     )
     display_osys_button = widgets.Button(
-        description="Display Optical System",
-        width='13em',
-        color='white',
-        background_color='#005fc4',
-        border_color='#224A75'
+        description='Display Optical System', width='13em', color='white', background_color='#005fc4', border_color='#224A75'
     )
     clear_button = widgets.Button(
-        description="Clear Output",
-        width='10em',
-        color='white',
-        background_color='#ed4747',
-        border_color='#911C1C'
+        description='Clear Output', width='10em', color='white', background_color='#ed4747', border_color='#911C1C'
     )
     progress = widgets.HTML(value='<progress>')
 
@@ -380,26 +346,16 @@ def show_notebook_interface_jwst(instrument):
         progress.visible = True
         if monochromatic_toggle.value is True:
             psf = instrument.calc_psf(
-                monochromatic=monochromatic_wavelength.value * 1e-6,
-                display=True,
-                outfile=OUTPUT_FILENAME,
-                overwrite=True
+                monochromatic=monochromatic_wavelength.value * 1e-6, display=True, outfile=OUTPUT_FILENAME, overwrite=True
             )
         else:
             source = poppy.specFromSpectralType(source_selection.value)
-            _log.debug("Got source type {}: {}".format(source_selection.value, source))
-            psf = instrument.calc_psf(
-                source=source,
-                display=True,
-                outfile=OUTPUT_FILENAME,
-                overwrite=True
-            )
-        fig, (ax_oversamp, ax_detsamp) = plt.subplots(1, 2,figsize=(12, 4))
-        title1 = "PSF sim for {}, {}\n".format(instrument.name, instrument.filter)
-        poppy.display_psf(psf, ax=ax_oversamp,
-                          title=title1+"Oversampled PSF")
-        poppy.display_psf(psf, ax=ax_detsamp, ext='DET_SAMP',
-                          title=title1+'Detector pixel sampled PSF')
+            _log.debug('Got source type {}: {}'.format(source_selection.value, source))
+            psf = instrument.calc_psf(source=source, display=True, outfile=OUTPUT_FILENAME, overwrite=True)
+        fig, (ax_oversamp, ax_detsamp) = plt.subplots(1, 2, figsize=(12, 4))
+        title1 = 'PSF sim for {}, {}\n'.format(instrument.name, instrument.filter)
+        poppy.display_psf(psf, ax=ax_oversamp, title=title1 + 'Oversampled PSF')
+        poppy.display_psf(psf, ax=ax_detsamp, ext='DET_SAMP', title=title1 + 'Detector pixel sampled PSF')
         progress.visible = None
         download_link.visible = True
 
@@ -411,7 +367,7 @@ def show_notebook_interface_jwst(instrument):
     calculate_button.on_click(calc)
     display_osys_button.on_click(disp)
     clear_button.on_click(clear)
-    display(widgets.HTML(value="<br/>"))  # kludge
+    display(widgets.HTML(value='<br/>'))  # kludge
     buttons = widgets.HBox(children=[calculate_button, display_osys_button, clear_button])
     display(buttons)
 

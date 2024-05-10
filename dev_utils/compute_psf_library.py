@@ -8,6 +8,7 @@ from os.path import abspath, sep, join, exists, isdir, split
 import os
 from itertools import product, chain
 import matplotlib
+
 matplotlib.use('Agg')
 if not os.environ.get('PYSYN_CDBS'):
     os.environ['PYSYN_CDBS'] = '/grp/hst/cdbs'
@@ -20,11 +21,13 @@ import webbpsf
 
 N_PROCESSES = 16
 
+
 def _worker_logging_setup(queue_instance):
     queue_handler = logging.handlers.QueueHandler(queue_instance)
     root = logging.getLogger()
     root.addHandler(queue_handler)
     root.setLevel(logging.DEBUG)
+
 
 INSTRUMENTS = (webbpsf.NIRCam, webbpsf.NIRSpec, webbpsf.MIRI, webbpsf.NIRISS, webbpsf.FGS)
 
@@ -34,10 +37,9 @@ STELLAR_SPECTRAL_TYPE = 'G0V'
 # John Stansberry, Nov 4 2015
 # Table 3. Allowed Filters for Coronagraphic Science
 NIRCAM_ALLOWED_FILTERS_FOR_MASKS = {
-    'MASKSWB':  ('F182M', 'F187N', 'F210M', 'F212N', 'F200W'),
-    'MASK210R':  ('F182M', 'F187N', 'F210M', 'F212N', 'F200W'),
-    'MASKLWB':  ('F250M', 'F300M', 'F335M', 'F360M', 'F410M', 'F430M', 'F460M', 'F480M',
-                 'F277W', 'F356W', 'F444W'),
+    'MASKSWB': ('F182M', 'F187N', 'F210M', 'F212N', 'F200W'),
+    'MASK210R': ('F182M', 'F187N', 'F210M', 'F212N', 'F200W'),
+    'MASKLWB': ('F250M', 'F300M', 'F335M', 'F360M', 'F410M', 'F430M', 'F460M', 'F480M', 'F277W', 'F356W', 'F444W'),
     'MASK335R': ('F300M', 'F335M', 'F360M', 'F410M', 'F356W'),
     'MASK430R': ('F410M', 'F360M', 'F430M', 'F460M', 'F444W'),
 }
@@ -84,6 +86,7 @@ OPD_TO_USE = {
     'NIRISS': 'OPD_RevW_ote_for_NIRISS_requirements.fits.gz',
 }
 
+
 def ensure_dir(dirpath):
     try:
         os.makedirs(dirpath)
@@ -92,9 +95,11 @@ def ensure_dir(dirpath):
             raise
     return dirpath
 
+
 def apply_configuration(instrument_instance, configuration):
     for key, value in configuration.items():
         setattr(instrument_instance, key, value)
+
 
 def make_file_path(instrument_instance, output_directory):
     output_file_path = abspath(join(output_directory, instrument_instance.name))
@@ -110,13 +115,13 @@ def make_file_path(instrument_instance, output_directory):
         value = getattr(instrument_instance, attribute)
 
         # Special case for space-filled NIRSpec mask names
-        if (instrument_instance.name == 'NIRSpec' and
-            value in NIRSPEC_ABBREVIATED_MASK_NAMES):
-                value = NIRSPEC_ABBREVIATED_MASK_NAMES[value]
+        if instrument_instance.name == 'NIRSpec' and value in NIRSPEC_ABBREVIATED_MASK_NAMES:
+            value = NIRSPEC_ABBREVIATED_MASK_NAMES[value]
 
         if value is not None:
             parts.append('{}_{}'.format(attribute, value))
     return join(output_file_path, '_'.join(parts) + '.fits')
+
 
 def _validate(opd, filter_name, image_mask, pupil_mask, instrument_name):
     def both_or_neither(a, b):
@@ -187,10 +192,22 @@ def generate_configuration(instrument_instance):
         # For all different OPDs:
         # chain([None,], instrument_instance.opd_list),
         # For only one OPD map:
-        [OPD_TO_USE[instrument_instance.name],],
+        [
+            OPD_TO_USE[instrument_instance.name],
+        ],
         instrument_instance.filter_list,
-        chain([None,], instrument_instance.image_mask_list),
-        chain([None,], instrument_instance.pupil_mask_list),
+        chain(
+            [
+                None,
+            ],
+            instrument_instance.image_mask_list,
+        ),
+        chain(
+            [
+                None,
+            ],
+            instrument_instance.pupil_mask_list,
+        ),
     )
     for opd, filter_name, image_mask, pupil_mask in product(*selections):
         if not _validate(opd, filter_name, image_mask, pupil_mask, instrument_instance.name):
@@ -203,13 +220,14 @@ def generate_configuration(instrument_instance):
                 'pupil_mask': pupil_mask,
             }
 
+
 def _do_one_psf(InstrumentClass, configuration, output_directory):
-    log = logging.getLogger("worker." + multiprocessing.current_process().name)
+    log = logging.getLogger('worker.' + multiprocessing.current_process().name)
     inst = InstrumentClass()
     apply_configuration(inst, configuration)
-    log.debug("Computing PSF for {} ({})".format(inst.name, configuration))
+    log.debug('Computing PSF for {} ({})'.format(inst.name, configuration))
     output_file_path = make_file_path(inst, output_directory)
-    log.debug("Checking for existing PSF: {}".format(output_file_path))
+    log.debug('Checking for existing PSF: {}'.format(output_file_path))
     if not exists(output_file_path):
         dirs, name = split(output_file_path)
         ensure_dir(dirs)
@@ -218,17 +236,15 @@ def _do_one_psf(InstrumentClass, configuration, output_directory):
         spectrum = webbpsf.specFromSpectralType(STELLAR_SPECTRAL_TYPE, catalog='ck04')
         psf = inst.calc_psf(fov_arcsec=fov_arcsec, source=spectrum)
         psf.writeto(output_file_path)
-        log.debug("Computed PSF\n\t{}\nand wrote to: {}".format(configuration, output_file_path))
+        log.debug('Computed PSF\n\t{}\nand wrote to: {}'.format(configuration, output_file_path))
     else:
-        log.debug("Got existing PSF at {}".format(output_file_path))
+        log.debug('Got existing PSF at {}'.format(output_file_path))
     return output_file_path
+
 
 def compute_library(output_directory, pool, instrument_classes=INSTRUMENTS):
     def submit_job(InstrumentClass, configuration):
-        return pool.apply_async(
-            _do_one_psf,
-            (InstrumentClass, configuration, output_directory)
-        )
+        return pool.apply_async(_do_one_psf, (InstrumentClass, configuration, output_directory))
 
     results = []
 
@@ -243,16 +259,18 @@ def compute_library(output_directory, pool, instrument_classes=INSTRUMENTS):
 
     return 0
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description="Compute a PSF library for JWST")
-    parser.add_argument("--nircam", action='store_true')
-    parser.add_argument("--niriss", action='store_true')
-    parser.add_argument("--nirspec", action='store_true')
-    parser.add_argument("--fgs", action='store_true')
-    parser.add_argument("--miri", action='store_true')
-    parser.add_argument("--all", action='store_true')
-    parser.add_argument("output_dir")
+
+    parser = argparse.ArgumentParser(description='Compute a PSF library for JWST')
+    parser.add_argument('--nircam', action='store_true')
+    parser.add_argument('--niriss', action='store_true')
+    parser.add_argument('--nirspec', action='store_true')
+    parser.add_argument('--fgs', action='store_true')
+    parser.add_argument('--miri', action='store_true')
+    parser.add_argument('--all', action='store_true')
+    parser.add_argument('output_dir')
     args = parser.parse_args()
     instrument_classes = []
     if args.all:
@@ -269,7 +287,7 @@ if __name__ == "__main__":
         if args.miri:
             instrument_classes.append(webbpsf.MIRI)
         if len(instrument_classes) == 0:
-            print("You must specify at least one instrument to compute PSFs for!")
+            print('You must specify at least one instrument to compute PSFs for!')
             sys.exit(1)
 
     multiprocessing.set_start_method('forkserver')
