@@ -10,7 +10,7 @@ import pysiaf
 
 
 def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest'):
-    """ Setup a webbpsf Instrument instance matched to a given dataset
+    """Setup a webbpsf Instrument instance matched to a given dataset
 
     Parameters
     ----------
@@ -23,32 +23,31 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
     choice : string
         Method to choose which OPD file to use, e.g. 'before', 'after', or 'closest'
     """
-    if isinstance(filename_or_HDUList,str):
+    if isinstance(filename_or_HDUList, str):
         if verbose:
-            print(f"Setting up sim to match {filename_or_HDUList}")
+            print(f'Setting up sim to match {filename_or_HDUList}')
         header = fits.getheader(filename_or_HDUList)
     else:
         header = filename_or_HDUList[0].header
         if verbose:
-            print(f"Setting up sim to match provided FITS HDUList object")
+            print(f'Setting up sim to match provided FITS HDUList object')
 
     inst = webbpsf.instrument(header['INSTRUME'])
 
-    if inst.name=='MIRI' and header['FILTER']=='P750L':
+    if inst.name == 'MIRI' and header['FILTER'] == 'P750L':
         # webbpsf doesn't model the MIRI LRS prism spectral response
-        print("Please note, webbpsf does not currently model the LRS spectral response. Setting filter to F770W instead.")
-        inst.filter='F770W'
+        print('Please note, webbpsf does not currently model the LRS spectral response. Setting filter to F770W instead.')
+        inst.filter = 'F770W'
     elif (inst.name == 'NIRCam') and (header['PUPIL'][0] == 'F') and (header['PUPIL'][-1] in ['N', 'M']):
         # These NIRCam filters are physically in the pupil wheel, but still act as filters.
         # Grab the filter name from the PUPIL keyword in this case.
         inst.filter = header['PUPIL']
     else:
-        inst.filter=header['filter']
+        inst.filter = header['filter']
     inst.set_position_from_aperture_name(header['APERNAME'])
 
-    dateobs = astropy.time.Time(header['DATE-OBS']+"T"+header['TIME-OBS'])
+    dateobs = astropy.time.Time(header['DATE-OBS'] + 'T' + header['TIME-OBS'])
     inst.load_wss_opd_by_date(dateobs, verbose=verbose, plot=plot, choice=choice)
-
 
     # per-instrument specializations
     if inst.name == 'NIRCam':
@@ -56,24 +55,24 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
             if header['PUPIL'] == 'MASKBAR':
                 # the FITS header is just 'BAR' but the value needed in webbpsf is either
                 # 'MASKLWB' or "MASKSWB' depending on channel.
-                inst.pupil_mask = 'MASKLWB' if  header['CHANNEL']=='LONG' else 'MASKSWB'
+                inst.pupil_mask = 'MASKLWB' if header['CHANNEL'] == 'LONG' else 'MASKSWB'
             else:
                 inst.pupil_mask = header['PUPIL']
             if 'CORONMSK' in header:
                 inst.image_mask = header['CORONMSK'].replace('MASKA', 'MASK')  # note, have to modify the value slightly for
-                                                                               # consistency with the labels used in webbpsf
+                # consistency with the labels used in webbpsf
             # The apername keyword is not always correct for cases with dual-channel coronagraphy
             # in some such cases, APERNAME != PPS_APER. Let's ensure we have the proper apername for this channel:
             apername = get_nrc_coron_apname(header)
             inst.set_position_from_aperture_name(apername)
 
         elif header['PUPIL'] != 'CLEAR' and not header['PUPIL'].startswith('F'):  # no action needed for these
-                                            # note that filters in the pupil wheel were handled already above
+            # note that filters in the pupil wheel were handled already above
             inst.pupil_mask = header['PUPIL']
 
     elif inst.name == 'MIRI':
         if inst.filter in ['F1065C', 'F1140C', 'F1550C']:
-            inst.image_mask = 'FQPM'+inst.filter[1:5]
+            inst.image_mask = 'FQPM' + inst.filter[1:5]
         elif inst.filter == 'F2300C':
             inst.image_mask = 'LYOT2300'
         elif header['FILTER'] == 'P750L':
@@ -84,7 +83,8 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
     # TODO add other per-instrument keyword checks
 
     if verbose:
-        print(f"""
+        print(
+            f"""
 Configured simulation instrument for:
     Instrument: {inst.name}
     Filter: {inst.filter}
@@ -93,10 +93,10 @@ Configured simulation instrument for:
     Det. Pos.: {inst.detector_position} {'in subarray' if "FULL" not in inst.aperturename else ""}
     Image plane mask: {inst.image_mask}
     Pupil plane mask: {inst.pupil_mask}
-    """)
+    """
+        )
 
     return inst
-
 
 
 def get_nrc_coron_apname(input):
@@ -130,7 +130,7 @@ def get_nrc_coron_apname(input):
 
     # No need to do anything if the aperture names are the same
     # Also skip if MASK not in apname_pps
-    if ((apname==apname_pps) or ('MASK' not in apname_pps)) and ('400X256' not in subarray):
+    if ((apname == apname_pps) or ('MASK' not in apname_pps)) and ('400X256' not in subarray):
         apname_new = apname
     else:
         # Should only get here if coron mask and apname doesn't match PPS
@@ -140,10 +140,10 @@ def get_nrc_coron_apname(input):
 
         # Get subarray info
         # Sometimes apname erroneously has 'FULL' in it
-        # So, first for subarray info in apname_pps 
+        # So, first for subarray info in apname_pps
         if ('400X256' in apname_pps) or ('400X256' in subarray):
             apn0 = f'{sca}_400X256'
-        elif ('FULL' in apname_pps):
+        elif 'FULL' in apname_pps:
             apn0 = f'{sca}_FULL'
         else:
             apn0 = sca
@@ -158,13 +158,13 @@ def get_nrc_coron_apname(input):
             # Find all instances of "_"
             inds = [pos for pos, char in enumerate(apname_pps) if char == '_']
             # Filter is always appended to end, but can have different string sizes (F322W2)
-            filter = apname_pps[inds[-1]+1:]
+            filter = apname_pps[inds[-1] + 1 :]
             apname_new += f'_{filter}'
-        elif last_str=='NARROW':
+        elif last_str == 'NARROW':
             apname_new += '_NARROW'
         elif ('TAMASK' in apname_pps) and ('WB' in apname_pps[-1]):
             apname_new += '_WEDGE_BAR'
-        elif ('TAMASK' in apname_pps) and (apname_pps[-1]=='R'):
+        elif ('TAMASK' in apname_pps) and (apname_pps[-1] == 'R'):
             apname_new += '_WEDGE_RND'
 
     # print(apname_new)
@@ -209,7 +209,7 @@ def get_nrc_coron_mask_from_pps_apername(apname_pps):
             image_mask = image_mask.replace('FS', '')
 
         # Remove trailing S or L from LWB and SWB TA apertures
-        if ('WB' in image_mask) and (image_mask[-1]=='S' or image_mask[-1]=='L'):
+        if ('WB' in image_mask) and (image_mask[-1] == 'S' or image_mask[-1] == 'L'):
             image_mask = image_mask[:-1]
 
     return image_mask

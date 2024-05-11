@@ -24,12 +24,14 @@ def test_compare_to_calc_psf_oversampled():
     """
     oversample = 2
     fov_pixels = 10
-    nlambda= 1
+    nlambda = 1
 
     # Create PSF grid
     fgs = webbpsf_core.FGS()
-    fgs.detector = "FGS1"
-    grid = fgs.psf_grid(all_detectors=False, num_psfs=4, oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda, verbose=False)
+    fgs.detector = 'FGS1'
+    grid = fgs.psf_grid(
+        all_detectors=False, num_psfs=4, oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda, verbose=False
+    )
 
     # Pull one of the PSFs out of the grid
     psfnum = 1
@@ -40,14 +42,14 @@ def test_compare_to_calc_psf_oversampled():
 
     # Using meta data, create the expected same PSF via calc_psf
     fgs.detector_position = (locx, locy)
-    calcpsf = fgs.calc_psf(oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda)["OVERDIST"].data
+    calcpsf = fgs.calc_psf(oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda)['OVERDIST'].data
     kernel = astropy.convolution.Box2DKernel(width=oversample)
     convpsf = astropy.convolution.convolve(calcpsf, kernel)
-    scalefactor = oversample**2 # normalization as used internally in GriddedPSFModel; see #302
+    scalefactor = oversample**2  # normalization as used internally in GriddedPSFModel; see #302
 
     # Compare to make sure they are in fact the same PSF
-    assert gridpsf.shape == calcpsf.shape, "Shape mismatch"
-    assert np.allclose(gridpsf, convpsf*scalefactor), "Data values not as expected"
+    assert gridpsf.shape == calcpsf.shape, 'Shape mismatch'
+    assert np.allclose(gridpsf, convpsf * scalefactor), 'Data values not as expected'
 
 
 def test_compare_to_calc_psf_detsampled():
@@ -61,10 +63,18 @@ def test_compare_to_calc_psf_detsampled():
 
     # Create PSF grid
     mir = webbpsf_core.MIRI()
-    mir.filter = "F560W"
-    mir.detector = "MIRIM"
-    grid = mir.psf_grid(all_detectors=False, num_psfs=4, use_detsampled_psf=True, add_distortion=False,
-                        oversample=oversample, fov_arcsec=fov_arcsec, nlambda=nlambda, verbose=False)
+    mir.filter = 'F560W'
+    mir.detector = 'MIRIM'
+    grid = mir.psf_grid(
+        all_detectors=False,
+        num_psfs=4,
+        use_detsampled_psf=True,
+        add_distortion=False,
+        oversample=oversample,
+        fov_arcsec=fov_arcsec,
+        nlambda=nlambda,
+        verbose=False,
+    )
 
     # Pull one of the PSFs out of the grid
     psfnum = 1
@@ -76,7 +86,7 @@ def test_compare_to_calc_psf_detsampled():
     # Using meta data, create the expected same PSF via calc_psf
     mir.detector_position = (locx, locy)
     mir.options['output_mode'] = 'Detector Sampled Image'
-    calcpsf = mir.calc_psf(oversample=oversample, fov_arcsec=fov_arcsec, nlambda=nlambda)["DET_SAMP"].data
+    calcpsf = mir.calc_psf(oversample=oversample, fov_arcsec=fov_arcsec, nlambda=nlambda)['DET_SAMP'].data
     kernel = astropy.convolution.Box2DKernel(width=1)
     convpsf = astropy.convolution.convolve(calcpsf, kernel)
 
@@ -92,15 +102,15 @@ def test_all_detectors():
     (shortwave vs longwave) with respect to the filter
     """
     nir = webbpsf_core.NIRCam()
-    longfilt = "F250M"
-    shortfilt = "F140M"
+    longfilt = 'F250M'
+    shortfilt = 'F140M'
 
     # Case 1: Shortwave -> check that only the SW detectors are applied for the SW filter
     nir.filter = shortfilt
     grid1 = nir.psf_grid(all_detectors=True, num_psfs=1, add_distortion=False, fov_pixels=1, oversample=2, verbose=False)
     det_list = []
     for hdu in grid1:
-        det_list.append(hdu.meta["detector"][0])
+        det_list.append(hdu.meta['detector'][0])
 
     assert len(grid1) == len(gridded_library.CreatePSFLibrary.nrca_short_detectors)
     assert set(det_list) == set(gridded_library.CreatePSFLibrary.nrca_short_detectors)
@@ -110,7 +120,7 @@ def test_all_detectors():
     grid2 = nir.psf_grid(all_detectors=True, num_psfs=1, add_distortion=False, fov_pixels=1, oversample=2, verbose=False)
     det_list = []
     for hdu in grid2:
-        det_list.append(hdu.meta["detector"][0])
+        det_list.append(hdu.meta['detector'][0])
 
     assert len(grid2) == len(gridded_library.CreatePSFLibrary.nrca_long_detectors)
     assert set(det_list) == set(gridded_library.CreatePSFLibrary.nrca_long_detectors)
@@ -122,40 +132,57 @@ def test_one_psf():
     fov_pixels = 11
 
     nis = webbpsf_core.NIRISS()
-    nis.filter = "F140M"
+    nis.filter = 'F140M'
 
     # Case 1: The PSF is centered on the detector (with single_psf_centered=True)
-    grid1 = nis.psf_grid(all_detectors=False, num_psfs=1, add_distortion=True, oversample=oversample,
-                         fov_pixels=fov_pixels, single_psf_centered=True, use_detsampled_psf=False, verbose=False)
+    grid1 = nis.psf_grid(
+        all_detectors=False,
+        num_psfs=1,
+        add_distortion=True,
+        oversample=oversample,
+        fov_pixels=fov_pixels,
+        single_psf_centered=True,
+        use_detsampled_psf=False,
+        verbose=False,
+    )
 
     # Case 2: The PSF is set to a specific position (with nis.detector_position = (10, 0))
     nis.detector_position = (10, 0)  # it's set as (x,y)
-    grid2 = nis.psf_grid(all_detectors=False, num_psfs=1, add_distortion=True, oversample=oversample,
-                         fov_pixels=fov_pixels, single_psf_centered=False, use_detsampled_psf=False, verbose=False)
+    grid2 = nis.psf_grid(
+        all_detectors=False,
+        num_psfs=1,
+        add_distortion=True,
+        oversample=oversample,
+        fov_pixels=fov_pixels,
+        single_psf_centered=False,
+        use_detsampled_psf=False,
+        verbose=False,
+    )
 
     # Compare Case 2 to the calc_psf output to make sure it's placing the PSF in the right location
     calc = nis.calc_psf(add_distortion=True, oversample=2, fov_pixels=11)
     # first, add IPC to the oversampled data from case 2, then convolve with detector binning
     detectors.apply_detector_ipc(calc, extname='OVERDIST')
     kernel = astropy.convolution.Box2DKernel(width=oversample)
-    convpsf = astropy.convolution.convolve(calc["OVERDIST"].data, kernel)
-    scalefactor = oversample**2 # normalization as used internally in GriddedPSFModel; see #302
+    convpsf = astropy.convolution.convolve(calc['OVERDIST'].data, kernel)
+    scalefactor = oversample**2  # normalization as used internally in GriddedPSFModel; see #302
 
-
-    assert np.all(grid1.grid_xypos == [[1023, 1023]]), "Center position not as expected"  # the default is the center of the NIS aperture
-    assert np.all(grid2.grid_xypos == [(10, 0)]), "Corner position not as expected" # it's in (x,y)
+    assert np.all(
+        grid1.grid_xypos == [[1023, 1023]]
+    ), 'Center position not as expected'  # the default is the center of the NIS aperture
+    assert np.all(grid2.grid_xypos == [(10, 0)]), 'Corner position not as expected'  # it's in (x,y)
     # check for near-equality of the PSFs computed both ways,
     #  but ignore the outer few pixels rows and columns, for which boundary wrapping leads to imperfect equality
     #  depending on the order of the convolutions. Ignore 2 rows/cols on either side based on oversample value
-    assert np.allclose((convpsf*scalefactor)[2:-2, 2:-2], grid2.data[0, 2:-2, 2:-2]), "PSF data values not as expected"
+    assert np.allclose((convpsf * scalefactor)[2:-2, 2:-2], grid2.data[0, 2:-2, 2:-2]), 'PSF data values not as expected'
 
 
 def test_nircam_errors():
     """Check that there are checks for incorrect value setting - particularly with NIRCam"""
-    longfilt = "F250M"
-    shortfilt = "F140M"
-    longdet = "NRCB5"
-    shortdet = "NRCA3"
+    longfilt = 'F250M'
+    shortfilt = 'F140M'
+    longdet = 'NRCB5'
+    shortdet = 'NRCA3'
 
     nir = webbpsf_core.NIRCam()
 
@@ -173,19 +200,19 @@ def test_nircam_errors():
         nir.filter = longfilt
         nir.detector = shortdet
         nir.psf_grid(all_detectors=False, num_psfs=1, fov_pixels=1, verbose=False)  # error
-    assert "RuntimeError" in str(excinfo)
+    assert 'RuntimeError' in str(excinfo)
 
     # Should error - Bad filter/detector combination (SW filt to LW det)
     with pytest.raises(RuntimeError) as excinfo:  # Errors inside calc_psf() call
         nir.filter = shortfilt
         nir.detector = longdet
         nir.psf_grid(all_detectors=False, num_psfs=1, fov_pixels=1, verbose=False)  # error
-    assert "RuntimeError" in str(excinfo)
+    assert 'RuntimeError' in str(excinfo)
 
     # Should error - Bad num_psfs entry (must be a square number)
     with pytest.raises(ValueError) as excinfo:
         nir.psf_grid(all_detectors=False, num_psfs=2, fov_pixels=1, verbose=False)  # error
-    assert "ValueError" in str(excinfo)
+    assert 'ValueError' in str(excinfo)
 
 
 def test_saving(tmpdir):
@@ -193,16 +220,18 @@ def test_saving(tmpdir):
 
     # Create a temp directory to place file in
     directory = str(tmpdir)
-    file = "test1.fits"
+    file = 'test1.fits'
 
     # Test using default calc_psf values
     fgs = webbpsf_core.FGS()
-    fgs.filter = "FGS"
-    fgs.detector = "FGS2"
-    grid = fgs.psf_grid(all_detectors=False, num_psfs=4, nlambda=1, save=True, outdir=directory, outfile=file, overwrite=True)
+    fgs.filter = 'FGS'
+    fgs.detector = 'FGS2'
+    grid = fgs.psf_grid(
+        all_detectors=False, num_psfs=4, nlambda=1, save=True, outdir=directory, outfile=file, overwrite=True
+    )
 
     # Check that the saved file matches the returned file (and thus that the save worked through properly)
-    with fits.open(os.path.join(directory, file[:-5]+"_fgs2.fits")) as infile:
+    with fits.open(os.path.join(directory, file[:-5] + '_fgs2.fits')) as infile:
         # Check data
         assert np.array_equal(infile[0].data, grid.data)
 
@@ -210,7 +239,7 @@ def test_saving(tmpdir):
         model = utils.to_griddedpsfmodel(infile)
         assert model.meta.keys() == grid.meta.keys()
         assert np.all(model.grid_xypos == grid.grid_xypos)
-        assert model.meta["oversampling"] == grid.meta["oversampling"]
+        assert model.meta['oversampling'] == grid.meta['oversampling']
 
     # Remove temporary directory
     tmpdir.remove()
@@ -222,8 +251,8 @@ def test_2d_to_griddedpsfmodel():
     # Set up example 2D fits image
     data = np.ones((10, 10))
     primaryhdu = fits.PrimaryHDU(data)
-    primaryhdu.header["DET_YX0"] = ('(1024, 1024)', 'The #0 PSFs (y,x) detector pixel position')
-    primaryhdu.header["OVERSAMP"] = (5, 'oversampling value')
+    primaryhdu.header['DET_YX0'] = ('(1024, 1024)', 'The #0 PSFs (y,x) detector pixel position')
+    primaryhdu.header['OVERSAMP'] = (5, 'oversampling value')
     hdu = fits.HDUList(primaryhdu)
 
     # Test that nothing errors when writing a GriddedPSFModel object
@@ -245,22 +274,30 @@ def test_wfi():
 
     # Create PSF grid
     wfi = roman.WFI()
-    grid = wfi.psf_grid(all_detectors=False, add_distortion=False, num_psfs=4, fov_pixels=fov_pixels, oversample=oversample, nlambda=nlambda, verbose=False)
+    grid = wfi.psf_grid(
+        all_detectors=False,
+        add_distortion=False,
+        num_psfs=4,
+        fov_pixels=fov_pixels,
+        oversample=oversample,
+        nlambda=nlambda,
+        verbose=False,
+    )
 
     # Pull one of the PSFs out of the grid
     psfnum = 1
     loc = grid.grid_xypos[psfnum]
-    locy = int(float(loc[1])-0.5)
-    locx = int(float(loc[0])-0.5)
+    locy = int(float(loc[1]) - 0.5)
+    locx = int(float(loc[0]) - 0.5)
     gridpsf = grid.data[psfnum, :, :]
 
     # Using meta data, create the expected same PSF via calc_psf
     wfi.detector_position = (locx, locy)
-    calcpsf = wfi.calc_psf(oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda)["OVERSAMP"].data
+    calcpsf = wfi.calc_psf(oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda)['OVERSAMP'].data
     kernel = astropy.convolution.Box2DKernel(width=oversample)
     convpsf = astropy.convolution.convolve(calcpsf, kernel)
-    scalefactor = oversample ** 2  # normalization as used internally in GriddedPSFModel; see #302
+    scalefactor = oversample**2  # normalization as used internally in GriddedPSFModel; see #302
 
     # Compare to make sure they are in fact the same PSF
-    assert gridpsf.shape == calcpsf.shape, "Shape mismatch"
-    assert np.allclose(gridpsf, convpsf*scalefactor), "Data values not as expected"
+    assert gridpsf.shape == calcpsf.shape, 'Shape mismatch'
+    assert np.allclose(gridpsf, convpsf * scalefactor), 'Data values not as expected'

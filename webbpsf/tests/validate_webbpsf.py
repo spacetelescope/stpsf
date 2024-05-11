@@ -10,7 +10,7 @@ import poppy
 from .. import webbpsf_core
 
 
-__doc__="""
+__doc__ = """
 
 Validation Tests for Webb PSF. These functions perform simulations using WebbPSF and compare
 their results with the output of other simulations - e.g. earlier simulations by JWPSF, or ones
@@ -20,19 +20,16 @@ from the SI teams, etc.
 """
 
 
-def validate_vs_russ_plot7(base_opd = 'OPD_RevV_nircam_155.fits'):
-    """ Validate against plots from Makidon et al. 2007 JWST-STScI-001157
+def validate_vs_russ_plot7(base_opd='OPD_RevV_nircam_155.fits'):
+    """Validate against plots from Makidon et al. 2007 JWST-STScI-001157"""
 
-    """
+    waves_flux = N.array([0.6672437, 1.0602914, 1.458226, 1.9633503, 3.5440383, 4.7919989])
+    flux_in_150_mas = N.array([0.7121211, 0.7727273, 0.7878786, 0.8484846, 0.6931819, 0.6893938])
 
-    waves_flux = N.array([ 0.6672437,  1.0602914,  1.458226 ,  1.9633503,  3.5440383, 4.7919989])
-    flux_in_150_mas = N.array([ 0.7121211,  0.7727273,  0.7878786,  0.8484846,  0.6931819, 0.6893938])
+    waves_fwhm = N.array([0.6672437, 1.0602914, 1.458226, 1.9550256, 3.5440383, 4.7919989])
+    fwhm_arcsec = N.array([0.0225, 0.0347727, 0.0477273, 0.0627273, 0.1125, 0.1520454])
 
-    waves_fwhm = N.array([ 0.6672437,  1.0602914,  1.458226 ,  1.9550256,  3.5440383, 4.7919989])
-    fwhm_arcsec = N.array([ 0.0225   ,  0.0347727,  0.0477273,  0.0627273,  0.1125   , 0.1520454])
-
-
-    #fig, axarr = P.subplots(fignum=1,
+    # fig, axarr = P.subplots(fignum=1,
     P.clf()
     P.subplots_adjust(hspace=0.04)
     ax1 = P.subplot(211)
@@ -49,57 +46,54 @@ def validate_vs_russ_plot7(base_opd = 'OPD_RevV_nircam_155.fits'):
     ax2.set_ylabel('FWHM (arcsec)')
     ax1.set_ylabel('Flux within 0.15 arcsec')
 
-
     filt_list = ['F070W', 'F090W', 'F115W', 'F150W', 'F200W', 'F250M', 'F300M', 'F360M', 'F410M', 'F430M', 'F460M', 'F480M']
 
     nircam = webbpsf_core.NIRCam()
     waves = []
     fwhms = []
     ee15s = []
-    nlambda=5   # empirically this gives essentially indistinguishable results as using the full thing.
-    oversample=4 # empirically going higher than this to 8 makes no appreciable difference.
-    fov = 8.0    # make it relatively large to get the denominator right for the EE.
-    #base_opd = nircam.pupilopd
+    nlambda = 5  # empirically this gives essentially indistinguishable results as using the full thing.
+    oversample = 4  # empirically going higher than this to 8 makes no appreciable difference.
+    fov = 8.0  # make it relatively large to get the denominator right for the EE.
+    # base_opd = nircam.pupilopd
 
     for filt in filt_list:
         nircam.filter = filt
-        psf = nircam.calcPSF( nlambda=nlambda, fov_arcsec=fov, oversample=oversample) # we only need a tiny PSF here
+        psf = nircam.calcPSF(nlambda=nlambda, fov_arcsec=fov, oversample=oversample)  # we only need a tiny PSF here
         waves.append(psf[0].header['WAVELEN'] * 1e6)
-        #fwhms.append( webbpsf.measure_fwhm(psf) )
-        #ee = webbpsf.measure_EE(psf)
-        #ee15s.append(  ee(0.15) )
+        # fwhms.append( webbpsf.measure_fwhm(psf) )
+        # ee = webbpsf.measure_EE(psf)
+        # ee15s.append(  ee(0.15) )
 
         # try other OPDs to check scatter
         my_ees = []
         my_fwhms = []
-        for i in range(10): #[1,2,3,4,5]:
-            nircam.pupilopd = (base_opd,i)
-            psf = nircam.calcPSF( nlambda=nlambda, fov_arcsec=fov, oversample=oversample) # we only need a tiny PSF here
+        for i in range(10):  # [1,2,3,4,5]:
+            nircam.pupilopd = (base_opd, i)
+            psf = nircam.calcPSF(nlambda=nlambda, fov_arcsec=fov, oversample=oversample)  # we only need a tiny PSF here
             ee = poppy.measure_EE(psf)
             my_ees.append(ee(0.15))
             my_fwhms.append(poppy.measure_fwhm(psf))
             ax1.plot([waves[-1]], [ee(0.15)], 'r+')
-            ax2.plot([waves[-1]], [  my_fwhms[-1]], 'r+')
+            ax2.plot([waves[-1]], [my_fwhms[-1]], 'r+')
             P.draw()
-        ee15s.append( N.array(my_ees).mean())
-        fwhms.append( N.array(my_fwhms).mean())
+        ee15s.append(N.array(my_ees).mean())
+        fwhms.append(N.array(my_fwhms).mean())
 
         ax1.plot(waves, ee15s, 'ro-')
         ax2.plot(waves, fwhms, 'ro-')
 
-
-
         P.draw()
-    l1 =ax2.plot(waves_fwhm, fwhm_arcsec, 'bx-', markersize=6, markeredgewidth=2, label='Makidon et al. 2007')
-    l2 = ax2.plot(waves, fwhms, 'ro-',label='This work')
+    l1 = ax2.plot(waves_fwhm, fwhm_arcsec, 'bx-', markersize=6, markeredgewidth=2, label='Makidon et al. 2007')
+    l2 = ax2.plot(waves, fwhms, 'ro-', label='This work')
 
     ax1.set_ybound(0.6, 0.9)
-    #ax1.set_ybound(0, 1.0)
+    # ax1.set_ybound(0, 1.0)
     ax2.set_ybound(0, 0.18)
     ax2.set_yticks([0.0, 0.05, 0.10, 0.15])
     ax2.set_xbound(0.6, 6)
-    ax2.set_xticks([0.7, 0.8, 0.9, 1.0, 2,3, 4, 5])
-    ax2.set_xticklabels([0.7, 0.8, 0.9, 1.0, 2,3, 4, 5])
+    ax2.set_xticks([0.7, 0.8, 0.9, 1.0, 2, 3, 4, 5])
+    ax2.set_xticklabels([0.7, 0.8, 0.9, 1.0, 2, 3, 4, 5])
     ax1.set_xticklabels([])
 
     ax2.legend([l1, l2], ['Makidon et al. 2007', 'This work'], loc='lower right', frameon=False)
@@ -110,22 +104,21 @@ def validate_vs_russ_plot7(base_opd = 'OPD_RevV_nircam_155.fits'):
 
 
 def validate_vs_russ_plot6(nlambda=5, ax=None):
-    """ Compare against the radial profiles in Plot 6.
-
-    """
+    """Compare against the radial profiles in Plot 6."""
     P.clf()
     P.subplots_adjust(wspace=0.01, hspace=0.04)
-        #validate_vs_russ_plot6('F070W', nlambda=nlambda, ax=ax) #20)
-        #ax2 = P.subplot(122)
-        #validate_vs_russ_plot6('F200W', nlambda=nlambda, ax=ax2)
-        #ax2.set_xlabel("Radial separation (arcsec)")
-        #ax2.set_yticklabels([])
+    # validate_vs_russ_plot6('F070W', nlambda=nlambda, ax=ax) #20)
+    # ax2 = P.subplot(122)
+    # validate_vs_russ_plot6('F200W', nlambda=nlambda, ax=ax2)
+    # ax2.set_xlabel("Radial separation (arcsec)")
+    # ax2.set_yticklabels([])
 
-        #return
+    # return
     for i, filter_ in enumerate(['F070W', 'F200W']):
-        ax = P.subplot(2,2,i+1)
-        ax.set_xlabel("Radial separation (arcsec)")
-        if i == 0: ax.set_ylabel("Azimuthally averaged profile")
+        ax = P.subplot(2, 2, i + 1)
+        ax.set_xlabel('Radial separation (arcsec)')
+        if i == 0:
+            ax.set_ylabel('Azimuthally averaged profile')
 
         if filter_ == 'F070W':
             # first a whole mess of data traced from those plots via Graphclick. Stuck here just to avoid having tons of random extra data files for this.
@@ -248,8 +241,7 @@ def validate_vs_russ_plot6(nlambda=5, ax=None):
             # fix the erroneous tracing of these points, which had the top Y axis marked at the 1.58 point instead of 1.0 due to how the plot axes are drawn.
             # in linear coordinates, the erroneous top of the axes was 1.04 higher than the real top.
             # So un-log scale and then re-log scale.
-            prof = 10**((N.log10(prof/1e-5))/5*1.04*5)*1e-5
-
+            prof = 10 ** ((N.log10(prof / 1e-5)) / 5 * 1.04 * 5) * 1e-5
 
             prof_perf = None
 
@@ -275,57 +267,61 @@ def validate_vs_russ_plot6(nlambda=5, ax=None):
                     0.8965988,  0.8981181,  0.9064746,  0.910273 ,  0.914831 , 0.9171101,  0.9216682,  0.9254666,  0.9277456,  0.9277456,
                     0.931544 ,  0.931544 ,  0.9345827,  0.9361021,  0.9391408, 0.9429392,  0.9459779,  0.9459779])
 
-            #wave_perf = wave
-            #prof_perf = prof*0 # didn't bother tracing this one...
+            # wave_perf = wave
+            # prof_perf = prof*0 # didn't bother tracing this one...
 
         ax = P.gca()
         P.semilogy(rad_prof, prof, 'b-', label='Makidon et al. 2007')
         if prof_perf is not None:
-            P.semilogy(rad_perf, prof_perf, 'b--',  label='Perfect PSF')
+            P.semilogy(rad_perf, prof_perf, 'b--', label='Perfect PSF')
         P.title(filter_)
 
         ax.set_ybound(1e-5, 1)
         ax.set_xbound(0, 0.55)
         P.draw()
 
-        oversample=10 # by testing, this needs to be really high. This is because it's normalized to the very peak central pixel...
-        fov = 4.0    # make it relatively large to get the denominator right for the EE.
+        oversample = (
+            10  # by testing, this needs to be really high. This is because it's normalized to the very peak central pixel...
+        )
+        fov = 4.0  # make it relatively large to get the denominator right for the EE.
 
         nc = webbpsf_core.NIRCam()
-        nc.pupilopd='OPD_RevV_nircam_123.fits'
+        nc.pupilopd = 'OPD_RevV_nircam_123.fits'
         nc.filter = filter_
         psf = nc.calcPSF(oversample=oversample, nlambda=nlambda, fov_arcsec=fov)
         my_rad, my_prof = poppy.radial_profile(psf)
-        ax.plot(my_rad, my_prof/my_prof.max(),'r-', label = 'This work')
+        ax.plot(my_rad, my_prof / my_prof.max(), 'r-', label='This work')
         ax.set_xbound(0, 0.55)
         P.draw()
 
-        nc.pupilopd=None
+        nc.pupilopd = None
         psf_perf = nc.calcPSF(oversample=oversample, nlambda=nlambda, fov_arcsec=fov)
         my_rad_perf, my_prof_perf = poppy.radial_profile(psf_perf)
-        ax.plot(my_rad_perf, my_prof_perf/my_prof_perf.max(),'r--', label = 'Perfect PSF')
+        ax.plot(my_rad_perf, my_prof_perf / my_prof_perf.max(), 'r--', label='Perfect PSF')
 
         ax.set_ybound(1e-5, 1)
         ax.set_xbound(0, 0.55)
-        ax.legend( loc='upper right', frameon=False)
+        ax.legend(loc='upper right', frameon=False)
 
-        if i == 1: ax.set_yticklabels([])
+        if i == 1:
+            ax.set_yticklabels([])
         ax.set_xticklabels([])
 
         ########## bottom plot
         # we can just compute the encircled energy from the radial profiles...
 
-        ax2 = P.subplot(2,2,i+3)
-        if i == 0: ax2.set_ylabel("Fractional Encircled Energy")
+        ax2 = P.subplot(2, 2, i + 3)
+        if i == 0:
+            ax2.set_ylabel('Fractional Encircled Energy')
 
-#        def prof_to_ee(radius, profile):
-#            dr = radius[1:] - radius[:-1]
-#            flux = profile[:-1] * 2 * N.pi * radius[:-1]  * dr
-#            ee = N.cumsum(flux)
-#            ee /= ee.max() # normalize to the max of whatever we've got..
-#            return (radius[:-1], ee)
-#
-#        rad_ee, ee = prof_to_ee(rad_prof, prof)
+            #        def prof_to_ee(radius, profile):
+            #            dr = radius[1:] - radius[:-1]
+            #            flux = profile[:-1] * 2 * N.pi * radius[:-1]  * dr
+            #            ee = N.cumsum(flux)
+            #            ee /= ee.max() # normalize to the max of whatever we've got..
+            #            return (radius[:-1], ee)
+            #
+            #        rad_ee, ee = prof_to_ee(rad_prof, prof)
         ax2.plot(rad_ee, ee, 'b-', label='Makidon et al. 2007')
         ax2.plot(rad_ee_perf, ee_perf, 'b--', label='Perfect PSF')
 
@@ -336,21 +332,15 @@ def validate_vs_russ_plot6(nlambda=5, ax=None):
         ee_fn_perf = poppy.measure_EE(psf_perf)
         ax2.plot(my_rad_ee, ee_fn_perf(my_rad_ee), 'r--', label='This work')
 
-        ax2.set_xlabel("Radial separation (arcsec)")
-        if i == 1: ax2.set_yticklabels([])
+        ax2.set_xlabel('Radial separation (arcsec)')
+        if i == 1:
+            ax2.set_yticklabels([])
         ax2.set_xbound(0, 0.55)
 
-
-        #stop()
-
-
-
-
-
+        # stop()
 
         P.draw()
-        #stop()
-
+        # stop()
 
 
 ################################################################################
@@ -358,100 +348,95 @@ def validate_vs_russ_plot6(nlambda=5, ax=None):
 #       Comparisons with simulations by SI Teams
 #
 
-#---- NIRCam ------------------
+# ---- NIRCam ------------------
+
 
 def validate_vs_krist_blc(which='spot'):
-    """ Compare the BLC occulter structure (not the PSFs, the actual occulter profile)
+    """Compare the BLC occulter structure (not the PSFs, the actual occulter profile)
     with the data files provided by John Krist
     """
-    if which=='spot':
-        image_mask =  'MASK430R'
+    if which == 'spot':
+        image_mask = 'MASK430R'
         pupil_mask = 'CIRCLYOT'
     else:
-        image_mask =  'MASKLWB'
+        image_mask = 'MASKLWB'
         pupil_mask = 'WEDGELYOT'
 
     nc = webbpsf_core.NIRCam()
-    nc.pupilopd=None
+    nc.pupilopd = None
     nc.filter = 'F460M'
     nc.image_mask = image_mask
     nc.pupil_mask = pupil_mask
     nc.options['no_sam'] = True
-    nc.pixelscale = 0.065 # match the Krist sims exactly. vs 0.648 official
+    nc.pixelscale = 0.065  # match the Krist sims exactly. vs 0.648 official
 
     cor_vmin = 1e-12
-    cor_vmax=1e-5
-
+    cor_vmax = 1e-5
 
     P.clf()
     mask1 = 'nircam_4600nm_%s_occ.fits' % wedge
     mask1f = fits.open(mask1)
 
-    #P.subplot(332)
+    # P.subplot(332)
     os = nc.get_optical_system()
-    #os.planes[1].display(ax=P.gca(),  what='intensity', colorbar_orientation='vertical')
-    #P.gca().set_title('')
-    #P.gca().set_xbound(-8,8)
-    #P.gca().set_ybound(-8,8)
+    # os.planes[1].display(ax=P.gca(),  what='intensity', colorbar_orientation='vertical')
+    # P.gca().set_title('')
+    # P.gca().set_xbound(-8,8)
+    # P.gca().set_ybound(-8,8)
 
-    wf = poppy.Wavefront(wavelength=4.6e-6,  npix = mask1f[0].data.shape[0], pixelscale = mask1f[0].header['PIXSIZE'])
-    trans = os.planes[1].getPhasor(wf)**2
+    wf = poppy.Wavefront(wavelength=4.6e-6, npix=mask1f[0].data.shape[0], pixelscale=mask1f[0].header['PIXSIZE'])
+    trans = os.planes[1].getPhasor(wf) ** 2
 
     npix = mask1f[0].data.shape[0]
-    pixels = (N.arange(npix) - npix/2.) *  mask1f[0].header['PIXSIZE']
+    pixels = (N.arange(npix) - npix / 2.0) * mask1f[0].header['PIXSIZE']
 
     ax = P.subplot(211)
-    P.plot(pixels, mask1f[0].data[:, npix/2], label='Krist')
-    P.plot(pixels, trans[:, npix/2], ls="--", color='r', label="Perrin")
-    ax.set_ylabel("Transmission")
+    P.plot(pixels, mask1f[0].data[:, npix / 2], label='Krist')
+    P.plot(pixels, trans[:, npix / 2], ls='--', color='r', label='Perrin')
+    ax.set_ylabel('Transmission')
 
     ax.legend(loc='lower right')
 
-    ax2 = P.subplot(212,sharex=ax)
+    ax2 = P.subplot(212, sharex=ax)
 
-    P.semilogy(pixels, 1-mask1f[0].data[:, npix/2], label='Krist')
-    P.semilogy(pixels, 1-trans[:, npix/2],  ls="--", color='r', label="WebbPSF")
-    P.semilogy(pixels, trans[:, npix/2] - mask1f[0].data[:, npix/2] ,  ls=":", color='r', label="Difference")
-    ax2.set_ylabel("1 - Transmission")
-    ax2.set_xlabel("Radius [arcsec]")
-    ax.set_xbound(-8,8)
-    #ax2.set_xbound(-7.3,-6.6)
-    #ax2.set_ybound(1e-4, 1e-3)
+    P.semilogy(pixels, 1 - mask1f[0].data[:, npix / 2], label='Krist')
+    P.semilogy(pixels, 1 - trans[:, npix / 2], ls='--', color='r', label='WebbPSF')
+    P.semilogy(pixels, trans[:, npix / 2] - mask1f[0].data[:, npix / 2], ls=':', color='r', label='Difference')
+    ax2.set_ylabel('1 - Transmission')
+    ax2.set_xlabel('Radius [arcsec]')
+    ax.set_xbound(-8, 8)
+    # ax2.set_xbound(-7.3,-6.6)
+    # ax2.set_ybound(1e-4, 1e-3)
     P.draw()
 
     P.savefig('results_nircam_blc430r_profile_comparison.pdf')
 
-
-    diff = trans[npix/2, :] - mask1f[0].data[npix/2, :]
-    print("Max diff: %.3g" % diff.max())
-
+    diff = trans[npix / 2, :] - mask1f[0].data[npix / 2, :]
+    print('Max diff: %.3g' % diff.max())
 
 
 def validate_vs_krist_sims(clobber=False, normalize=False, which='spot', no_sam=False):
-    """ Compare with PSFs provided by John Krist
-    """
+    """Compare with PSFs provided by John Krist"""
 
-
-    if which=='spot':
-        image_mask =  'MASK430R'
+    if which == 'spot':
+        image_mask = 'MASK430R'
         pupil_mask = 'CIRCLYOT'
     else:
-        image_mask =  'MASKLWB'
+        image_mask = 'MASKLWB'
         pupil_mask = 'WEDGELYOT'
 
     P.subplots_adjust(left=0.07, right=0.95, top=0.9, bottom=0.05)
 
     nc = webbpsf_core.NIRCam()
-    nc.pupilopd=None
+    nc.pupilopd = None
     nc.filter = 'F460M'
     nc.image_mask = image_mask
     nc.pupil_mask = pupil_mask
     nc.options['no_sam'] = no_sam
-    nc.pixelscale = 0.065 # match the Krist sims exactly. vs 0.648 official
+    nc.pixelscale = 0.065  # match the Krist sims exactly. vs 0.648 official
 
     cor_vmin = 1e-12
-    cor_vmax=1e-5
-
+    cor_vmax = 1e-5
 
     P.clf()
 
@@ -460,33 +445,32 @@ def validate_vs_krist_sims(clobber=False, normalize=False, which='spot', no_sam=
     fig.text(0.50, 0.95, 'Perrin', horizontalalignment='center', size=18)
     fig.text(0.80, 0.95, 'Difference P-K', horizontalalignment='center', size=18)
 
-    fig.text(0.05, 1./6, 'off-axis 4.6$\mu$m', verticalalignment='center', rotation='vertical' , size=18)
-    fig.text(0.05, 0.48, 'occulted 4.6$\mu$m', verticalalignment='center', rotation='vertical' , size=18)
-    fig.text(0.05, 5./6-0.05, image_mask + ' occulter', verticalalignment='center', rotation='vertical' , size=18)
-
+    fig.text(0.05, 1.0 / 6, 'off-axis 4.6$\mu$m', verticalalignment='center', rotation='vertical', size=18)
+    fig.text(0.05, 0.48, 'occulted 4.6$\mu$m', verticalalignment='center', rotation='vertical', size=18)
+    fig.text(0.05, 5.0 / 6 - 0.05, image_mask + ' occulter', verticalalignment='center', rotation='vertical', size=18)
 
     P.subplot(331)
     mask1 = 'nircam_4600nm_%s_occ.fits' % which
     mask1f = fits.open(mask1)
-    poppy.display_PSF(mask1f, title="", pixelscale='PIXSIZE', vmin=0, vmax=1, scale='linear', cmap=matplotlib.cm.gray)
+    poppy.display_PSF(mask1f, title='', pixelscale='PIXSIZE', vmin=0, vmax=1, scale='linear', cmap=matplotlib.cm.gray)
 
     P.subplot(332)
     os = nc.get_optical_system()
-    os.planes[1].display(ax=P.gca(),  what='intensity', colorbar_orientation='vertical')
+    os.planes[1].display(ax=P.gca(), what='intensity', colorbar_orientation='vertical')
     P.gca().set_title('')
-    P.gca().set_xbound(-8,8)
-    P.gca().set_ybound(-8,8)
+    P.gca().set_xbound(-8, 8)
+    P.gca().set_ybound(-8, 8)
 
-    wf = poppy.Wavefront(wavelength=4.6e-6,  npix = mask1f[0].data.shape[0], pixelscale = mask1f[0].header['PIXSIZE'])
-    trans = os.planes[1].getPhasor(wf)**2
+    wf = poppy.Wavefront(wavelength=4.6e-6, npix=mask1f[0].data.shape[0], pixelscale=mask1f[0].header['PIXSIZE'])
+    trans = os.planes[1].getPhasor(wf) ** 2
 
     P.subplot(333)
 
     if normalize:
-        to_plot = (trans-mask1f[0].data) / (trans+mask1f[0].data)/2
+        to_plot = (trans - mask1f[0].data) / (trans + mask1f[0].data) / 2
         vmin, vmax = -1, 1
     else:
-        to_plot = (trans-mask1f[0].data)
+        to_plot = trans - mask1f[0].data
         vmin, vmax = -1e-3, 1e-3
 
     poppy.imshow_with_mouseover(to_plot, cmap=matplotlib.cm.gray, vmin=vmin, vmax=vmax, extent=[-8, 8, -8, 8])
@@ -496,57 +480,54 @@ def validate_vs_krist_sims(clobber=False, normalize=False, which='spot', no_sam=
     except:
         pass
 
-
-
-
-
-    #---- occulted --
+    # ---- occulted --
     P.subplot(334)
     k1 = 'nircam_4600nm_%s.fits' % which
     k1f = fits.open(k1)
 
-    print("Total of %s is %f" % (k1, k1f[0].data.sum()))
-    poppy.display_PSF(k1f,  title="", pixelscale='SAMPLING', vmin=cor_vmin, vmax=cor_vmax)
+    print('Total of %s is %f' % (k1, k1f[0].data.sum()))
+    poppy.display_PSF(k1f, title='', pixelscale='SAMPLING', vmin=cor_vmin, vmax=cor_vmax)
 
     P.subplot(335)
-    my1 = 'test_'+k1
-    mypsf1 = webbpsf_core.calc_or_load_psf('test_'+k1, nc, nlambda=1,monochromatic=4.6e-6, oversample=4, fov_pixels=247, clobber=clobber)
-    print("Total of %s is %f" % (my1, mypsf1[0].data.sum()))
-    #nc.calcPSF(nlambda=1)
-    poppy.display_PSF(mypsf1, ext=1, title="", adjust_for_oversampling=True, vmin=cor_vmin, vmax=cor_vmax)
+    my1 = 'test_' + k1
+    mypsf1 = webbpsf_core.calc_or_load_psf(
+        'test_' + k1, nc, nlambda=1, monochromatic=4.6e-6, oversample=4, fov_pixels=247, clobber=clobber
+    )
+    print('Total of %s is %f' % (my1, mypsf1[0].data.sum()))
+    # nc.calcPSF(nlambda=1)
+    poppy.display_PSF(mypsf1, ext=1, title='', adjust_for_oversampling=True, vmin=cor_vmin, vmax=cor_vmax)
 
     P.subplot(336)
-    poppy.display_PSF_difference( mypsf1, k1f,  ext2=0, ext1=1, title="", vmax=1e-7, normalize=normalize)
+    poppy.display_PSF_difference(mypsf1, k1f, ext2=0, ext1=1, title='', vmax=1e-7, normalize=normalize)
 
-
-    #---- unocculted --
+    # ---- unocculted --
     P.subplot(337)
     k2 = 'nircam_4600nm_%s_fieldpsf.fits' % which
     k2f = fits.open(k2)
-    poppy.display_PSF(k2f,  title="", pixelscale='SAMPLING')
-    print("Total of %s is %f" % (k2, k2f[0].data.sum()))
+    poppy.display_PSF(k2f, title='', pixelscale='SAMPLING')
+    print('Total of %s is %f' % (k2, k2f[0].data.sum()))
 
-
-    nc.image_mask = None # make a coronagraphic-off-axis type PSF but still on-axis in the array
-    my2 = 'test_'+k2
-    mypsf2 = webbpsf_core.calc_or_load_psf('test_'+k2, nc, nlambda=1, monochromatic=4.6e-6, oversample=4, fov_pixels=247, clobber=clobber)
+    nc.image_mask = None  # make a coronagraphic-off-axis type PSF but still on-axis in the array
+    my2 = 'test_' + k2
+    mypsf2 = webbpsf_core.calc_or_load_psf(
+        'test_' + k2, nc, nlambda=1, monochromatic=4.6e-6, oversample=4, fov_pixels=247, clobber=clobber
+    )
     P.subplot(338)
-    poppy.display_PSF(mypsf2,  title="", ext=1, adjust_for_oversampling=True)
-    print("Total of %s is %f" % (my2, mypsf2[0].data.sum()))
+    poppy.display_PSF(mypsf2, title='', ext=1, adjust_for_oversampling=True)
+    print('Total of %s is %f' % (my2, mypsf2[0].data.sum()))
 
     P.subplot(339)
-    poppy.display_PSF_difference( mypsf2, k2f,  ext2=0, ext1=1, title="", vmax=1e-5, normalize=normalize)
+    poppy.display_PSF_difference(mypsf2, k2f, ext2=0, ext1=1, title='', vmax=1e-5, normalize=normalize)
 
-
-
-    print("shape of %s is %s" % (k1, k1f[0].data.shape))
-    print("shape of %s is %s" % (my1, mypsf1[1].data.shape))
+    print('shape of %s is %s' % (k1, k1f[0].data.shape))
+    print('shape of %s is %s' % (my1, mypsf1[1].data.shape))
 
     P.savefig('results_nircam_coron_comparison_%s.pdf' % which)
     stop()
 
 
-#---- MIRI ---------------------
+# ---- MIRI ---------------------
+
 
 def validate_vs_cavarroc_2008():
     inst = 'MIRI'
@@ -560,25 +541,18 @@ def validate_vs_cavarroc_2008():
     miri.options['source_offset_r'] = 0.005
     miri.options['source_offset_theta'] = 45
 
-    miri.calcPSF('test_%s_%s_offset%.3f.fits'  % (inst, filter,  miri.options['source_offset_r']))
+    miri.calcPSF('test_%s_%s_offset%.3f.fits' % (inst, filter, miri.options['source_offset_r']))
 
-
-
-    #--- Acq image
+    # --- Acq image
 
 
 def validate_miri_coron():
-    """Validate MIRI coronagraphic performance against the simulations in Cavarroc et al. 2008 SPIE
-
-
-    """
-
+    """Validate MIRI coronagraphic performance against the simulations in Cavarroc et al. 2008 SPIE"""
 
     miri = webbpsf_core.MIRI()
 
     miri.filter = 'FND'
     miri.image_mask = 'FQPM1140'
-
 
     im_nd_onaxis = miri.calcPSF(fov_arcsec=10)
 
@@ -595,56 +569,58 @@ def validate_miri_coron():
     stop()
 
 
-#---- TFI
+# ---- TFI
+
 
 def validate_tfi_coron():
-    """ Verify that simulated performance of the TFI coronagraph is consistent with that shown in
+    """Verify that simulated performance of the TFI coronagraph is consistent with that shown in
     Figure 10 of Doyon et al. 2010 SPIE 7731
 
     """
 
     return NotImplementedError('TFI has been deprecated.')
-	#     tfi = webbpsf_core.TFI()
-	#
-	#     # create test files
-	#     tfi.etalon_wavelength = 4.6
-	#     tfi.pupil_shift_x = 0.025 # assumep 2.5% pupil shear for consistency with Doyon et al.
-	#     image_masks = [None, 'CORON058', 'CORON075', 'CORON150', 'CORON150', 'CORON200']
-	#     pupil_masks = [None, 'MASKC71N', 'MASKC71N', 'MASKC66N', 'MASKC21N', 'MASKC21N']
-	#     throughputs = [1.0, 0.71, 0.71, 0.66, 0.21, 0.21]
-	#     fns = ['test_tfi_4.6um_unocculted.fits', 'test_tfi_4.6um_058_c71n.fits', 'test_tfi_4.6um_075_c71n.fits',
-	#             'test_tfi_4.6um_150_c66n.fits', 'test_tfi_4.6um_150_c21n.fits', 'test_tfi_4.6um_200_c21n.fits']
-	#     colors = ['black','red','purple','yellow','orange', 'cyan']
-	#
-	#     for i in range(len(fns)):
-	#         if not os.path.exists(fns[i]):
-	#             tfi.image_mask = image_masks[i]
-	#             tfi.pupil_mask = pupil_masks[i]
-	#             tfi.calcPSF(fns[i], fov_arcsec=16, oversample=2, calc_oversample=4)
-	#
-	#     # plot radial profiles
-	#     seps = N.array([0.5, 1.0, 1.5, 2.0, 2.5, 5.0])  #arcsecs
-	#     contrasts = N.array([6.9, 7.9, 9.2, 10.0, 10.9, 12.3]) # mags
-	#
-	#     P.clf()
-	#     peak_cts = None
-	#     for i in range(len(fns)):
-	#         radius, profile = webbpsf.radial_profile(fns[i])
-	#         radius2, stds= webbpsf.radial_profile(fns[i], stddev=True)
-	#         if peak_cts is None:
-	#             peak_cts = profile.max()
-	#         profile /= (peak_cts*throughputs[i])
-	#         stds /= (peak_cts*throughputs[i])
-	#         #P.semilogy(radius, profile, color=colors[i])
-	#         P.semilogy(radius, 5*stds, color=colors[i], lw=5 if i >0 else 1)
-	#         #stop()
-	#
-	#     P.xlabel("Separation (arcsec)")
-	#     P.ylabel("Contrast ratio (5$\sigma$)")
-	#     ax = P.gca()
-	#     ax.set_xlim(0,8)
-	#     ax.set_ylim(1e-6, 1e0)
 
+
+#     tfi = webbpsf_core.TFI()
+#
+#     # create test files
+#     tfi.etalon_wavelength = 4.6
+#     tfi.pupil_shift_x = 0.025 # assumep 2.5% pupil shear for consistency with Doyon et al.
+#     image_masks = [None, 'CORON058', 'CORON075', 'CORON150', 'CORON150', 'CORON200']
+#     pupil_masks = [None, 'MASKC71N', 'MASKC71N', 'MASKC66N', 'MASKC21N', 'MASKC21N']
+#     throughputs = [1.0, 0.71, 0.71, 0.66, 0.21, 0.21]
+#     fns = ['test_tfi_4.6um_unocculted.fits', 'test_tfi_4.6um_058_c71n.fits', 'test_tfi_4.6um_075_c71n.fits',
+#             'test_tfi_4.6um_150_c66n.fits', 'test_tfi_4.6um_150_c21n.fits', 'test_tfi_4.6um_200_c21n.fits']
+#     colors = ['black','red','purple','yellow','orange', 'cyan']
+#
+#     for i in range(len(fns)):
+#         if not os.path.exists(fns[i]):
+#             tfi.image_mask = image_masks[i]
+#             tfi.pupil_mask = pupil_masks[i]
+#             tfi.calcPSF(fns[i], fov_arcsec=16, oversample=2, calc_oversample=4)
+#
+#     # plot radial profiles
+#     seps = N.array([0.5, 1.0, 1.5, 2.0, 2.5, 5.0])  #arcsecs
+#     contrasts = N.array([6.9, 7.9, 9.2, 10.0, 10.9, 12.3]) # mags
+#
+#     P.clf()
+#     peak_cts = None
+#     for i in range(len(fns)):
+#         radius, profile = webbpsf.radial_profile(fns[i])
+#         radius2, stds= webbpsf.radial_profile(fns[i], stddev=True)
+#         if peak_cts is None:
+#             peak_cts = profile.max()
+#         profile /= (peak_cts*throughputs[i])
+#         stds /= (peak_cts*throughputs[i])
+#         #P.semilogy(radius, profile, color=colors[i])
+#         P.semilogy(radius, 5*stds, color=colors[i], lw=5 if i >0 else 1)
+#         #stop()
+#
+#     P.xlabel("Separation (arcsec)")
+#     P.ylabel("Contrast ratio (5$\sigma$)")
+#     ax = P.gca()
+#     ax.set_xlim(0,8)
+#     ax.set_ylim(1e-6, 1e0)
 
 
 ################################################################################
@@ -653,158 +629,201 @@ def validate_tfi_coron():
 
 
 def validate_vs_jwpsf_nircam():
-    """ Compare results from WebbPSF with earlier simulations produced with JWPSF
-    """
+    """Compare results from WebbPSF with earlier simulations produced with JWPSF"""
 
-    models = [ ('NIRCam','F200W', 'f200w_perfect_offset', '/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/perfect_opd.fits', 0.034,True),
-            ('NIRCam','F200W', 'f200w_perfect', '/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/perfect_opd.fits', 0.034,False),
-            ('NIRCam','F200W', 'f200w', '/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/nircam_obs_w_rsrv1.fits', 0.034,True),
-                ('MIRI','F1000W', 'f1000w', '/Users/mperrin/software/jwpsf_v3.0/data/MIRI/OPD/MIRI_OPDisim1.fits', 0.11,True)]
+    models = [
+        (
+            'NIRCam',
+            'F200W',
+            'f200w_perfect_offset',
+            '/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/perfect_opd.fits',
+            0.034,
+            True,
+        ),
+        (
+            'NIRCam',
+            'F200W',
+            'f200w_perfect',
+            '/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/perfect_opd.fits',
+            0.034,
+            False,
+        ),
+        (
+            'NIRCam',
+            'F200W',
+            'f200w',
+            '/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/nircam_obs_w_rsrv1.fits',
+            0.034,
+            True,
+        ),
+        ('MIRI', 'F1000W', 'f1000w', '/Users/mperrin/software/jwpsf_v3.0/data/MIRI/OPD/MIRI_OPDisim1.fits', 0.11, True),
+    ]
 
-
-    fig = P.figure(1, figsize=(13,8.5), dpi=80)
-    oversamp=4
+    fig = P.figure(1, figsize=(13, 8.5), dpi=80)
+    oversamp = 4
     for params in models:
-
         nc = webbpsf_core.Instrument(params[0])
         nc.filter = params[1]
-        nc.pupilopd = params[3] #'/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/nircam_obs_w_rsrv1.fits'
-        nc.pixelscale = params[4] #0.034 # this is wrong, but compute this way to match JWPSF exactly
+        nc.pupilopd = params[3]  #'/Users/mperrin/software/jwpsf_v3.0/data/NIRCam/OPD/nircam_obs_w_rsrv1.fits'
+        nc.pixelscale = params[4]  # 0.034 # this is wrong, but compute this way to match JWPSF exactly
         if params[5]:
             # offset by half a pixel to match the JWPSF convention
-            nc.options['source_offset_r'] = params[4]/2 * N.sqrt(2)/oversamp  # offset half a pixel each in X and Y
+            nc.options['source_offset_r'] = params[4] / 2 * N.sqrt(2) / oversamp  # offset half a pixel each in X and Y
             nc.options['source_offset_theta'] = -45
-
 
         jw_fn = 'jwpsf_%s_%s.fits' % (params[0].lower(), params[2].lower())
         my_fn = 'test_vs_' + jw_fn
 
-        if not os.path.exists( my_fn):
-            my_psf = nc.calcPSF(my_fn, oversample=oversamp, fov_pixels=512./oversamp)
+        if not os.path.exists(my_fn):
+            my_psf = nc.calcPSF(my_fn, oversample=oversamp, fov_pixels=512.0 / oversamp)
         else:
             my_psf = fits.open(my_fn)
 
         jw_psf = fits.open(jw_fn)
-        jw_psf[0].header.update('PIXELSCL', jw_psf[0].header['CDELT1']*3600)
-
+        jw_psf[0].header.update('PIXELSCL', jw_psf[0].header['CDELT1'] * 3600)
 
         P.clf()
-        #P.subplots_adjust(top=0.95, bottom=0.05, left=0.01, right=0.99)
+        # P.subplots_adjust(top=0.95, bottom=0.05, left=0.01, right=0.99)
         P.subplot(231)
-        titlestr = "%s %s, \n"%  (params[0], params[2])
-        poppy.display_PSF(my_psf, title=titlestr+"computed with WebbPSF" , colorbar=False)
+        titlestr = '%s %s, \n' % (params[0], params[2])
+        poppy.display_PSF(my_psf, title=titlestr + 'computed with WebbPSF', colorbar=False)
         P.subplot(232)
-        poppy.display_PSF(jw_psf, title=titlestr+"computed with JWPSF" , colorbar=False)
+        poppy.display_PSF(jw_psf, title=titlestr + 'computed with JWPSF', colorbar=False)
         P.subplot(233)
-        poppy.display_PSF_difference(my_psf,jw_psf, title=titlestr+'Difference Image', colorbar=False)
+        poppy.display_PSF_difference(my_psf, jw_psf, title=titlestr + 'Difference Image', colorbar=False)
 
-        imagecrop = 30*params[4]
+        imagecrop = 30 * params[4]
 
         P.subplot(234)
-        poppy.display_PSF(my_psf, title=titlestr+"computed with WebbPSF", colorbar=False, imagecrop=imagecrop)
+        poppy.display_PSF(my_psf, title=titlestr + 'computed with WebbPSF', colorbar=False, imagecrop=imagecrop)
         centroid = poppy.measure_centroid(my_psf)
-        P.gca().set_xlabel("centroid = (%.3f,%.3f)" % centroid)
+        P.gca().set_xlabel('centroid = (%.3f,%.3f)' % centroid)
 
         P.subplot(235)
-        poppy.display_PSF(jw_psf, title=titlestr+"computed with JWPSF", colorbar=False, imagecrop=imagecrop)
+        poppy.display_PSF(jw_psf, title=titlestr + 'computed with JWPSF', colorbar=False, imagecrop=imagecrop)
         centroid = poppy.measure_centroid(jw_psf)
-        P.gca().set_xlabel("centroid = (%.3f,%.3f)" % centroid)
+        P.gca().set_xlabel('centroid = (%.3f,%.3f)' % centroid)
 
         P.subplot(236)
-        poppy.display_PSF_difference(my_psf,jw_psf, title='Difference Image', colorbar=False, imagecrop=imagecrop)
+        poppy.display_PSF_difference(my_psf, jw_psf, title='Difference Image', colorbar=False, imagecrop=imagecrop)
 
-        P.savefig("results_vs_jwpsf_%s_%s.pdf" % (params[0], params[2]))
-
+        P.savefig('results_vs_jwpsf_%s_%s.pdf' % (params[0], params[2]))
 
         # oversampling = 4
         # wavelength range = 5 for JWPSF
 
-        #stop()
+        # stop()
+
 
 # Revision V and T pupils
 def compare_revs_tv(nlambda=20, oversample=16, fov_arcsec=4):
-    """ Compare PSF properties like FWHM and EE, for Rev T and Rev V pupil shapes"""
+    """Compare PSF properties like FWHM and EE, for Rev T and Rev V pupil shapes"""
     iname = 'NIRCam'
     inst = webbpsf_core.Instrument(iname)
 
     def ee_find_radius(ee_fn, value):
-        "find the radius at which a given EE occurs. bruce force & crude "
-        radius = N.arange(1000.)/1000.
+        "find the radius at which a given EE occurs. bruce force & crude"
+        radius = N.arange(1000.0) / 1000.0
         ee = ee_fn(radius)
-        wmin = N.argmin(N.abs(ee-value))
+        wmin = N.argmin(N.abs(ee - value))
         return radius[wmin]
-
 
     for filt in ['F070W', 'F200W']:
         inst.filter = filt
         base_opd = inst.pupilopd
-        nopd = 3 # for testing
+        nopd = 3  # for testing
         fwhm_v = N.zeros(nopd)
         fwhm_t = N.zeros(nopd)
-        eer_v = N.zeros((nopd,3))
-        eer_t = N.zeros((nopd,3))
+        eer_v = N.zeros((nopd, 3))
+        eer_t = N.zeros((nopd, 3))
 
         for i in range(nopd):
-            inst.pupilopd = (base_opd, i) # iterate through slices
-            PV = webbpsf_core.calc_or_load_psf('test_%s_%s_revV_%02d.fits' % (iname, filt, i+1), inst, nlambda=nlambda, oversample=oversample, fov_arcsec=fov_arcsec)
-            inst.pupilopd = '/Users/mperrin/software/webbpsf/data/OPD_RevT/nircam_obs_w_rsrv%d.fits' % (i+1)
-            PT = webbpsf_core.calc_or_load_psf('test_%s_%s_revT_%02d.fits' % (iname, filt, i+1), inst, nlambda=nlambda, oversample=oversample, fov_arcsec=fov_arcsec)
+            inst.pupilopd = (base_opd, i)  # iterate through slices
+            PV = webbpsf_core.calc_or_load_psf(
+                'test_%s_%s_revV_%02d.fits' % (iname, filt, i + 1),
+                inst,
+                nlambda=nlambda,
+                oversample=oversample,
+                fov_arcsec=fov_arcsec,
+            )
+            inst.pupilopd = '/Users/mperrin/software/webbpsf/data/OPD_RevT/nircam_obs_w_rsrv%d.fits' % (i + 1)
+            PT = webbpsf_core.calc_or_load_psf(
+                'test_%s_%s_revT_%02d.fits' % (iname, filt, i + 1),
+                inst,
+                nlambda=nlambda,
+                oversample=oversample,
+                fov_arcsec=fov_arcsec,
+            )
 
             fwhm_v[i] = poppy.measure_fwhm(PV)
             fwhm_t[i] = poppy.measure_fwhm(PT)
             ee_fn_v = poppy.measure_EE(PV)
             ee_fn_t = poppy.measure_EE(PT)
             for j, val in enumerate([0.4, 0.5, 0.6]):
-                eer_v[i,j] = ee_find_radius(ee_fn_v, val)
-                eer_t[i,j] = ee_find_radius(ee_fn_t, val)
+                eer_v[i, j] = ee_find_radius(ee_fn_v, val)
+                eer_t[i, j] = ee_find_radius(ee_fn_t, val)
 
         mean_fwhm_v = fwhm_v.mean()
         mean_fwhm_t = fwhm_t.mean()
         mean_eer_v = eer_v.mean(axis=0)
         mean_eer_t = eer_t.mean(axis=0)
-        print("Filter: "+filt)
-        print("   Rev T:  FWHM=%.4f    EE(0.4, 0.5, 0.6) = %.3f, %0.3f, %.3f" % (mean_fwhm_t, mean_eer_t[0], mean_eer_t[1], mean_eer_t[2]))
-        print("   Rev V:  FWHM=%.4f    EE(0.4, 0.5, 0.6) = %.3f, %0.3f, %.3f" % (mean_fwhm_v, mean_eer_v[0], mean_eer_v[1], mean_eer_v[2]))
+        print('Filter: ' + filt)
+        print(
+            '   Rev T:  FWHM=%.4f    EE(0.4, 0.5, 0.6) = %.3f, %0.3f, %.3f'
+            % (mean_fwhm_t, mean_eer_t[0], mean_eer_t[1], mean_eer_t[2])
+        )
+        print(
+            '   Rev V:  FWHM=%.4f    EE(0.4, 0.5, 0.6) = %.3f, %0.3f, %.3f'
+            % (mean_fwhm_v, mean_eer_v[0], mean_eer_v[1], mean_eer_v[2])
+        )
     stop()
 
 
-def compare_pupils_tv( oversample=8, vmax=1e-5, skipone=True):
+def compare_pupils_tv(oversample=8, vmax=1e-5, skipone=True):
     """
     Compare PSFs with the Rev T and Rev V pupil shapes
     """
     P.clf()
     inst = webbpsf_core.NIRCam()
-    inst.pupilopd=None
+    inst.pupilopd = None
 
     fov_arcsec = 10
-    nlambda=30
+    nlambda = 30
 
     inst.pupil = 'tricontagon.fits'
-    psf_tri = webbpsf_core.calc_or_load_psf('test_NIRCam_perfect_tricontagon_o%d.fits' % oversample, inst, nlambda=nlambda, oversample=oversample, fov_arcsec=fov_arcsec)
-
+    psf_tri = webbpsf_core.calc_or_load_psf(
+        'test_NIRCam_perfect_tricontagon_o%d.fits' % oversample,
+        inst,
+        nlambda=nlambda,
+        oversample=oversample,
+        fov_arcsec=fov_arcsec,
+    )
 
     if not skipone:
-        ax = P.subplot(1,3,1)
+        ax = P.subplot(1, 3, 1)
         poppy.display_PSF(psf_tri, normalize='peak', colorbar=False, title='Tricontagon')
 
-
-        for i, rev in enumerate(['T','V']):
-            inst.pupil = "pupil_Rev%s.fits" % rev
-            psf = webbpsf_core.calc_or_load_psf('test_NIRCam_perfect_rev%s_o%d.fits'  % (rev, oversample),inst,  nlambda=nlambda, oversample=oversample, fov_arcsec=fov_arcsec)
-            P.subplot(1,3,i+2)
-            poppy.display_PSF(psf, normalize='peak', colorbar = (rev =='V'), title='OTE Rev '+rev)
-
+        for i, rev in enumerate(['T', 'V']):
+            inst.pupil = 'pupil_Rev%s.fits' % rev
+            psf = webbpsf_core.calc_or_load_psf(
+                'test_NIRCam_perfect_rev%s_o%d.fits' % (rev, oversample),
+                inst,
+                nlambda=nlambda,
+                oversample=oversample,
+                fov_arcsec=fov_arcsec,
+            )
+            P.subplot(1, 3, i + 2)
+            poppy.display_PSF(psf, normalize='peak', colorbar=(rev == 'V'), title='OTE Rev ' + rev)
 
         stop()
         P.clf()
 
-    psf_V = fits.open('test_NIRCam_perfect_rev%s_o%d.fits'  % ('V', oversample))
-    psf_T = fits.open('test_NIRCam_perfect_rev%s_o%d.fits'  % ('T', oversample))
+    psf_V = fits.open('test_NIRCam_perfect_rev%s_o%d.fits' % ('V', oversample))
+    psf_T = fits.open('test_NIRCam_perfect_rev%s_o%d.fits' % ('T', oversample))
     P.subplot(221)
-    poppy.display_PSF_difference(psf_V, psf_tri, vmax=vmax, title="Rev V - tricontagon")
+    poppy.display_PSF_difference(psf_V, psf_tri, vmax=vmax, title='Rev V - tricontagon')
     P.subplot(222)
-    poppy.display_PSF_difference(psf_V, psf_T,vmax=vmax, title="Rev V - Rev T")
-
+    poppy.display_PSF_difference(psf_V, psf_T, vmax=vmax, title='Rev V - Rev T')
 
     ax3 = P.subplot(223)
     ax3.set_ylabel('Azimuthally averaged profile')
@@ -814,38 +833,35 @@ def compare_pupils_tv( oversample=8, vmax=1e-5, skipone=True):
     ax4.set_ylabel('Fractional Encircled Energy')
     ax4.set_xlabel('Separation (arcsec)')
 
-
-    for p, label in zip([psf_tri, psf_T, psf_V], ['Tri', "Rev T", 'Rev V']):
+    for p, label in zip([psf_tri, psf_T, psf_V], ['Tri', 'Rev T', 'Rev V']):
         rad, rp = poppy.radial_profile(p)
         ee_fn = poppy.measure_EE(p)
 
-        ax3.plot(rad,rp/rp.max())
+        ax3.plot(rad, rp / rp.max())
         ax4.plot(rad, ee_fn(rad), label=label)
 
         print(poppy.measure_fwhm(p))
     ax4.legend(loc='lower right')
     ax3.set_yscale('log')
     ax3.set_xscale('log')
-    #ax3.axhline([psf_V[0].data.max()*0.5], ls=":")
+    # ax3.axhline([psf_V[0].data.max()*0.5], ls=":")
 
-    #ax3.set_xbound(0,4)
-    ax3.set_xbound(0.01,4)
-    ax4.set_xbound(0,4)
+    # ax3.set_xbound(0,4)
+    ax3.set_xbound(0.01, 4)
+    ax4.set_xbound(0, 4)
     P.draw()
-
 
     stop()
 
-def validate_nircam_ee():
 
+def validate_nircam_ee():
     # from BALL-JWST-SYST-05-003, Systems Eng Rpt on OTE Geometric Optical Model Config
 
     # Encircled energies at 1 micron, field position (0,0),
     # page 18
     # from Code V model I think
     EE_fraction = [10, 20, 30, 40, 50, 60, 70, 80, 90]
-    EE_radius = [.004592, 0.009561, 0.015019, 0.021147, 0.028475, 0.037626, 0.052406, 0.081993, 0.204422]
-
+    EE_radius = [0.004592, 0.009561, 0.015019, 0.021147, 0.028475, 0.037626, 0.052406, 0.081993, 0.204422]
 
     # same thing, page 24, from OSLO model
     EE_radius = [0.006815, 0.013630, 0.020411, 0.026182, 0.031953, 0.037725, 0.058640, 0.090230, 0.210803]
@@ -855,6 +871,8 @@ def validate_nircam_ee():
 
 ################################################################################
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(name)-12s: %(levelname)-8s %(message)s',)
-
+if __name__ == '__main__':
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(name)-12s: %(levelname)-8s %(message)s',
+    )

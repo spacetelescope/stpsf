@@ -28,6 +28,7 @@ import pprint
 GRISM_FILTERS = ('GRISM0', 'GRISM1')
 PRISM_FILTERS = ('PRISM',)
 
+
 class WavelengthDependenceInterpolator(object):
     """WavelengthDependenceInterpolator can be configured with
     `n_zernikes` worth of Zernike coefficients at up to `n_wavelengths`
@@ -54,11 +55,15 @@ class WavelengthDependenceInterpolator(object):
             aberration_row_idx = self._wavelengths.index(wavelength)
         else:
             # can't add more wavelengths without allocating new _aberration_terms array
-            raise ValueError("Already have information at {} wavelengths "
-                             "(pass larger n_wavelengths to __init__?)".format(self._n_wavelengths))
+            raise ValueError(
+                'Already have information at {} wavelengths ' '(pass larger n_wavelengths to __init__?)'.format(
+                    self._n_wavelengths
+                )
+            )
         if len(zernike_array) != self._n_zernikes:
-            raise ValueError("Expected {} aberration terms (pass different "
-                             "n_zernikes to __init__?)".format(self._n_zernikes))
+            raise ValueError(
+                'Expected {} aberration terms (pass different ' 'n_zernikes to __init__?)'.format(self._n_zernikes)
+            )
         self._aberration_terms[aberration_row_idx] = zernike_array
 
     def get_aberration_terms(self, wavelength):
@@ -76,13 +81,16 @@ class WavelengthDependenceInterpolator(object):
                 if isinstance(wavelength, u.Quantity):
                     wavelength = wavelength.to(u.m).value
                 wavelength_closest = np.clip(wavelength, np.min(self._wavelengths), np.max(self._wavelengths))
-                _log.warn("Attempted to get aberrations at wavelength {:.2g} "
-                          "outside the range of the reference data; clipping to closest wavelength {:.2g}".format(
-                    wavelength, wavelength_closest))
+                _log.warn(
+                    'Attempted to get aberrations at wavelength {:.2g} '
+                    'outside the range of the reference data; clipping to closest wavelength {:.2g}'.format(
+                        wavelength, wavelength_closest
+                    )
+                )
 
-                aberration_terms = griddata(self._wavelengths, self._aberration_terms, wavelength_closest,
-                                            method='linear')
+                aberration_terms = griddata(self._wavelengths, self._aberration_terms, wavelength_closest, method='linear')
             return aberration_terms
+
 
 class FieldDependentAberration(poppy.ZernikeWFE):
     """FieldDependentAberration incorporates aberrations that
@@ -99,19 +107,14 @@ class FieldDependentAberration(poppy.ZernikeWFE):
     _omit_piston_tip_tilt = True
     _field_position = None
 
-    def __init__(self, pixel_width, pixel_height,
-                 name="Field-dependent Aberration", radius=1.0, oversample=1, interp_order=3):
+    def __init__(
+        self, pixel_width, pixel_height, name='Field-dependent Aberration', radius=1.0, oversample=1, interp_order=3
+    ):
         self.pixel_width, self.pixel_height = pixel_width, pixel_height
         self.field_position = pixel_width // 2, pixel_height // 2
         self._wavelength_interpolators = {}
         self.pupil_diam = radius * 2.0
-        super().__init__(
-            name=name,
-            verbose=True,
-            radius=radius,
-            oversample=oversample,
-            interp_order=interp_order
-        )
+        super().__init__(name=name, verbose=True, radius=radius, oversample=oversample, interp_order=interp_order)
 
     def get_opd(self, wave):
         """Set the Zernike coefficients (for ZernikeWFE.getOPD) based
@@ -135,11 +138,9 @@ class FieldDependentAberration(poppy.ZernikeWFE):
         interpolate aberrations"""
         x_pixel, y_pixel = position
         if x_pixel > self.pixel_width or x_pixel < 0:
-            raise ValueError("Requested pixel_x position lies outside "
-                             "the detector width ({})".format(x_pixel))
+            raise ValueError('Requested pixel_x position lies outside ' 'the detector width ({})'.format(x_pixel))
         if y_pixel > self.pixel_height or y_pixel < 0:
-            raise ValueError("Requested pixel_y position lies outside "
-                             "the detector height ({})".format(y_pixel))
+            raise ValueError('Requested pixel_y position lies outside ' 'the detector height ({})'.format(y_pixel))
 
         self._field_position = x_pixel, y_pixel
 
@@ -162,16 +163,11 @@ class FieldDependentAberration(poppy.ZernikeWFE):
                 field_points.append(field_point_coords)
                 aberration_terms.append(point_interpolator.get_aberration_terms(wavelength))
             aberration_array = np.asarray(aberration_terms)
-            assert len(aberration_array.shape) == 2, "computed aberration array is not 2D " \
-                                                     "(inconsistent number of Zernike terms " \
-                                                     "at each point?)"
-            field_position = tuple(self.field_position)
-            coefficients = griddata(
-                np.asarray(field_points),
-                np.asarray(aberration_terms),
-                field_position,
-                method='linear'
+            assert len(aberration_array.shape) == 2, (
+                'computed aberration array is not 2D ' '(inconsistent number of Zernike terms ' 'at each point?)'
             )
+            field_position = tuple(self.field_position)
+            coefficients = griddata(np.asarray(field_points), np.asarray(aberration_terms), field_position, method='linear')
             if np.any(np.isnan(coefficients)):
                 # FIND TWO CLOSEST INPUT GRID POINTS:
                 dist = []
@@ -189,30 +185,35 @@ class FieldDependentAberration(poppy.ZernikeWFE):
                 closest_interp_point = (x1 + a * dx, y1 + a * dy)
                 # INTERPOLATE ABERRATIONS TO CLOSEST INTERPOLATED POINT:
                 coefficients = griddata(
-                    np.asarray(field_points),
-                    np.asarray(aberration_terms),
-                    closest_interp_point,
-                    method='linear')
+                    np.asarray(field_points), np.asarray(aberration_terms), closest_interp_point, method='linear'
+                )
                 # IF CLOSEST INTERPOLATED POINT IS STILL OUTSIDE THE INPUT GRID,
                 # THEN USE NEAREST GRID POINT INSTEAD:
                 if np.any(np.isnan(coefficients)):
                     coefficients = aberration_terms[min_dist_indx[0] + 1]
-                    _log.warn("Attempted to get aberrations at field point {} which is outside the range "
-                              "of the reference data; approximating to nearest input grid point".format(field_position))
+                    _log.warn(
+                        'Attempted to get aberrations at field point {} which is outside the range '
+                        'of the reference data; approximating to nearest input grid point'.format(field_position)
+                    )
                 else:
-                    _log.warn("Attempted to get aberrations at field point {} which is outside the range "
-                              "of the reference data; approximating to nearest interpolated point {}".format(
-                        field_position, closest_interp_point))
-                assert not np.any(np.isnan(coefficients)), "Could not compute aberration " \
-                                                           "at field point {}".format(field_position)
+                    _log.warn(
+                        'Attempted to get aberrations at field point {} which is outside the range '
+                        'of the reference data; approximating to nearest interpolated point {}'.format(
+                            field_position, closest_interp_point
+                        )
+                    )
+                assert not np.any(np.isnan(coefficients)), 'Could not compute aberration ' 'at field point {}'.format(
+                    field_position
+                )
         if self._omit_piston_tip_tilt:
-            _log.debug("Omitting piston/tip/tilt")
+            _log.debug('Omitting piston/tip/tilt')
             coefficients[:3] = 0.0  # omit piston, tip, and tilt Zernikes
         return coefficients
 
 
 def _load_wfi_detector_aberrations(filename):
     from astropy.io import ascii
+
     zernike_table = ascii.read(filename, encoding='utf-8-sig')
     detectors = {}
 
@@ -223,10 +224,7 @@ def _load_wfi_detector_aberrations(filename):
         field_points = set(single_detector_info['field_point'])
         interpolators = {}
         detector = FieldDependentAberration(
-            4096,
-            4096,
-            radius=RomanInstrument.PUPIL_RADIUS,
-            name="Field Dependent Aberration (SCA{:02})".format(number)
+            4096, 4096, radius=RomanInstrument.PUPIL_RADIUS, name='Field Dependent Aberration (SCA{:02})'.format(number)
         )
         for field_id in field_points:
             field_point_rows = single_detector_info[single_detector_info['field_point'] == field_id]
@@ -237,8 +235,7 @@ def _load_wfi_detector_aberrations(filename):
             # (local_x in mm / 10 um pixel size) -> * 1e2
             # local_x and _y range from -20.44 to +20.44, so adding to the midpoint pixel
             # makes sense to place (-20.44, -20.44) at (4, 4)
-            pixx, pixy = (round(midpoint_pixel - local_x * 1e2),
-                          round(midpoint_pixel + local_y * 1e2))
+            pixx, pixy = (round(midpoint_pixel - local_x * 1e2), round(midpoint_pixel + local_y * 1e2))
 
             detector.add_field_point(pixx, pixy, interpolator)
         return detector
@@ -247,8 +244,7 @@ def _load_wfi_detector_aberrations(filename):
         """Build an interpolator object that interpolates Z1-Z22 in
         wavelength space"""
         wavelengths = set(rows['wavelength'])
-        interpolator = WavelengthDependenceInterpolator(n_wavelengths=len(wavelengths),
-                                                        n_zernikes=22)
+        interpolator = WavelengthDependenceInterpolator(n_wavelengths=len(wavelengths), n_zernikes=22)
         for row in rows:
             z = np.zeros(22)
             for idx in range(22):
@@ -259,7 +255,7 @@ def _load_wfi_detector_aberrations(filename):
 
     detector_ids = set(zernike_table['sca'])
     for detid in detector_ids:
-        detectors["SCA{:02}".format(detid)] = build_detector_from_table(detid, zernike_table)
+        detectors['SCA{:02}'.format(detid)] = build_detector_from_table(detid, zernike_table)
 
     return detectors
 
@@ -271,17 +267,32 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
     RomanInstrument contains data and functionality common to Roman
     instruments, such as setting the pupil shape
     """
-    telescope = "Roman"
+    telescope = 'Roman'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.options['jitter'] = 'gaussian'
-        self.options['jitter_sigma'] = 0.012 # arcsec/axis, see https://roman.ipac.caltech.edu/sims/Param_db.html#telescope
+        self.options['jitter_sigma'] = 0.012  # arcsec/axis, see https://roman.ipac.caltech.edu/sims/Param_db.html#telescope
 
-    def calc_psf(self, outfile=None, source=None, nlambda=None, monochromatic=None,
-                 fov_arcsec=None, fov_pixels=None, oversample=None, detector_oversample=None, fft_oversample=None,
-                 overwrite=True, display=False, save_intermediates=False, return_intermediates=False,
-                 normalize='first', add_distortion=True, crop_psf=False):
+    def calc_psf(
+        self,
+        outfile=None,
+        source=None,
+        nlambda=None,
+        monochromatic=None,
+        fov_arcsec=None,
+        fov_pixels=None,
+        oversample=None,
+        detector_oversample=None,
+        fft_oversample=None,
+        overwrite=True,
+        display=False,
+        save_intermediates=False,
+        return_intermediates=False,
+        normalize='first',
+        add_distortion=True,
+        crop_psf=False,
+    ):
         """
         Compute a PSF
 
@@ -302,20 +313,31 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
         self.options['crop_psf'] = crop_psf
 
         # add_distortion keyword is not implemented for RomanCoronagraph Class
-        if self.name == "RomanCoronagraph" and add_distortion==True:
+        if self.name == 'RomanCoronagraph' and add_distortion == True:
             self.options['add_distortion'] = False
             self.options['crop_psf'] = False
-            _log.info("Geometric distortions are not implemented in WebbPSF for Roman CGI. The add_distortion keyword must be set to False for this case.")
-        
-        # Run poppy calc_psf
-        psf = webbpsf_core.SpaceTelescopeInstrument.calc_psf(self, outfile=outfile, source=source, nlambda=nlambda,
-                                                monochromatic=monochromatic, fov_arcsec=fov_arcsec,
-                                                fov_pixels=fov_pixels, oversample=oversample,
-                                                detector_oversample=detector_oversample, fft_oversample=fft_oversample,
-                                                overwrite=overwrite, display=display,
-                                                save_intermediates=save_intermediates, 
-                                                return_intermediates=return_intermediates, normalize=normalize)
+            _log.info(
+                'Geometric distortions are not implemented in WebbPSF for Roman CGI. The add_distortion keyword must be set to False for this case.'
+            )
 
+        # Run poppy calc_psf
+        psf = webbpsf_core.SpaceTelescopeInstrument.calc_psf(
+            self,
+            outfile=outfile,
+            source=source,
+            nlambda=nlambda,
+            monochromatic=monochromatic,
+            fov_arcsec=fov_arcsec,
+            fov_pixels=fov_pixels,
+            oversample=oversample,
+            detector_oversample=detector_oversample,
+            fft_oversample=fft_oversample,
+            overwrite=overwrite,
+            display=display,
+            save_intermediates=save_intermediates,
+            return_intermediates=return_intermediates,
+            normalize=normalize,
+        )
 
         return psf
 
@@ -334,13 +356,13 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
         try:
             x, y = map(int, position)
         except ValueError:
-            raise ValueError("Detector pixel coordinates must be pairs of nonnegative numbers, "
-                             "not {}".format(position))
+            raise ValueError('Detector pixel coordinates must be pairs of nonnegative numbers, ' 'not {}'.format(position))
         if x < 0 or y < 0:
-            raise ValueError("Detector pixel coordinates must be nonnegative integers")
+            raise ValueError('Detector pixel coordinates must be nonnegative integers')
         if x > self._detector_npixels - 1 or y > self._detector_npixels - 1:
-            raise ValueError("The maximum allowed detector pixel "
-                             "coordinate value is {}".format(self._detector_npixels - 1))
+            raise ValueError(
+                'The maximum allowed detector pixel ' 'coordinate value is {}'.format(self._detector_npixels - 1)
+            )
 
         self._detectors[self._detector].field_position = (int(position[0]), int(position[1]))
 
@@ -352,12 +374,9 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
     def _get_fits_header(self, result, options):
         """Populate FITS Header keywords"""
         super()._get_fits_header(result, options)
-        result[0].header['DETXPIXL'] = (self.detector_position[0],
-                                        'X pixel position (for field dependent aberrations)')
-        result[0].header['DETYPIXL'] = (self.detector_position[1],
-                                        'Y pixel position (for field dependent aberrations)')
+        result[0].header['DETXPIXL'] = (self.detector_position[0], 'X pixel position (for field dependent aberrations)')
+        result[0].header['DETYPIXL'] = (self.detector_position[1], 'Y pixel position (for field dependent aberrations)')
         result[0].header['DETECTOR'] = (self.detector, 'Detector selected')
-
 
     def _calc_psf_format_output(self, result, options):
         """
@@ -377,32 +396,34 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
         Modifies the 'result' HDUList object.
 
         """
-       # Pull values from options dictionary
+        # Pull values from options dictionary
         add_distortion = options.get('add_distortion', True)
         crop_psf = options.get('crop_psf', True)
         # Add distortion if set in calc_psf
         if add_distortion:
-            _log.debug("Adding PSF distortion(s)")
-            
+            _log.debug('Adding PSF distortion(s)')
+
             # Set up new extensions to add distortion to:
             n_exts = len(result)
             for ext in np.arange(n_exts):
                 hdu_new = fits.ImageHDU(result[ext].data, result[ext].header)  # these will be the PSFs that are edited
                 result.append(hdu_new)
                 ext_new = ext + n_exts
-                result[ext_new].header["EXTNAME"] = result[ext].header["EXTNAME"][0:4] + "DIST"  # change extension name
-                _log.debug("Appending new extension {} with EXTNAME = {}".format(ext_new, result[ext_new].header["EXTNAME"]))
+                result[ext_new].header['EXTNAME'] = result[ext].header['EXTNAME'][0:4] + 'DIST'  # change extension name
+                _log.debug('Appending new extension {} with EXTNAME = {}'.format(ext_new, result[ext_new].header['EXTNAME']))
 
-            _log.debug("WFI: Adding optical distortion")
+            _log.debug('WFI: Adding optical distortion')
             psf_distorted = distortion.apply_distortion(result)  # apply siaf distortion model
 
             # Edit the variable to match if input didn't request distortion
             # (cannot set result = psf_distorted due to return method)
             [result.append(fits.ImageHDU()) for i in np.arange(len(psf_distorted) - len(result))]
-            for ext in np.arange(len(psf_distorted)): result[ext] = psf_distorted[ext]
+            for ext in np.arange(len(psf_distorted)):
+                result[ext] = psf_distorted[ext]
 
         # Rewrite result variable based on output_mode set:
         webbpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
+
 
 class WFIPupilController:
     """
@@ -420,7 +441,7 @@ class WFIPupilController:
         self._pupil_basepath = None
 
         self._pupil = None
-        self._pupil_mask = None # new for webbpsf 1.0
+        self._pupil_mask = None  # new for webbpsf 1.0
 
         # Flag to en-/disable automatic selection of the appropriate pupil_mask
         self._auto_pupil = True
@@ -433,7 +454,8 @@ class WFIPupilController:
             'SKINNY': 'RST_WIM_Filter_skinny_{0}.fits.gz',
             'WIDE': 'RST_WIM_Filter_F184_{0}.fits.gz',
             'GRISM': 'RST_WSM_Grism_Grism_{0}.fits.gz',
-            'PRISM': 'RST_WSM_Prism_Prism_{0}.fits.gz'}
+            'PRISM': 'RST_WSM_Prism_Prism_{0}.fits.gz',
+        }
 
     @property
     def pupil(self):
@@ -446,8 +468,7 @@ class WFIPupilController:
 
     @pupil.setter
     def pupil(self, value):
-        raise AttributeError('Pupil cannot be directly specified. '
-                             'Use lock_pupil() instead.')
+        raise AttributeError('Pupil cannot be directly specified. ' 'Use lock_pupil() instead.')
 
     @property
     def pupil_mask(self):
@@ -460,8 +481,7 @@ class WFIPupilController:
 
     @pupil_mask.setter
     def pupil_mask(self, name):
-        raise AttributeError('Pupil mask cannot be directly specified. '
-                             'Use lock_pupil_mask() instead.')
+        raise AttributeError('Pupil mask cannot be directly specified. ' 'Use lock_pupil_mask() instead.')
 
     def _get_filter_mask(self, wfi_filter):
         """
@@ -497,7 +517,7 @@ class WFIPupilController:
             Path to WebbPSF-WFI data files
         """
         self._datapath = datapath
-        self._pupil_basepath = os.path.join(self._datapath, "pupils")
+        self._pupil_basepath = os.path.join(self._datapath, 'pupils')
 
     def update_pupil(self, filter, detector):
         """
@@ -514,29 +534,27 @@ class WFIPupilController:
             See WFI.detector_list for a list of valid detectors.
         """
         if not self._auto_pupil:
-            _log.info('Automatic pupil selection was locked; '
-                      'using user-provided pupil.')
+            _log.info('Automatic pupil selection was locked; ' 'using user-provided pupil.')
             return
 
         if self._pupil_basepath is None:
-           raise Exception('update_pupil called before setting pupil file path')
+            raise Exception('update_pupil called before setting pupil file path')
 
         # change detector string to match file format (e.g., "SCA01" -> "SCA_1")
-        det_substr = f"{detector[:3]}_{str(int((detector[3:])))}"
+        det_substr = f'{detector[:3]}_{str(int((detector[3:])))}'
 
         # figure out proper mask based on filter (or use locked mask if enabled)
-        pupil_mask = (self._get_filter_mask(filter) if self._auto_pupil_mask
-                      else self.pupil_mask)
+        pupil_mask = self._get_filter_mask(filter) if self._auto_pupil_mask else self.pupil_mask
 
         path_formatter = self.pupil_file_formatters[pupil_mask]
-        pupil = os.path.join(self._pupil_basepath,
-                             path_formatter.format(det_substr))
+        pupil = os.path.join(self._pupil_basepath, path_formatter.format(det_substr))
 
         self._pupil_mask = pupil_mask
         self._pupil = pupil
 
-        _log.info(f"Using {'' if self._auto_pupil_mask else 'locked '}"
-                  f"pupil mask '{pupil_mask}' and detector '{detector}'.")
+        _log.info(
+            f"Using {'' if self._auto_pupil_mask else 'locked '}" f"pupil mask '{pupil_mask}' and detector '{detector}'."
+        )
 
     def lock_pupil(self, pupil_path):
         """
@@ -609,14 +627,14 @@ class WFI(RomanInstrument):
     def __init__(self):
         # pixel scale is from Roman-AFTA SDT report final version (p. 91)
         # https://roman.ipac.caltech.edu/sims/Param_db.html
-        pixelscale = 110e-3 # arcsec/px
+        pixelscale = 110e-3  # arcsec/px
 
         # Initialize the aberrations for super().__init__
         self._aberration_files = {}
         self._is_custom_aberration = False
-        self._current_aberration_file = ""
+        self._current_aberration_file = ''
 
-        super().__init__("WFI", pixelscale=pixelscale)
+        super().__init__('WFI', pixelscale=pixelscale)
 
         # Initialize the pupil controller
         self._pupil_controller = WFIPupilController()
@@ -627,23 +645,21 @@ class WFI(RomanInstrument):
         # Define default aberration files for WFI modes
         self._aberration_files = {
             'imaging': os.path.join(self._datapath, 'wim_zernikes_cycle9.csv'),
-            'prism': os.path.join(self._datapath,
-                                  'wsm_prism_zernikes_cycle9.csv'),
-            'grism': os.path.join(self._datapath,
-                                  'wsm_grism_zernikes_cycle9.csv'),
-            'custom': None}
+            'prism': os.path.join(self._datapath, 'wsm_prism_zernikes_cycle9.csv'),
+            'grism': os.path.join(self._datapath, 'wsm_grism_zernikes_cycle9.csv'),
+            'custom': None,
+        }
 
         # Load and set default detector from aberration file
         self._detector_npixels = 4096
         self._load_detector_aberrations(self._aberration_files[self.mode])
         self.detector = 'SCA01'
 
-        self.opd_list = [os.path.join(self._WebbPSF_basepath,
-                                      'upscaled_HST_OPD.fits')]
+        self.opd_list = [os.path.join(self._WebbPSF_basepath, 'upscaled_HST_OPD.fits')]
         self.pupilopd = self.opd_list[-1]
 
     def _addAdditionalOptics(self, optsys, **kwargs):
-        _log.debug("   No optics added for WFI")
+        _log.debug('   No optics added for WFI')
         return optsys, False, None
 
     def _load_detector_aberrations(self, path):
@@ -710,8 +726,7 @@ class WFI(RomanInstrument):
         elif wfi_filter in self.filter_list:
             return 'imaging'
         else:
-            raise ValueError(f"Instrument {self.name} doesn't have a filter "
-                             f"called {wfi_filter}.")
+            raise ValueError(f"Instrument {self.name} doesn't have a filter " f'called {wfi_filter}.')
 
     def _update_pupil(self, filter=None, detector=None):
         if detector is None:
@@ -720,7 +735,7 @@ class WFI(RomanInstrument):
             filter = self.filter
 
         if detector is not None and filter is not None:
-            self._pupil_controller.update_pupil(filter=filter,detector=detector)
+            self._pupil_controller.update_pupil(filter=filter, detector=detector)
 
     @RomanInstrument.detector.setter
     def detector(self, value):
@@ -728,7 +743,7 @@ class WFI(RomanInstrument):
         The current WFI detector. See WFI.detector_list for valid values.
         """
         if value.upper() not in self.detector_list:
-            raise ValueError("Invalid detector. Valid detector names are: {}".format(', '.join(self.detector_list)))
+            raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
 
         self._detector = value.upper()
         if self._detector is not None:
@@ -743,23 +758,20 @@ class WFI(RomanInstrument):
         value = value.upper()
 
         if value not in self.filter_list:
-            raise ValueError(f"Instrument {self.name} doesn't have a "
-                             f"filter called {value}.")
+            raise ValueError(f"Instrument {self.name} doesn't have a " f'filter called {value}.')
 
         self._filter = value
 
         # Update aberrations if self._aberration_files has been initiated (not
         # empty) and if they haven't been locked by user
         if self._aberration_files and not self._is_custom_aberration:
-
             # identify aberration file for new mode
             mode = self._get_filter_mode(self._filter)
             aberration_file = self._aberration_files[mode]
 
             # if aberrations are not already loaded for the new mode,
             # load and replace detectors using the new mode's aberration file
-            if not os.path.samefile(self._current_aberration_file,
-                                    aberration_file):
+            if not os.path.samefile(self._current_aberration_file, aberration_file):
                 self._load_detector_aberrations(aberration_file)
 
         # Update pupil only if detector was previously loaded
@@ -781,8 +793,7 @@ class WFI(RomanInstrument):
         # don't allow pupil to be set until the pupil controller is active. (a
         # parent class tries to set it to None in WFI's preceding super() call)
         if hasattr(self, '_pupil_controller'):
-            raise AttributeError('Pupil cannot be directly specified. '
-                                 'Use lock_pupil() instead.')
+            raise AttributeError('Pupil cannot be directly specified. ' 'Use lock_pupil() instead.')
 
     @property
     def pupil_mask(self):
@@ -794,8 +805,7 @@ class WFI(RomanInstrument):
 
     @pupil_mask.setter
     def pupil_mask(self, name):
-        raise AttributeError('Pupil mask cannot be directly specified. '
-                             'Use lock_pupil_mask() instead.')
+        raise AttributeError('Pupil mask cannot be directly specified. ' 'Use lock_pupil_mask() instead.')
 
     @property
     def mode(self):
@@ -806,8 +816,7 @@ class WFI(RomanInstrument):
 
     @mode.setter
     def mode(self, value):
-        raise AttributeError("WFI mode cannot be directly specified; "
-                             "it is set by changing filters.")
+        raise AttributeError('WFI mode cannot be directly specified; ' 'it is set by changing filters.')
 
     def lock_aberrations(self, aberration_path):
         """
@@ -848,7 +857,7 @@ class WFI(RomanInstrument):
         path to that file by running the following:
             >>> from webbpsf import roman
             >>> wfi = roman.WFI()
-            >>> print(wfi._aberration_files["imaging"])
+            >>> print(wfi._aberration_files['imaging'])
 
         Warning: You should not edit the default files!
         """
@@ -857,14 +866,14 @@ class WFI(RomanInstrument):
         self._is_custom_aberration = True
 
     def unlock_aberrations(self):
-         """
-         Releases the lock on the detector aberration file location
-         and loads the default file.
-         """
-         aberration_path = self._aberration_files[self.mode]
-         self._load_detector_aberrations(aberration_path)
-         self._aberration_files['custom'] = None
-         self._is_custom_aberration = False
+        """
+        Releases the lock on the detector aberration file location
+        and loads the default file.
+        """
+        aberration_path = self._aberration_files[self.mode]
+        self._load_detector_aberrations(aberration_path)
+        self._aberration_files['custom'] = None
+        self._is_custom_aberration = False
 
     def lock_pupil(self, pupil_path):
         """
@@ -883,9 +892,9 @@ class WFI(RomanInstrument):
         if os.path.isfile(pupil_path):
             self._pupil_controller.lock_pupil(pupil_path)
         else:
-            raise FileNotFoundError(f"{pupil_path} not found.")
+            raise FileNotFoundError(f'{pupil_path} not found.')
 
-        _log.warning("Disabling default pupil selection behavior.")
+        _log.warning('Disabling default pupil selection behavior.')
 
     def unlock_pupil(self):
         """
@@ -895,7 +904,7 @@ class WFI(RomanInstrument):
         for the current detector/filter combination.
         """
         self._pupil_controller.unlock_pupil()
-        self._update_pupil() # reset pupil
+        self._update_pupil()  # reset pupil
 
     def lock_pupil_mask(self, pupil_mask):
         """
@@ -921,7 +930,7 @@ class WFI(RomanInstrument):
         is changed.
         """
         self._pupil_controller.unlock_pupil_mask()
-        self._update_pupil() # reset pupil mask
+        self._update_pupil()  # reset pupil mask
 
 
 class RomanCoronagraph(RomanInstrument):
@@ -961,10 +970,11 @@ class RomanCoronagraph(RomanInstrument):
         'CHARSPC_F660': ('IFS', 'F660', 'CHARSPC', 'CHARSPC_F660_BOWTIE', 'LS30D88'),
         'CHARSPC_F770': ('IFS', 'F770', 'CHARSPC', 'CHARSPC_F770_BOWTIE', 'LS30D88'),
         'CHARSPC_F890': ('IFS', 'F890', 'CHARSPC', 'CHARSPC_F890_BOWTIE', 'LS30D88'),
-        'DISKSPC_F721': ('IMAGER', 'F721', 'DISKSPC', 'DISKSPC_F721_ANNULUS', 'LS30D88')}
+        'DISKSPC_F721': ('IMAGER', 'F721', 'DISKSPC', 'DISKSPC_F721_ANNULUS', 'LS30D88'),
+    }
 
     def __init__(self, mode=None, pixelscale=None, fov_arcsec=None, apply_static_opd=False):
-        super().__init__("RomanCoronagraph", pixelscale=pixelscale)
+        super().__init__('RomanCoronagraph', pixelscale=pixelscale)
 
         self._detector_npixels = 1024
         self._detectors = {camera: 'placeholder' for camera in self.camera_list}
@@ -992,7 +1002,7 @@ class RomanCoronagraph(RomanInstrument):
 
         if mode is None:
             self.print_mode_table()
-            _log.info("Since the mode was not specified at instantiation, defaulting to CHARSPC_F660")
+            _log.info('Since the mode was not specified at instantiation, defaulting to CHARSPC_F660')
             self.mode = 'CHARSPC_F660'
         else:
             self.mode = mode
@@ -1016,7 +1026,7 @@ class RomanCoronagraph(RomanInstrument):
         else:  # default to 'IFS'
             if not hasattr(self, 'fov_arcsec') or not self._override_fov:
                 self.fov_arcsec = 2 * 0.82  # 2015 SDT report, Section 3.4.1.1.1:
-                                            # IFS has 76 lenslets across the (2 x 0.82) arcsec FoV.
+                # IFS has 76 lenslets across the (2 x 0.82) arcsec FoV.
             if not hasattr(self, 'pixelscale') or not self._override_pixelscale:
                 self.pixelscale = 0.025  # Nyquist at 600 nm
 
@@ -1053,11 +1063,9 @@ class RomanCoronagraph(RomanInstrument):
             raise ValueError("Instrument {0} doesn't have a apodizer called {1}.".format(self.name, value))
         self._apodizer = value
         if value == 'DISKSPC':
-            self._apodizer_fname = \
-                os.path.join(self._datapath, "optics/DISKSPC_SP_256pix.fits.gz")
+            self._apodizer_fname = os.path.join(self._datapath, 'optics/DISKSPC_SP_256pix.fits.gz')
         else:  # for now, default to CHARSPC
-            self._apodizer_fname = \
-                os.path.join(self._datapath, "optics/CHARSPC_SP_256pix.fits.gz")
+            self._apodizer_fname = os.path.join(self._datapath, 'optics/CHARSPC_SP_256pix.fits.gz')
 
     @property
     def fpm(self):
@@ -1072,20 +1080,24 @@ class RomanCoronagraph(RomanInstrument):
         self._fpm = value
         if value.startswith('DISKSPC'):
             self._fpmres = 3
-            self._owa = 20.
+            self._owa = 20.0
             self._Mfpm = int(np.ceil(self._fpmres * self._owa))
-            self._fpm_fname = \
-                os.path.join(self._datapath,
-                             "optics/DISKSPC_FPM_65WA200_360deg_-_FP1res{0:d}_evensamp_D{1:03d}_{2:s}.fits.gz".format(
-                                 self._fpmres, 2 * self._Mfpm, self.filter))
+            self._fpm_fname = os.path.join(
+                self._datapath,
+                'optics/DISKSPC_FPM_65WA200_360deg_-_FP1res{0:d}_evensamp_D{1:03d}_{2:s}.fits.gz'.format(
+                    self._fpmres, 2 * self._Mfpm, self.filter
+                ),
+            )
         else:
             self._fpmres = 4
-            self._owa = 9.
+            self._owa = 9.0
             self._Mfpm = int(np.ceil(self._fpmres * self._owa))
-            self._fpm_fname = \
-                os.path.join(self._datapath,
-                             "optics/CHARSPC_FPM_25WA90_2x65deg_-_FP1res{0:d}_evensamp_D{1:03d}_{2:s}.fits.gz".format(
-                                 self._fpmres, 2 * self._Mfpm, self.filter))
+            self._fpm_fname = os.path.join(
+                self._datapath,
+                'optics/CHARSPC_FPM_25WA90_2x65deg_-_FP1res{0:d}_evensamp_D{1:03d}_{2:s}.fits.gz'.format(
+                    self._fpmres, 2 * self._Mfpm, self.filter
+                ),
+            )
 
     @property
     def lyotstop(self):
@@ -1098,7 +1110,7 @@ class RomanCoronagraph(RomanInstrument):
         if value not in self.lyotstop_list:
             raise ValueError("Instrument {0} doesn't have a Lyot mask called {1}.".format(self.name, value))
         self._lyotstop = value
-        self._lyotstop_fname = os.path.join(self._datapath, "optics/SPC_LS_30D88_256pix.fits.gz")
+        self._lyotstop_fname = os.path.join(self._datapath, 'optics/SPC_LS_30D88_256pix.fits.gz')
 
     @property
     def mode_list(self):
@@ -1112,9 +1124,13 @@ class RomanCoronagraph(RomanInstrument):
     def mode(self):
         """Currently selected mode name"""
         for modename, settings in self._mode_table.items():
-            if (self.camera == settings[0].upper() and self.filter == settings[1].upper() and
-                    self.apodizer == settings[2].upper() and self.fpm == settings[3].upper() and
-                    self.lyotstop == settings[4]):
+            if (
+                self.camera == settings[0].upper()
+                and self.filter == settings[1].upper()
+                and self.apodizer == settings[2].upper()
+                and self.fpm == settings[3].upper()
+                and self.lyotstop == settings[4]
+            ):
                 return modename
         return 'Custom'
 
@@ -1129,14 +1145,18 @@ class RomanCoronagraph(RomanInstrument):
         self.fpm = settings[3]
         self.lyotstop = settings[4]
         _log.info('Set the following optical configuration:')
-        _log.info('camera = {0}, filter = {1}, apodizer = {2}, fpm = {3}, lyotstop = {4}'.format(\
-                  self.camera, self.filter, self.apodizer, self.fpm, self.lyotstop))
+        _log.info(
+            'camera = {0}, filter = {1}, apodizer = {2}, fpm = {3}, lyotstop = {4}'.format(
+                self.camera, self.filter, self.apodizer, self.fpm, self.lyotstop
+            )
+        )
 
     def print_mode_table(self):
         """Print the table of observing mode options and their associated optical configuration"""
-        _log.info("Printing the table of Roman Coronagraph Instrument observing modes supported by WebbPSF.")
-        _log.info("Each is defined by a combo of camera, filter, apodizer, "
-                  "focal plane mask (FPM), and Lyot stop settings:")
+        _log.info('Printing the table of Roman Coronagraph Instrument observing modes supported by WebbPSF.')
+        _log.info(
+            'Each is defined by a combo of camera, filter, apodizer, ' 'focal plane mask (FPM), and Lyot stop settings:'
+        )
         _log.info(pprint.pformat(self._mode_table))
 
     @property
@@ -1146,7 +1166,7 @@ class RomanCoronagraph(RomanInstrument):
 
     @detector_position.setter
     def detector_position(self, position):
-        raise RuntimeError("Detector position not adjustable for RomanCoronagraph")
+        raise RuntimeError('Detector position not adjustable for RomanCoronagraph')
 
     def _validate_config(self, **kwargs):
         super()._validate_config(**kwargs)
@@ -1156,8 +1176,9 @@ class RomanCoronagraph(RomanInstrument):
 
         trySAM = False
 
-        if ('pupil_shift_x' in self.options and self.options['pupil_shift_x'] != 0) or \
-                ('pupil_shift_y' in self.options and self.options['pupil_shift_y'] != 0):
+        if ('pupil_shift_x' in self.options and self.options['pupil_shift_x'] != 0) or (
+            'pupil_shift_y' in self.options and self.options['pupil_shift_y'] != 0
+        ):
             shift = (self.options['pupil_shift_x'], self.options['pupil_shift_y'])
         else:
             shift = None
@@ -1173,7 +1194,7 @@ class RomanCoronagraph(RomanInstrument):
         optsys.add_pupil(transmission=self._lyotstop_fname, name=self.lyotstop, shift=shift)
 
         # Cast as MatrixFTCoronagraph; this configures the detector
-        occ_box_size = 1.
+        occ_box_size = 1.0
         mft_optsys = poppy.MatrixFTCoronagraph(optsys, oversample=oversample, occulter_box=occ_box_size)
 
         return mft_optsys, trySAM, occ_box_size
@@ -1194,20 +1215,13 @@ class RomanCoronagraph(RomanInstrument):
         result[0].header.set('MODE', self.mode, comment='Observing mode')
         result[0].header.set('CAMERA', self.camera, comment='Imager or IFS')
         result[0].header.set('APODIZER', self.apodizer, comment='Apodizer')
-        result[0].header.set('APODTRAN', os.path.basename(self._apodizer_fname),
-                             comment='Apodizer transmission')
-        result[0].header.set('PUPLSCAL', apodizer_hdr['PUPLSCAL'],
-                             comment='Apodizer pixel scale in m/pixel')
-        result[0].header.set('PUPLDIAM', apodizer_hdr['PUPLDIAM'],
-                             comment='Full apodizer array size, incl padding.')
+        result[0].header.set('APODTRAN', os.path.basename(self._apodizer_fname), comment='Apodizer transmission')
+        result[0].header.set('PUPLSCAL', apodizer_hdr['PUPLSCAL'], comment='Apodizer pixel scale in m/pixel')
+        result[0].header.set('PUPLDIAM', apodizer_hdr['PUPLDIAM'], comment='Full apodizer array size, incl padding.')
         result[0].header.set('FPM', self.fpm, comment='Focal plane mask')
-        result[0].header.set('FPMTRAN', os.path.basename(self._fpm_fname),
-                             comment='FPM transmission')
+        result[0].header.set('FPMTRAN', os.path.basename(self._fpm_fname), comment='FPM transmission')
         result[0].header.set('FPMSCAL', fpm_hdr['PIXSCALE'], comment='FPM spatial sampling, arcsec/pix')
         result[0].header.set('LYOTSTOP', self.lyotstop, comment='Lyot stop')
-        result[0].header.set('LSTRAN', os.path.basename(self._lyotstop_fname),
-                             comment='Lyot stop transmission')
-        result[0].header.set('PUPLSCAL', lyotstop_hdr['PUPLSCAL'],
-                             comment='Lyot stop pixel scale in m/pixel')
-        result[0].header.set('PUPLDIAM', lyotstop_hdr['PUPLDIAM'],
-                             comment='Lyot stop array size, incl padding.')
+        result[0].header.set('LSTRAN', os.path.basename(self._lyotstop_fname), comment='Lyot stop transmission')
+        result[0].header.set('PUPLSCAL', lyotstop_hdr['PUPLSCAL'], comment='Lyot stop pixel scale in m/pixel')
+        result[0].header.set('PUPLDIAM', lyotstop_hdr['PUPLDIAM'], comment='Lyot stop array size, incl padding.')

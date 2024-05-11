@@ -9,6 +9,7 @@ from scipy.ndimage import rotate
 from soc_roman_tools.siaf.siaf import RomanSiaf
 import webbpsf.webbpsf_core
 
+
 def _get_default_siaf(instrument, aper_name):
     """
     Create instance of pysiaf for the input instrument and aperture
@@ -28,15 +29,15 @@ def _get_default_siaf(instrument, aper_name):
     """
 
     # Create new naming because SIAF requires special capitalization
-    if instrument == "NIRCAM":
-        siaf_name = "NIRCam"
-    elif instrument == "NIRSPEC":
-        siaf_name = "NIRSpec"
+    if instrument == 'NIRCAM':
+        siaf_name = 'NIRCam'
+    elif instrument == 'NIRSPEC':
+        siaf_name = 'NIRSpec'
     else:
         siaf_name = instrument
 
     # Select a single SIAF aperture
-    if instrument=='WFI':
+    if instrument == 'WFI':
         siaf = RomanSiaf()
         aper = siaf[aper_name]
     else:
@@ -45,13 +46,21 @@ def _get_default_siaf(instrument, aper_name):
 
     return aper
 
-# Functions for applying distortion from SIAF polynomials
-def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0, 
-                  xnew_coords=None, ynew_coords=None, return_coords=False,
-                  aper=None):
-    """ Distort an image
 
-    Apply SIAF instrument distortion to an image that is assumed to be in 
+# Functions for applying distortion from SIAF polynomials
+def distort_image(
+    hdulist_or_filename,
+    ext=0,
+    to_frame='sci',
+    fill_value=0,
+    xnew_coords=None,
+    ynew_coords=None,
+    return_coords=False,
+    aper=None,
+):
+    """Distort an image
+
+    Apply SIAF instrument distortion to an image that is assumed to be in
     its ideal coordinates. The header information should contain the relevant
     SIAF point information, such as SI instrument, aperture name, pixel scale,
     detector oversampling, and detector position ('sci' coords).
@@ -69,7 +78,7 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
         Value used to fill in any blank space by the skewed PSF. Default = 0.
         If set to None, values outside the domain are extrapolated.
     to_frame : str
-        Requested type of output coordinate frame. 
+        Requested type of output coordinate frame.
 
             * 'tel': arcsecs V2,V3
             * 'sci': pixels, in conventional DMS axes orientation
@@ -78,20 +87,20 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
 
     xnew_coords : None or ndarray
         Array of x-values in new coordinate frame to interpolate onto.
-        Can be a 1-dimensional array of unique values, in which case 
-        the final image will be of size (ny_new, nx_new). Or a 2d array 
-        that corresponds to full regular grid and has same shape as 
+        Can be a 1-dimensional array of unique values, in which case
+        the final image will be of size (ny_new, nx_new). Or a 2d array
+        that corresponds to full regular grid and has same shape as
         `ynew_coords` (ny_new, nx_new). If set to None, then final image
         is same size as input image, and coordinate grid spans the min
-        and max values of siaf_ap.convert(xidl,yidl,'idl',to_frame). 
+        and max values of siaf_ap.convert(xidl,yidl,'idl',to_frame).
     ynew_coords : None or ndarray
         Array of y-values in new coordinate frame to interpolate onto.
-        Can be a 1-dimensional array of unique values, in which case 
-        the final image will be of size (ny_new, nx_new). Or a 2d array 
-        that corresponds to full regular grid and has same shape as 
+        Can be a 1-dimensional array of unique values, in which case
+        the final image will be of size (ny_new, nx_new). Or a 2d array
+        that corresponds to full regular grid and has same shape as
         `xnew_coords` (ny_new, nx_new). If set to None, then final image
         is same size as input image, and coordinate grid spans the min
-        and max values of siaf_ap.convert(xidl,yidl,'idl',to_frame). 
+        and max values of siaf_ap.convert(xidl,yidl,'idl',to_frame).
     return_coords : bool
         In addition to returning the final image, setting this to True
         will return the full set of new coordinates. Output will then
@@ -110,37 +119,37 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
     elif isinstance(hdulist_or_filename, fits.HDUList):
         hdu_list = hdulist_or_filename
     else:
-        raise ValueError("input must be a filename or HDUlist")
+        raise ValueError('input must be a filename or HDUlist')
 
     if aper is None:
         # Log instrument and detector names
-        instrument = hdu_list[0].header["INSTRUME"].upper().strip()
+        instrument = hdu_list[0].header['INSTRUME'].upper().strip()
 
         if instrument == 'WFI':
-            aper_name = 'WFI' + hdu_list[0].header["DETECTOR"][-2:] + "_FULL"
+            aper_name = 'WFI' + hdu_list[0].header['DETECTOR'][-2:] + '_FULL'
         else:
-            aper_name = hdu_list[0].header["APERNAME"].upper()
+            aper_name = hdu_list[0].header['APERNAME'].upper()
 
         # Pull default values
         aper = _get_default_siaf(instrument, aper_name)
 
     # Pixel scale information
     ny, nx = hdu_list[ext].shape
-    pixelscale = hdu_list[ext].header["PIXELSCL"]  # the pixel scale carries the over-sample value
+    pixelscale = hdu_list[ext].header['PIXELSCL']  # the pixel scale carries the over-sample value
 
     # Get 'sci' reference location where PSF is observed
-    xsci_cen = hdu_list[ext].header["DET_X"]  # center x location in pixels ('sci')
-    ysci_cen = hdu_list[ext].header["DET_Y"]  # center y location in pixels ('sci')
+    xsci_cen = hdu_list[ext].header['DET_X']  # center x location in pixels ('sci')
+    ysci_cen = hdu_list[ext].header['DET_Y']  # center y location in pixels ('sci')
 
     # Convert the PSF center point from pixels to arcseconds using pysiaf
     xidl_cen, yidl_cen = aper.sci_to_idl(xsci_cen, ysci_cen)
 
     # ###############################################
     # Create an array of indices (in pixels) for where the PSF is located on the detector
-    nx_half, ny_half = ( (nx-1)/2., (ny-1)/2. )
-    xlin = np.linspace(-1*nx_half, nx_half, nx)
-    ylin = np.linspace(-1*ny_half, ny_half, ny)
-    xarr, yarr = np.meshgrid(xlin, ylin) 
+    nx_half, ny_half = ((nx - 1) / 2.0, (ny - 1) / 2.0)
+    xlin = np.linspace(-1 * nx_half, nx_half, nx)
+    ylin = np.linspace(-1 * ny_half, ny_half, ny)
+    xarr, yarr = np.meshgrid(xlin, ylin)
 
     # ###############################################
     # Create an array of indices (in pixels) that the final data will be interpolated onto
@@ -148,12 +157,12 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
 
     # If new x and y values are specified, create a meshgrid
     if (xnew_coords is not None) and (ynew_coords is not None):
-        if len(xnew_coords.shape)==1 and len(ynew_coords.shape)==1:
+        if len(xnew_coords.shape) == 1 and len(ynew_coords.shape) == 1:
             xnew, ynew = np.meshgrid(xnew_coords, ynew_coords)
-        elif len(xnew_coords.shape)==2 and len(ynew_coords.shape)==2:
-            assert xnew_coords.shape==ynew_coords.shape, "If new x and y inputs are a grid, must be same shapes"
+        elif len(xnew_coords.shape) == 2 and len(ynew_coords.shape) == 2:
+            assert xnew_coords.shape == ynew_coords.shape, 'If new x and y inputs are a grid, must be same shapes'
             xnew, ynew = xnew_coords, ynew_coords
-    elif to_frame=='sci':
+    elif to_frame == 'sci':
         osamp_x = aper.XSciScale / pixelscale
         osamp_y = aper.YSciScale / pixelscale
         xnew = xarr / osamp_x + xnew_cen
@@ -166,7 +175,7 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
         xv, yv = aper.convert(xidl, yidl, 'idl', to_frame)
         xmin, xmax = (xv.min(), xv.max())
         ymin, ymax = (yv.min(), yv.max())
-        
+
         # Range xnew from 0 to 1
         xnew = xarr - xarr.min()
         xnew /= xnew.max()
@@ -182,7 +191,7 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
         ynew = ynew * (ymax - ymin) + ymin
         # Make sure center value is xnew_cen
         ynew += ynew_cen - np.median(ynew)
-    
+
     # Convert requested coordinates to 'idl' coordinates
     xnew_idl, ynew_idl = aper.convert(xnew, ynew, to_frame, 'idl')
 
@@ -190,17 +199,19 @@ def distort_image(hdulist_or_filename, ext=0, to_frame='sci', fill_value=0,
     # Interpolate using Regular Grid Interpolator
     xvals = xlin * pixelscale + xidl_cen
     yvals = ylin * pixelscale + yidl_cen
-    func = RegularGridInterpolator((yvals,xvals), hdu_list[ext].data, method='linear', 
-                                   bounds_error=False, fill_value=fill_value)
+    func = RegularGridInterpolator(
+        (yvals, xvals), hdu_list[ext].data, method='linear', bounds_error=False, fill_value=fill_value
+    )
 
     # Create an array of (yidl, xidl) values to interpolate onto
-    pts = np.array([ynew_idl.flatten(),xnew_idl.flatten()]).transpose()
+    pts = np.array([ynew_idl.flatten(), xnew_idl.flatten()]).transpose()
     psf_new = func(pts).reshape(xnew.shape)
-    
+
     if return_coords:
         return (psf_new, xnew, ynew)
     else:
         return psf_new
+
 
 def apply_distortion(hdulist_or_filename=None, fill_value=0):
     """
@@ -227,18 +238,18 @@ def apply_distortion(hdulist_or_filename=None, fill_value=0):
     elif isinstance(hdulist_or_filename, fits.HDUList):
         hdu_list = hdulist_or_filename
     else:
-        raise ValueError("input must be a filename or HDUlist")
+        raise ValueError('input must be a filename or HDUlist')
 
     # Create a copy of the PSF
     psf = copy.deepcopy(hdu_list)
     ext = 1  # edit the oversampled PSF (OVERDIST extension)
 
     # Log instrument and detector names
-    instrument = hdu_list[0].header["INSTRUME"].upper().strip()
+    instrument = hdu_list[0].header['INSTRUME'].upper().strip()
     if instrument == 'WFI':
-        aper_name = 'WFI' + hdu_list[0].header["DETECTOR"][-2:] + "_FULL"
+        aper_name = 'WFI' + hdu_list[0].header['DETECTOR'][-2:] + '_FULL'
     else:
-        aper_name = hdu_list[0].header["APERNAME"].upper()
+        aper_name = hdu_list[0].header['APERNAME'].upper()
 
     # Pull default values
     aper = _get_default_siaf(instrument, aper_name)
@@ -250,8 +261,8 @@ def apply_distortion(hdulist_or_filename=None, fill_value=0):
     psf[ext].data = psf_new
 
     # Set new header keywords
-    psf[ext].header["DISTORT"] = ("True", "SIAF distortion coefficients applied")
-    psf[ext].header["SIAF_VER"] = (pysiaf.JWST_PRD_VERSION, "SIAF PRD version used")
+    psf[ext].header['DISTORT'] = ('True', 'SIAF distortion coefficients applied')
+    psf[ext].header['SIAF_VER'] = (pysiaf.JWST_PRD_VERSION, 'SIAF PRD version used')
 
     degree = int(getattr(aper, 'Sci2IdlDeg'))
     number_of_coefficients = int((degree + 1) * (degree + 2) / 2)
@@ -260,13 +271,14 @@ def apply_distortion(hdulist_or_filename=None, fill_value=0):
         coeff_keys = np.sort(np.array([c for c in all_keys if 'Idl2Sci' + axis in c]))
         coeff = np.array([getattr(aper, c) for c in coeff_keys[0:number_of_coefficients]])
         for i in range(len(coeff)):
-            key = "COEF_{}".format(coeff_keys[i][-3:])
-            psf[ext].header[key] = (coeff[i], "SIAF distortion coefficient for {}".format(coeff_keys[i]))
+            key = 'COEF_{}'.format(coeff_keys[i][-3:])
+            psf[ext].header[key] = (coeff[i], 'SIAF distortion coefficient for {}'.format(coeff_keys[i]))
 
     return psf
 
 
 # Function for applying Rotation to NIRCam, NIRISS, and FGS
+
 
 def apply_rotation(hdulist_or_filename=None, rotate_value=None, crop=True):
     """
@@ -296,28 +308,27 @@ def apply_rotation(hdulist_or_filename=None, rotate_value=None, crop=True):
     elif isinstance(hdulist_or_filename, fits.HDUList):
         hdu_list = hdulist_or_filename
     else:
-        raise ValueError("input must be a filename or HDUlist")
+        raise ValueError('input must be a filename or HDUlist')
 
     # Create a copy of the PSF
     psf = copy.deepcopy(hdu_list)
 
     # Log instrument and detector names
-    instrument = hdu_list[0].header["INSTRUME"].upper().strip()
+    instrument = hdu_list[0].header['INSTRUME'].upper().strip()
     if instrument == 'WFI':
-        aper_name = 'WFI' + hdu_list[0].header["DETECTOR"][-2:] + "_FULL"
+        aper_name = 'WFI' + hdu_list[0].header['DETECTOR'][-2:] + '_FULL'
     else:
-        aper_name = hdu_list[0].header["APERNAME"].upper()
+        aper_name = hdu_list[0].header['APERNAME'].upper()
 
-    if instrument in ["MIRI", "NIRSPEC"]:
-        raise ValueError("{}'s rotation is already included in WebbPSF and "
-                         "shouldn't be added again.".format(instrument))
-    if instrument == "WFI":
-        raise ValueError("Rotation not necessary for {:} as pupil are aligned with SCAs (to confirm).".format(instrument))
+    if instrument in ['MIRI', 'NIRSPEC']:
+        raise ValueError("{}'s rotation is already included in WebbPSF and " "shouldn't be added again.".format(instrument))
+    if instrument == 'WFI':
+        raise ValueError('Rotation not necessary for {:} as pupil are aligned with SCAs (to confirm).'.format(instrument))
 
     # Set rotation value if not already set by a keyword argument
     if rotate_value is None:
         aper = _get_default_siaf(instrument, aper_name)
-        rotate_value = getattr(aper, "V3IdlYAngle")  # the angle to rotate the PSF in degrees
+        rotate_value = getattr(aper, 'V3IdlYAngle')  # the angle to rotate the PSF in degrees
 
     # If crop = True, then reshape must be False - so invert this keyword
     reshape = np.invert(crop)
@@ -330,9 +341,6 @@ def apply_rotation(hdulist_or_filename=None, rotate_value=None, crop=True):
     psf[ext].data = psf_new
 
     # Set new header keyword
-    psf[ext].header["ROTATION"] = (rotate_value, "PSF rotated to match detector rotation")
+    psf[ext].header['ROTATION'] = (rotate_value, 'PSF rotated to match detector rotation')
 
     return psf
-
-
-
