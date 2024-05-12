@@ -1252,7 +1252,12 @@ class JWInstrument(SpaceTelescopeInstrument):
                 # Apply distortion effects to MIRI psf: Distortion and MIRI Scattering
                 _log.debug('MIRI: Adding optical distortion and Si:As detector internal scattering')
                 if self.mode != 'IFU':
-                    psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion
+                    if self._detector_geom_info.aperture.AperType != 'SLIT':
+                        psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion
+                    else:
+                        # slit type aperture, specifically LRS SLIT, does not have distortion polynomials
+                        # therefore omit apply_distortion if a SLIT aperture is selected.
+                        psf_siaf = result
                     psf_siaf_rot = detectors.apply_miri_scattering(psf_siaf)  # apply scattering effect
                     psf_distorted = detectors.apply_detector_charge_diffusion(psf_siaf_rot,options)  # apply detector charge transfer model
                 else:
