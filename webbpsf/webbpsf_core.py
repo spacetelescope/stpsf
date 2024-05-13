@@ -19,32 +19,24 @@ the logger name "webbpsf".
 
 Code by Marshall Perrin <mperrin@stsci.edu>
 """
-import os
-import glob
-from collections import namedtuple, OrderedDict
 import functools
-import numpy as np
-import scipy.interpolate, scipy.ndimage
+import glob
+import os
+from collections import OrderedDict, namedtuple
 
 import astropy
-import astropy.io.fits as fits
 import astropy.io.ascii as ioascii
+import astropy.io.fits as fits
 import astropy.units as units
-
+import numpy as np
 import poppy
-
 import pysiaf
+import scipy.interpolate
+import scipy.ndimage
 
-from . import conf
-from . import utils
-from . import optics
-from . import DATA_VERSION_MIN
-from . import detectors
-from . import distortion
-from . import gridded_library
-from . import opds
-from . import constants
 import webbpsf.mast_wss
+
+from . import DATA_VERSION_MIN, constants, detectors, distortion, gridded_library, opds, optics, utils
 
 try:
     from .version import version
@@ -1507,7 +1499,8 @@ class JWInstrument(SpaceTelescopeInstrument):
             raise NotImplementedError(f'Not a known kind of WFE: {kind}')
 
         if plot:
-            import matplotlib, matplotlib.pyplot as plt
+            import matplotlib
+            import matplotlib.pyplot as plt
 
             plt.imshow(opd, vmin=-5e-7, vmax=5e-7, cmap=matplotlib.cm.RdBu_r, origin='lower')
             plt.title(kind + ' WFE')
@@ -1598,7 +1591,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         #                               "[nm] RMS Observatory WFE (i.e. OTE+SI) at sensing field pt")
 
         if plot:
-            import matplotlib, matplotlib.pyplot as plt
+            import matplotlib
+            import matplotlib.pyplot as plt
 
             fig, axes = plt.subplots(figsize=(16, 9), ncols=3, nrows=2)
             vm = 2e-7
@@ -1711,7 +1705,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 )
                 opdhdu_at_si_fp[0].header.add_history(f'  Selected instrument field point is at V2,V3 = {v2v3}.')
                 opdhdu_at_si_fp[0].header.add_history(
-                    f'Saving out total estimated OTE WFE (global+field dep) at that field point.'
+                    'Saving out total estimated OTE WFE (global+field dep) at that field point.'
                 )
                 opdhdu_at_si_fp[0].header['INSTRUME'] = self.name
                 opdhdu_at_si_fp[0].header['DETECTOR'] = self.detector
@@ -2873,7 +2867,7 @@ class NIRSpec(JWInstrument):
         See Table 3-6 of NIRSpec Ops Concept Document, ESA-JWST-TN-0297 / JWST-OPS-003212
 
         """
-        from .optics import NIRSpec_three_MSA_shutters, NIRSpec_MSA_open_grid
+        from .optics import NIRSpec_MSA_open_grid, NIRSpec_three_MSA_shutters
 
         trySAM = False  # semi-analytic method never applicable here.
         SAM_box_size = None
@@ -2986,7 +2980,7 @@ class NIRISS(JWInstrument):
         are present, so we might as well still provide the ability to simulate 'em.
         """
 
-        from .optics import NIRISS_GR700XD_Grism, NIRISS_CLEARP
+        from .optics import NIRISS_CLEARP, NIRISS_GR700XD_Grism
 
         if self.image_mask == 'CORON058':
             radius = 0.58 / 2

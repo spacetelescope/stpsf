@@ -1,8 +1,8 @@
 # Functions for interacting with the MAST archive and JWST measured data
 
 
-import os
 import functools
+import os
 
 import astropy
 import astropy.io.fits as fits
@@ -10,7 +10,6 @@ import astropy.time
 import astropy.units as u
 import numpy as np
 from astropy.time import Time, TimeDelta
-
 from astroquery.mast import Mast, Observations
 
 import webbpsf.utils
@@ -285,7 +284,7 @@ def import_wss_opd(filename, npix_out=1024, verbose=False):
     #  initial coarse resolution on the segment gaps
     mask = inputOPD != 0
     paddedOPD = webbpsf.utils.border_extrapolate_pad(inputOPD, mask)
-    wasopd[0].header.add_history(f'  Dilated OPD values to fill adjacent invalid pixels (i.e. fill in gaps)')
+    wasopd[0].header.add_history('  Dilated OPD values to fill adjacent invalid pixels (i.e. fill in gaps)')
 
     # interpolate to larger size
     newopd = webbpsf.utils.rescale_interpolate_opd(paddedOPD, npix_out)
@@ -753,8 +752,9 @@ def get_visit_nrc_ta_image(visitid, verbose=True, kind='cal'):
     except urllib.error.HTTPError as err:
         if err.code == 401:  # Unauthorized
             # Use MAST API to allow retrieval of exclusive access data, if relevant
-            import astroquery
             import tempfile
+
+            import astroquery
 
             mast_api_token = os.environ.get('MAST_API_TOKEN', None)
             mast_obs = astroquery.mast.ObservationsClass(mast_api_token)

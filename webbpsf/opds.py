@@ -26,31 +26,28 @@
 #   prescription, as published for instance in Lightsey et al. 2012 Opt. Eng.
 #
 ###############################################################################
-import functools
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
-import scipy.special as sp
-import scipy
-import astropy.table
-import astropy.io.fits as fits
-import astropy.units as u
-import logging
-from collections import OrderedDict
-import warnings
-from packaging.version import Version
 import copy
+import functools
+import logging
+import os
+import warnings
+from collections import OrderedDict
 
+import astropy.io.fits as fits
+import astropy.table
+import astropy.units as u
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 import poppy
 import poppy.zernike as zernike
+import scipy
+import scipy.special as sp
+from packaging.version import Version
 
-import pysiaf
-
-from . import constants
-from . import surs
-from . import utils
 import webbpsf
+
+from . import constants, surs, utils
 
 _log = logging.getLogger('webbpsf')
 
@@ -1651,7 +1648,7 @@ class OTE_Linear_Model_WSS(OPD):
             wfe_sign = 1
 
         for i in range(3, 9):
-            self.opd_header[f'SMIF_H{i}'] = (z_coeffs[i], f'Hexike coeff from S.M. influence fn model')
+            self.opd_header[f'SMIF_H{i}'] = (z_coeffs[i], 'Hexike coeff from S.M. influence fn model')
         self.opd_header['HISTORY'] = 'Field point (x,y): ({})'.format(v2v3)
         self.opd_header['HISTORY'] = 'Control point: {} ({})'.format(
             self.control_point_fieldpoint.upper(), self.ote_control_point

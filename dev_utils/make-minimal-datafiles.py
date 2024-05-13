@@ -3,9 +3,7 @@
 # This is used to make a stripped-down version of the data files for use on GitHub Actions
 
 import os, sys
-import astropy.io.fits as fits
 import subprocess
-import glob
 
 try:
     inputfile = sys.argv[1]

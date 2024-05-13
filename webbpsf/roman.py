@@ -8,19 +8,16 @@ WARNING: This model has not yet been validated against other PSF
          mirror polishing errors, which are taken from HST).
 """
 
-import os.path
-import poppy
-import numpy as np
-
-from scipy.interpolate import griddata, RegularGridInterpolator
-from astropy.io import fits
-import astropy.units as u
 import logging
+import os.path
 
-from . import utils
-from . import webbpsf_core
-from . import distortion
-from .optics import _fix_zgrid_NaNs
+import astropy.units as u
+import numpy as np
+import poppy
+from astropy.io import fits
+from scipy.interpolate import griddata
+
+from . import distortion, utils, webbpsf_core
 
 _log = logging.getLogger('webbpsf')
 import pprint
