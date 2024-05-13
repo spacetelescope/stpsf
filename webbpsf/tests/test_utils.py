@@ -1,10 +1,7 @@
-import sys, os
-import numpy as np
-import matplotlib.pyplot as plt
 import astropy.io.fits as fits
+import numpy as np
 
 try:
-    import pytest
 
     _HAVE_PYTEST = True
 except:
@@ -15,11 +12,8 @@ import logging
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
+from .. import conf, utils, webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
-
-from .. import webbpsf_core
-from .. import utils
-from .. import conf
 
 
 def test_logging_restart():

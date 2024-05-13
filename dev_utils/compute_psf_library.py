@@ -1,12 +1,12 @@
-import sys
-import multiprocessing
+import datetime
 import logging
 import logging.handlers
-import datetime
-import time
-from os.path import abspath, sep, join, exists, isdir, split
+import multiprocessing
 import os
-from itertools import product, chain
+import sys
+from itertools import chain, product
+from os.path import abspath, exists, isdir, join, split
+
 import matplotlib
 
 matplotlib.use('Agg')
@@ -16,8 +16,7 @@ assert exists(os.environ['PYSYN_CDBS']), "Can't load synthetic photometry files!
 
 if not os.environ.get('WEBBPSF_PATH'):
     os.environ['WEBBPSF_PATH'] = '/grp/jwst/ote/webbpsf-data'
-import webbpsf
-
+import webbpsf # noqa
 
 N_PROCESSES = 16
 

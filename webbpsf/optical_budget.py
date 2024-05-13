@@ -1,12 +1,13 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import webbpsf
-import poppy
+
 import astropy.table as table
 import astropy.units as u
-from webbpsf.utils import rms
+import matplotlib.pyplot as plt
+import numpy as np
+import poppy
 
+import webbpsf
+from webbpsf.utils import rms
 
 ### JWST Optical Budgets Information
 # This module makes extensive use of information from the JWST Optical Budget
@@ -290,7 +291,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_ote_static,
         aperture,
-        title=f'OTE total static wavefront',
+        title='OTE total static wavefront',
         ax=axes[1, 0],
         annotate_budget='OTE total static',
         instname=inst.name,
@@ -300,7 +301,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_ote_controllable,
         aperture,
-        title=f'OTE controllable mode residuals\n(low+mid s.f.)',
+        title='OTE controllable mode residuals\n(low+mid s.f.)',
         ax=axes[1, 1],
         annotate_budget='OTE residual controllable modes (mid freq)',
         instname=inst.name,
@@ -308,7 +309,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_ote_uncontrollable,
         aperture,
-        title=f'OTE uncontrollable WFE\n(high s.f.)',
+        title='OTE uncontrollable WFE\n(high s.f.)',
         ax=axes[1, 2],
         annotate_budget='OTE uncontrollable high freq',
         instname=inst.name,
@@ -316,7 +317,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_ote_field_dep,
         aperture,
-        title=f'OTE field-dependent WFE\n(low s.f.)',
+        title='OTE field-dependent WFE\n(low s.f.)',
         ax=axes[1, 3],
         annotate_budget='OTE residual low freq (field dep)',
         instname=inst.name,
@@ -325,7 +326,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_ote_dynamic,
         aperture,
-        title=f'OTE total dynamic wavefront',
+        title='OTE total dynamic wavefront',
         ax=axes[2, 0],
         annotate_budget='OTE total dynamic',
         instname=inst.name,
@@ -334,7 +335,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     ax = show_opd(
         wfe_ote_dynamic_thermal,
         aperture,
-        title=f'OTE thermal drifts',
+        title='OTE thermal drifts',
         ax=axes[2, 1],
         annotate_budget='OTE stability',
         instname=inst.name,
@@ -348,12 +349,12 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
         horizontalalignment='right',
     )
     show_opd(
-        wfe_ote_dynamic_vibe, aperture, title=f'OTE vibe', ax=axes[2, 2], annotate_budget='OTE vibe', instname=inst.name
+        wfe_ote_dynamic_vibe, aperture, title='OTE vibe', ax=axes[2, 2], annotate_budget='OTE vibe', instname=inst.name
     )
     ax = show_opd(
         wfe_for_imagemotion,
         aperture,
-        title=f'image motion$^*$ (as equiv. WFE)',
+        title='image motion$^*$ (as equiv. WFE)',
         ax=axes[2, 3],
         annotate_budget='Image motion (as equiv. WFE)',
         instname=inst.name,
@@ -364,7 +365,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_si,
         aperture,
-        title=f'ISIM+SI total ',
+        title='ISIM+SI total ',
         ax=axes[3, 0],
         annotate_budget='ISIM+SI total',
         instname=inst.name,
@@ -381,7 +382,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_si * 0,
         aperture,
-        title=f'ISIM struct. align.',
+        title='ISIM struct. align.',
         ax=axes[3, 2],
         annotate_budget='ISIM structural',
         instname=inst.name,
@@ -389,7 +390,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     show_opd(
         wfe_si_dynamic,
         aperture,
-        title=f'ISIM+SI instability',
+        title='ISIM+SI instability',
         ax=axes[3, 3],
         annotate_budget='ISIM+SI instability',
         instname=inst.name,

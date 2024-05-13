@@ -1,26 +1,21 @@
+import logging
 import os
-import poppy
-import poppy.utils
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 
-from astropy.table import Table
 import astropy.io.fits as fits
 import astropy.units as units
-
-from scipy.interpolate import griddata, RegularGridInterpolator
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import poppy
+import poppy.utils
+from astropy.table import Table
+from scipy.interpolate import RegularGridInterpolator, griddata
 from scipy.ndimage import rotate
 
-from . import webbpsf_core
-from . import utils
-from . import constants
-
-import logging
+from . import constants, utils, webbpsf_core
 
 _log = logging.getLogger('webbpsf')
 
-import pysiaf
 
 
 #######  Classes for modeling aspects of JWST's segmented active primary #####

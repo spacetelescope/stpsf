@@ -1,10 +1,11 @@
 import os
+
 import numpy as np
 import pytest
-from webbpsf import roman, measure_fwhm
 from astropy.table import Table
 from numpy import allclose
 
+from webbpsf import measure_fwhm, roman
 
 GRISM_FILTERS = roman.GRISM_FILTERS
 PRISM_FILTERS = roman.PRISM_FILTERS
@@ -118,7 +119,7 @@ def test_WFI_pupil_controller():
             # test unlock
             wfi.unlock_pupil_mask()
 
-            assert wfi.pupil == pupil_path(wfi), f'Pupil mask unlock failed'
+            assert wfi.pupil == pupil_path(wfi), 'Pupil mask unlock failed'
 
         assert wfi._pupil_controller._auto_pupil, 'Pupil is locked and should not be'
         assert wfi._pupil_controller._auto_pupil_mask, 'Pupil mask is locked and should not be'
@@ -132,7 +133,7 @@ def test_WFI_pupil_controller():
         assert wfi.pupil == this_file, 'Pupil did not lock to proper file.'
 
         wfi.unlock_pupil()
-        assert wfi.pupil == pupil_path(wfi), f'Pupil unlock failed.'
+        assert wfi.pupil == pupil_path(wfi), 'Pupil unlock failed.'
 
         assert wfi._pupil_controller._auto_pupil, 'Pupil is locked and should  not be'
         assert wfi._pupil_controller._auto_pupil_mask, 'Pupil mask is locked and should not be'

@@ -99,14 +99,14 @@ class SegmentUpdate(object):
         if self.coord == 'global':
             return self.moves
         else:
-            raise NotImplemented('Error')
+            raise NotImplementedError('Error')
 
     def to_local(self):
         """Return moves cast to local coordinates"""
         if self.coord == 'local':
             return self.moves
         else:
-            raise NotImplemented('Error')
+            raise NotImplementedError('Error')
             # TO implement based on Ball's 'pmglobal_to_seg' in ./wfsc_core_algs/was_core_pmglobal_to_seg.pro
             # or the code in ./segment_control/mcs_hexapod_obj__define.pro
 
@@ -171,7 +171,7 @@ class SUR(object):
     def xmltext(self):
         """The XML text representation of a given move"""
         text = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                <SEGMENT_UPDATE_REQUEST creator="?" date="{date}" time="{time}" version="0.0.1" operational="false" 
+                <SEGMENT_UPDATE_REQUEST creator="?" date="{date}" time="{time}" version="0.0.1" operational="false"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../setup_files/
                 schema/segment_update_request.xsd">
                 <CONFIGURATION_NAME>{self.configuration_name}</CONFIGURATION_NAME>

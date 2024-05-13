@@ -1,12 +1,9 @@
 ## Functions to match or fit PSFs to observed JWST data
 import astropy
-import astropy.units as u
 import astropy.io.fits as fits
-
-import scipy.optimize
+import pysiaf
 
 import webbpsf
-import pysiaf
 
 
 def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest'):
@@ -30,7 +27,7 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
     else:
         header = filename_or_HDUList[0].header
         if verbose:
-            print(f'Setting up sim to match provided FITS HDUList object')
+            print('Setting up sim to match provided FITS HDUList object')
 
     inst = webbpsf.instrument(header['INSTRUME'])
 

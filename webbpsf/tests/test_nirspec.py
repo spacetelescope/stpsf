@@ -1,22 +1,16 @@
-import sys, os
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.io.fits as fits
-import astropy.units as u
-import pysiaf
-
 import logging
+
+import astropy.units as u
+import numpy as np
+import pysiaf
 
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
 from .. import webbpsf_core
-import poppy
-
 
 # ------------------    NIRSpec Tests    ----------------------------
-
-from .test_webbpsf import generic_output_test, do_test_source_offset, do_test_set_position_from_siaf
+from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
 test_nirspec = lambda: generic_output_test('NIRSpec')
 
