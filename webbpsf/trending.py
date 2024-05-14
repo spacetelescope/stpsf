@@ -1641,15 +1641,11 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
 
     wlm8_m1 = hdul1[5].data
     wlp8_m1 = hdul1[10].data
-    wlm8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[6].data, wlm8_m1.shape)    # noqa TODO - any reason not to delete?
-    wlp8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[11].data, wlm8_m1.shape)   # noqa TODO - any reason not to delete?
 
     opd, hdul2 = webbpsf.trending._read_opd(fn2)
 
     wlm8_m2 = hdul2[5].data
     wlp8_m2 = hdul2[10].data
-    wlm8_c2 = poppy.utils.pad_or_crop_to_shape(hdul2[6].data, wlm8_m2.shape)    # noqa TODO - any reason not to delete?
-    wlp8_c2 = poppy.utils.pad_or_crop_to_shape(hdul2[11].data, wlm8_m2.shape)   # noqa TODO - any reason not to delete?
 
     cm = matplotlib.cm.inferno
     cm.set_bad(cm(0))
@@ -1708,9 +1704,6 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
         ax.yaxis.set_ticks([])
 
     return fig
-
-
-
 
 
 def show_wfs_around_obs(filename, verbose='True'):
@@ -1897,8 +1890,7 @@ def show_wfs_during_program(
 
     # Look up wavefront sensing and mirror move corrections for that range
     opdtable = get_opdtable_for_daterange(start_date, end_date)
-    corrections_table = webbpsf.mast_wss.get_corrections(opdtable) # noqa TODO - this is unused and has no ramifications, is there a reason to keep or can I delete this line?
-
+    
     # Iterate over the WFS measurements to retrieve the OPDs and RMS WFE
     wfs_dates = []
     rms_obs = []

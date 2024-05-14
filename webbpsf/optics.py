@@ -233,8 +233,6 @@ class NIRSpec_MSA_open_grid(poppy.AnalyticOpticalElement):
         The walls separating adjacent shutters are 0.06 arcsec wide.
         """
 
-        msa_width = 0.2     # TODO - Unused values okay to delete?
-        msa_height = 0.45   # TODO - Unused values okay to delete?
         msa_wall = 0.06
         msa_x_pitch = 0.26
         msa_y_pitch = 0.51
@@ -841,7 +839,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             if poppy.accel_math._USE_NUMEXPR:
                 import numexpr as ne
 
-                jn1 = scipy.special.j1(sigmar)  # noqa TODO - this looks like a bug, should jn1 be formatted in the following line?
+                jn1 = scipy.special.j1(sigmar)  # noqa
                 self.transmission = ne.evaluate('(1 - (2 * jn1 / sigmar) ** 2)')
             else:
                 self.transmission = 1 - (2 * scipy.special.j1(sigmar) / sigmar) ** 2

@@ -426,10 +426,6 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
             between_col2_col3, meany_row, '+', color='purple', horizontalalignment='center', fontweight='bold', fontsize=18
         )
 
-    # Annotate first column to show WFE summation
-    between_row1_row2 = (bounds(axes[1, 0])[0, 1] + bounds(axes[2, 0])[1, 1]) / 2   # TODO - Unused values okay to delete?
-    between_row2_row3 = (bounds(axes[2, 0])[0, 1] + bounds(axes[3, 0])[1, 1]) / 2   # TODO - Unused values okay to delete?
-
     meanx_col0 = bounds(axes[0, 0])[:, 0].mean()
     for irow, symbol in enumerate(['=', '+', '+']):
         between_rows = (bounds(axes[irow, 0])[0, 1] + bounds(axes[irow + 1, 0])[1, 1]) / 2

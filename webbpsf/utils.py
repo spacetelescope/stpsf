@@ -995,3 +995,15 @@ def determine_inst_name_from_v2v3(v2v3):
         raise ValueError(f'Given V2V3 coordinates {v2v3} do not fall within an instrument FOV region')
 
     return instrument
+
+
+def label_wavelength (nwavelengths, wavelength_slices):
+    # Allow up to 10,000 wavelength slices. The number matters because FITS
+    # header keys can only have up to 8 characters. Backward-compatible.
+    if nwavelengths < 100:
+        label = 'WAVELN{:02d}'.format(wavelength_slices)
+    elif nwavelengths < 10000:
+        label = 'WVLN{:04d}'.format(wavelength_slices)
+    else:
+        raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
+    return label

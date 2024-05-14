@@ -2972,52 +2972,6 @@ def random_unstack(ote, radius=1, verbose=False):
     ote.update_opd(verbose=verbose)
 
 
-# --------------------------------------------------------------------------------
-
-
-def test_OPDbender():
-    plt.figure(1)
-    tel = OPDbender()  # TODO remove this whole test?
-    tel.displace('A1', 1, 0, 0, display=False)
-    tel.displace('A2', 0, 1, 0, display=False)
-    tel.displace('A3', 0, 0, 0.03, display=False)
-    tel.displace('A4', 0, -1, 0, display=False)
-    tel.displace('A5', 1, -1, 0, display=False)
-
-    tel.tilt('B1', 0.1, 0, 0)
-    tel.tilt('B2', 0, 0.1, 0)
-    tel.tilt('B3', 0, 0, 100)
-
-    tel.display()
-
-    plt.figure(2)
-    tel.zern_seg('B3')
-
-    print('')
-    print('')
-    print('RMS WFE is ', tel.rms())
-
-    tel.print_state()
-
-
-def test2_OPDbender(filename='OPD_RevV_nircam_132.fits'):
-    orig = OPDbender(filename) # TODO remove this whole test?
-
-    plot_kwargs = {'colorbar_orientation': 'horizontal', 'clear': False}
-
-    plt.clf()
-    plt.subplot(131)
-    orig.draw(title='Input OPD from \n' + filename, **plot_kwargs)
-
-    perturbed = orig.copy()
-    perturbed.perturb_all(multiplier=0.2, draw=False)
-
-    plt.subplot(132)
-    perturbed.draw(title='OPD after small random perturbation', **plot_kwargs)
-
-    plt.subplot(133)
-    diff = perturbed - orig
-    diff.draw(title='Difference ({0:.1f} nm rms)'.format(diff.rms()), **plot_kwargs)
 
 
 # -------------------------------------------------------------------------------

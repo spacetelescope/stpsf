@@ -4,10 +4,11 @@ from collections import OrderedDict
 
 import astropy.convolution
 import numpy as np
+import poppy
 from astropy.io import fits
 from astropy.nddata import NDData
+from photutils.psf import GriddedPSFModel
 
-import poppy
 import webbpsf.detectors
 
 
@@ -149,15 +150,6 @@ class CreatePSFLibrary:
         grid = c.create_grid()
 
         """
-
-        # Before doing anything else, check that we have GriddedPSFModel
-        try:
-            from photutils.psf import GriddedPSFModel
-        except ImportError:
-            try:
-                from photutils import GriddedPSFModel # noqa
-            except ImportError:
-                raise ImportError('This method requires photutils >= 0.6')
 
         # Pull WebbPSF instance
         self.webb = instrument

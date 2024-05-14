@@ -12,6 +12,8 @@ import pytest
 
 import webbpsf
 
+from ..utils import rms
+
 # Set up a pinned pysiaf version so as not to break tests with any pysiaf value updates
 prd_data_dir = pysiaf.constants.JWST_PRD_DATA_ROOT.rsplit('PRD', 1)[0]
 PRD34_NRC = os.path.join(prd_data_dir, 'PRDOPSSOC-034/SIAFXML/SIAFXML/NIRCam_SIAF.xml')
@@ -343,8 +345,6 @@ def test_apply_field_dependence_model():
     dependence. Thus there are several calls to manually set only the nominal field dep to True
 
     """
-    def rms(array, mask):
-        return np.sqrt((array[mask] ** 2).mean())
 
     # Get the OPD without any sort of field dependence
     ote = webbpsf.opds.OTE_Linear_Model_WSS(v2v3=None)
