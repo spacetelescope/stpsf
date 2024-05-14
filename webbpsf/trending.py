@@ -322,7 +322,7 @@ def wfe_histogram_plot(
     dates = astropy.time.Time(opdtable1['date'], format='isot')
 
     # Interpolate those RMSes into an even grid over time
-    interp_fn = scipy.interpolate.interp1d(mjds, rmses, kind='linear')
+    interp_fn = scipy.interpolate.interp1d(mjds, rmses, kind='nearest')
 
     mjdrange = np.linspace(np.min(mjds), np.max(mjds), 2048)
     interp_rmses = interp_fn(mjdrange)
