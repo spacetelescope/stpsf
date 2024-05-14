@@ -4,23 +4,28 @@ import astropy.units as u
 import numpy as np
 import pysiaf
 
+from .. import webbpsf_core
+from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
+
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
-from .. import webbpsf_core
 
 # ------------------    NIRSpec Tests    ----------------------------
-from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
-test_nirspec = lambda: generic_output_test('NIRSpec')
-
+def test_nirspec():
+    return generic_output_test('NIRSpec')
 # Use a larger than typical tolerance when testing NIRSpec offsets. The
 # pixels are so undersampled (0.1 arcsec!) that it's unreasonable to try for
 # better than 1/10th of a pixel precision using default settings.
-test_nirspec_source_offset_00 = lambda: do_test_source_offset('NIRSpec', theta=0.0, tolerance=0.1, monochromatic=3e-6)
-test_nirspec_source_offset_45 = lambda: do_test_source_offset('NIRSpec', theta=45.0, tolerance=0.1, monochromatic=3e-6)
+def test_nirspec_source_offset_00():
+    return do_test_source_offset('NIRSpec', theta=0.0, tolerance=0.1, monochromatic=3e-6)
 
-test_nirspec_set_siaf = lambda: do_test_set_position_from_siaf('NIRSpec')
+def test_nirspec_source_offset_45():
+    return do_test_source_offset('NIRSpec', theta=45.0, tolerance=0.1, monochromatic=3e-6)
+
+def test_nirspec_set_siaf():
+    return do_test_set_position_from_siaf('NIRSpec')
 
 
 def test_nirspec_slit_apertures():
@@ -45,4 +50,4 @@ def test_calc_datacube_fast():
 
     waves = np.linspace(3e-6, 5e-6, 3)
 
-    cube = nrs.calc_datacube_fast(waves, fov_pixels=30, oversample=1, compare_methods=True)
+    nrs.calc_datacube_fast(waves, fov_pixels=30, oversample=1, compare_methods=True) # TODO assert success

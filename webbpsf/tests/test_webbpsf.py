@@ -2,16 +2,13 @@ import logging
 import os
 
 import numpy as np
-
-_log = logging.getLogger('test_webbpsf')
-_log.addHandler(logging.NullHandler())
-
-
 import poppy
 
 from .. import webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
 
+_log = logging.getLogger('test_webbpsf')
+_log.addHandler(logging.NullHandler())
 
 # The following functions are used in each of the test_<SI> files to
 # test the individual SIs
@@ -188,7 +185,7 @@ def test_return_intermediates():
     assert isinstance(psf, astropy.io.fits.HDUList)
 
 
-def do_test_set_position_from_siaf(iname, more_apertures=[]):
+def do_test_set_position_from_siaf(iname, more_apertures=[]):   # TODO have test assert success
     """Test that we can use the mapping from image mask names to
     aperture names to set detector positions automatically when
     image masks are selected."""
@@ -217,16 +214,16 @@ def test_calc_psf_format_output():
 
 
 def test_instrument():
-    nc = webbpsf_core.instrument('NIRCam')
+    webbpsf_core.instrument('NIRCam') # TODO - assert success
 
     try:
         import pytest
-    except:
+    except ImportError:
         _log.warning('Skipping last step in test_instrument because pytest is not installed.')
         return  # We can't do this next test if we don't have the pytest.raises function.
 
     with pytest.raises(ValueError) as excinfo:
-        tmp = webbpsf_core.instrument('ACS')
+        webbpsf_core.instrument('ACS')
     assert _exception_message_starts_with(excinfo, 'Incorrect instrument name')
 
 

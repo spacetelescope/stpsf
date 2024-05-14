@@ -233,8 +233,8 @@ class NIRSpec_MSA_open_grid(poppy.AnalyticOpticalElement):
         The walls separating adjacent shutters are 0.06 arcsec wide.
         """
 
-        msa_width = 0.2
-        msa_height = 0.45
+        msa_width = 0.2     # TODO - Unused values okay to delete?
+        msa_height = 0.45   # TODO - Unused values okay to delete?
         msa_wall = 0.06
         msa_x_pitch = 0.26
         msa_y_pitch = 0.51
@@ -388,7 +388,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         if which == 'LLNL':
             raise NotImplementedError('Rotated field mask for LLNL grism not yet implemented!')
         elif which == 'Bach':
-            transmission = os.path.join(utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz')
+            transmission = os.path.join(utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz')  # TODO - Unused value, delete entire statement?
         else:
             raise NotImplementedError('Unknown grating name:' + which)
 
@@ -447,7 +447,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         self.pupil_demagnification = 6.6 / 0.040  # about 165
 
         # perform an initial population of the OPD array for display etc.
-        tmp = self.get_phasor(poppy.Wavefront(2e-6))
+        self.get_phasor(poppy.Wavefront(2e-6))
 
     def get_opd(self, wave):
         """Make an OPD array corresponding to the cylindrical weak lens
@@ -513,7 +513,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # now compute the spatially dependent sag of the cylinder, as projected onto the primary
 
         # what is the pupil scale at the *reimaged pupil* of the grism?
-        pupil_scale_m_per_pix = 38.0255e-6  # Based on UdeM info in wfe_cylindricallens.pro
+        pupil_scale_m_per_pix = 38.0255e-6  # Based on UdeM info in wfe_cylindricallens.pro # TODO - unused, can be deleted or just commented out?
         # sag = np.sqrt(self.cylinder_radius**2 - (x*self.amplitude_header['PUPLSCAL']/self.pupil_demagnification)**2) - self.cylinder_radius
         sag = np.sqrt(self.cylinder_radius**2 - (x / self.pupil_demagnification) ** 2) - self.cylinder_radius
         # sag = self.cylinder_radius -  np.sqrt(self.cylinder_radius**2 - (x * pupil_scale_m_per_pix )**2 )
@@ -527,7 +527,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
 
         # no OPD in opaque regions (makes no difference in propagation but improves display)
         if self._transmission.shape != sag.shape:
-            tmp = self.get_transmission()  # Update the ._transmission attribute
+            self.get_transmission()  # Update the ._transmission attribute
         sag[self._transmission == 0] = 0
         wnz = np.where(self._transmission != 0)  # use this just for display of the log messages:
         _log.debug(
@@ -549,7 +549,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
     def get_transmission(self, wave):
         """Make array for the pupil obscuration appropriate to the grism"""
 
-        if isinstance(wave, poppy.Wavefront):
+        if isinstance(wave, poppy.Wavefront):   # TODO - Wavelength isn't used, safe to delete in this function?
             wavelength = wave.wavelength
         else:
             wave = poppy.Wavefront(wavelength=float(wave))
@@ -776,7 +776,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
                 _log.debug(
                     'Set bar offset to {} based on requested filter {} on {}.'.format(bar_offset, auto_offset, self.name)
                 )
-            except:
+            except (KeyError, IndexError):
                 raise ValueError(
                     'Filter {} does not have a defined nominal offset position along {}'.format(auto_offset, self.name)
                 )
@@ -841,7 +841,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             if poppy.accel_math._USE_NUMEXPR:
                 import numexpr as ne
 
-                jn1 = scipy.special.j1(sigmar)
+                jn1 = scipy.special.j1(sigmar)  # noqa TODO - this looks like a bug, should jn1 be formatted in the following line?
                 self.transmission = ne.evaluate('(1 - (2 * jn1 / sigmar) ** 2)')
             else:
                 self.transmission = 1 - (2 * scipy.special.j1(sigmar) / sigmar) ** 2
@@ -986,7 +986,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
         if not np.isfinite(self.transmission.sum()):
             # stop()
             _log.warn('There are NaNs in the BLC mask - correcting to zero. (DEBUG LATER?)')
-            self.transmission[np.where(np.isfinite(self.transmission) == False)] = 0
+            self.transmission[np.where(np.isfinite(self.transmission) is False)] = 0
         return self.transmission
 
     def display(self, annotate=False, annotate_color='cyan', annotate_text_color=None, grid_size=20, *args, **kwargs):

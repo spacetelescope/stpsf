@@ -10,6 +10,7 @@ WARNING: This model has not yet been validated against other PSF
 
 import logging
 import os.path
+import pprint
 
 import astropy.units as u
 import numpy as np
@@ -20,7 +21,6 @@ from scipy.interpolate import griddata
 from . import distortion, utils, webbpsf_core
 
 _log = logging.getLogger('webbpsf')
-import pprint
 
 GRISM_FILTERS = ('GRISM0', 'GRISM1')
 PRISM_FILTERS = ('PRISM',)
@@ -219,7 +219,6 @@ def _load_wfi_detector_aberrations(filename):
         Zernikes Z1-Z22 at various wavelengths and field points"""
         single_detector_info = zernike_table[zernike_table['sca'] == number]
         field_points = set(single_detector_info['field_point'])
-        interpolators = {}
         detector = FieldDependentAberration(
             4096, 4096, radius=RomanInstrument.PUPIL_RADIUS, name='Field Dependent Aberration (SCA{:02})'.format(number)
         )
@@ -310,7 +309,7 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
         self.options['crop_psf'] = crop_psf
 
         # add_distortion keyword is not implemented for RomanCoronagraph Class
-        if self.name == 'RomanCoronagraph' and add_distortion == True:
+        if self.name == 'RomanCoronagraph' and add_distortion is True:
             self.options['add_distortion'] = False
             self.options['crop_psf'] = False
             _log.info(
@@ -395,7 +394,6 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
         """
         # Pull values from options dictionary
         add_distortion = options.get('add_distortion', True)
-        crop_psf = options.get('crop_psf', True)
         # Add distortion if set in calc_psf
         if add_distortion:
             _log.debug('Adding PSF distortion(s)')
@@ -1204,7 +1202,6 @@ class RomanCoronagraph(RomanInstrument):
     def _get_fits_header(self, result, options):
         """Populate FITS Header keywords"""
         super()._get_fits_header(result, options)
-        pupil_hdr = fits.getheader(self.pupil)
         apodizer_hdr = fits.getheader(self._apodizer_fname)
         fpm_hdr = fits.getheader(self._fpm_fname)
         lyotstop_hdr = fits.getheader(self._lyotstop_fname)

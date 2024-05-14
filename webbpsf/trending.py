@@ -297,9 +297,9 @@ def wfe_histogram_plot(
         else:
             full_file_path = row['fileName']
         if 'rms_wfe' not in opdtable1.colnames:
-            if ote_only == False:
+            if ote_only is False:
                 rmses.append(fits.getheader(full_file_path, ext=1)['RMS_WFE'])
-            elif ote_only == True:
+            elif ote_only is True:
                 opd_data = fits.getdata(full_file_path, ext=1)
                 mask = opd_data != 0
 
@@ -316,7 +316,6 @@ def wfe_histogram_plot(
         mjds = opdtable1['date_obs_mjd']
         pre_or_post.append(webbpsf.mast_wss.infer_pre_or_post_correction(row))
 
-    where_pre = ['pre' in a for a in pre_or_post]
     where_post = ['post' in a for a in pre_or_post]
 
     dates = astropy.time.Time(opdtable1['date'], format='isot')
@@ -729,7 +728,6 @@ def single_measurement_trending_plot(
 
         sur_opd = webbpsf.opds.sur_to_opd(sur_fn, ignore_missing=ignore_missing)
         # cosmetic: handle masking slightly differently here to accomodate slightly different edge pixels
-        sur_mask = sur_opd != 0
         surnanmask = nanmask.copy()
         surnanmask[sur_opd == 0] = np.nan
 
@@ -960,7 +958,6 @@ def wavefront_drift_plots(
     wf_si = target_256 * mask
 
     dates = []
-    last_visit = ''
 
     # Iterate over all selected OPDs
     for i, row in enumerate(opdtable[which_opds_mask]):
@@ -993,7 +990,6 @@ def wavefront_drift_plots(
     )
     axes_f = axes.flat
 
-    is_correction = np.zeros(n, bool)
     nanmask = np.zeros_like(wf_ote[0]) + np.nan
     nanmask[mask] = 1
     last_date_obs = np.nan
@@ -1028,7 +1024,7 @@ def wavefront_drift_plots(
 
         deltas_shown.append(delta_opd)
 
-        title = f'{date[0:10]}  {date[11:16]}\n$\Delta T =${deltat * 24:.1f} hr'
+        title = f'{date[0:10]}  {date[11:16]}\n$\Delta T =${deltat * 24:.1f} hr' # noqa
         if label_cid:
             title = f'{cid}\n' + title
         if label_visit:
@@ -1183,7 +1179,7 @@ def get_dates_for_pid(pid, project='jwst'):
         start_times = astropy.time.Time(np.unique(start_times))
 
         return start_times
-    except:
+    except:  # noqa - adequate errors can be raised all needing this error
         print('No access to data for PID {:d}'.format(pid))
         return
 
@@ -1380,7 +1376,7 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
             (ees_at_rad - median_ee) / median_ee,
             ls='-',
             color=color,
-            label=f'$\Delta$EE within {ee_rad:.2f} arcsec ({ee_npix} pix)',
+            label=f'$\Delta$EE within {ee_rad:.2f} arcsec ({ee_npix} pix)', # noqa
         )
 
         axes[1].text(
@@ -1502,7 +1498,7 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
                 20, 20, f'{webbpsf.utils.rms(delta_opd, mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
             )
 
-    for i, l in enumerate(['Measured\nWFE', 'Drifts', 'Mirror\nCorrections']):
+    for i, l in enumerate(['Measured\nWFE', 'Drifts', 'Mirror\nCorrections']): # noqa
         im_axes[i, 0].yaxis.set_visible(True)
         im_axes[i, 0].set_ylabel(l + '\n\n', fontsize=fs, fontweight='bold')
 
@@ -1645,15 +1641,15 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
 
     wlm8_m1 = hdul1[5].data
     wlp8_m1 = hdul1[10].data
-    wlm8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[6].data, wlm8_m1.shape)
-    wlp8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[11].data, wlm8_m1.shape)
+    wlm8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[6].data, wlm8_m1.shape)    # noqa TODO - any reason not to delete?
+    wlp8_c1 = poppy.utils.pad_or_crop_to_shape(hdul1[11].data, wlm8_m1.shape)   # noqa TODO - any reason not to delete?
 
     opd, hdul2 = webbpsf.trending._read_opd(fn2)
 
     wlm8_m2 = hdul2[5].data
     wlp8_m2 = hdul2[10].data
-    wlm8_c2 = poppy.utils.pad_or_crop_to_shape(hdul2[6].data, wlm8_m2.shape)
-    wlp8_c2 = poppy.utils.pad_or_crop_to_shape(hdul2[11].data, wlm8_m2.shape)
+    wlm8_c2 = poppy.utils.pad_or_crop_to_shape(hdul2[6].data, wlm8_m2.shape)    # noqa TODO - any reason not to delete?
+    wlp8_c2 = poppy.utils.pad_or_crop_to_shape(hdul2[11].data, wlm8_m2.shape)   # noqa TODO - any reason not to delete?
 
     cm = matplotlib.cm.inferno
     cm.set_bad(cm(0))
@@ -1714,6 +1710,9 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     return fig
 
 
+
+
+
 def show_wfs_around_obs(filename, verbose='True'):
     """Make a helpful plot showing available WFS before and after some given science
     observation. This can be used to help inform how much WFE variability there was around that time.
@@ -1729,7 +1728,8 @@ def show_wfs_around_obs(filename, verbose='True'):
 
     header = fits.getheader(filename)
 
-    get_datetime = lambda header: astropy.time.Time(header['DATE-OBS'] + 'T' + header['TIME-OBS'])
+    def get_datetime_from_header(header):
+        return astropy.time.Time(header['DATE-OBS'] + 'T' + header['TIME-OBS'])
 
     def vprint(*args, **kwargs):
         if verbose:
@@ -1740,19 +1740,19 @@ def show_wfs_around_obs(filename, verbose='True'):
     inst.filter = header['filter']
     inst.set_position_from_aperture_name(header['APERNAME'])
 
-    dateobs = get_datetime(header)
+    dateobs = get_datetime_from_header(header)
     vprint(f'File {filename} observed at {dateobs}')
 
     vprint('Retrieving WFS before that obs...', end='')
     inst.load_wss_opd_by_date(dateobs, choice='before', verbose=False)
     wfe_before = inst.get_wfe('total')
-    wfe_before_dateobs = get_datetime(inst.pupilopd[0].header)
+    wfe_before_dateobs = get_datetime_from_header(inst.pupilopd[0].header)
     vprint(f' WFS at {wfe_before_dateobs}')
 
     vprint('Retrieving WFS after that obs...', end='')
     inst.load_wss_opd_by_date(dateobs, choice='after', verbose=False)
     wfe_after = inst.get_wfe('total')
-    wfe_after_dateobs = get_datetime(inst.pupilopd[0].header)
+    wfe_after_dateobs = get_datetime_from_header(inst.pupilopd[0].header)
 
     vprint(f' WFS at {wfe_after_dateobs}')
 
@@ -1897,7 +1897,7 @@ def show_wfs_during_program(
 
     # Look up wavefront sensing and mirror move corrections for that range
     opdtable = get_opdtable_for_daterange(start_date, end_date)
-    corrections_table = webbpsf.mast_wss.get_corrections(opdtable)
+    corrections_table = webbpsf.mast_wss.get_corrections(opdtable) # noqa TODO - this is unused and has no ramifications, is there a reason to keep or can I delete this line?
 
     # Iterate over the WFS measurements to retrieve the OPDs and RMS WFE
     wfs_dates = []
@@ -2017,7 +2017,7 @@ def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filena
         show_opd_image(delta_opd * nanmask, ax=ax, vmax=vmax)
         plt.colorbar(mappable=ax.images[0], label='WFE [microns]')
 
-        ax.set_title(f'$\Delta$WFE in the {post_delta_t - prev_delta_t:.2f} d around {datetime}')
+        ax.set_title(f'$\Delta$WFE in the {post_delta_t - prev_delta_t:.2f} d around {datetime}') # noqa
         ax.set_xlabel(f'{post_opd_fn} - \n{prev_opd_fn}')
         ax.set_xticks([])
         ax.xaxis.set_visible(True)

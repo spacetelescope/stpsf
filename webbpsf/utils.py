@@ -11,9 +11,10 @@ import numpy as np
 import scipy
 from astropy.nddata import NDData
 
+from . import conf
+
 _log = logging.getLogger('webbpsf')
 
-from . import conf
 
 _DISABLE_FILE_LOGGING_VALUE = 'none'
 
@@ -395,12 +396,12 @@ def system_diagnostic():
             freq=psutil.cpu_freq()[0] / 1000,
             percent=psutil.cpu_percent(),
         )
-    except:
+    except ImportError:
         try:
             import multiprocessing
 
             cpu_info = '  Cores: {}'.format(multiprocessing.cpu_count())
-        except:
+        except ImportError:
             cpu_info = 'No CPU info available'
 
     # Get numpy config - the following is a modified version of
@@ -408,7 +409,7 @@ def system_diagnostic():
 
     numpyconfig = ''
     for name, info_dict in numpy.__config__.__dict__.items():
-        if name[0] == '_' or type(info_dict) is not type({}):
+        if name[0] == '_' or not isinstance(info_dict, dict):
             continue
         numpyconfig += name + ':\n'
         if not info_dict:

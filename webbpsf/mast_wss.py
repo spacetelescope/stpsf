@@ -222,8 +222,8 @@ def get_opd_at_time(date, choice='closest', verbose=False, output_path=None):
     elif choice == 'average':
         if verbose:
             print(f'User requested calculating OPD time averaged around {date}')
-        fn_pre = mast_retrieve_opd(pre_opd_fn, output_path=output_path)
-        fn_post = mast_retrieve_opd(post_opd_fn, output_path=output_path)
+        mast_retrieve_opd(pre_opd_fn, output_path=output_path)  # TODO - define pre_opd_fn now or skip?
+        mast_retrieve_opd(post_opd_fn, output_path=output_path)
         raise NotImplementedError('Not yet implemented')
     elif choice == 'closest':
         closest_fn, closest_dt = (
@@ -424,14 +424,10 @@ def add_columns_to_track_corrections(opdtable):
 
     """
     #
-    dates = astropy.time.Time(opdtable['date'], format='isot')
     pre_or_post = []
 
     for row in opdtable:
         pre_or_post.append(infer_pre_or_post_correction(row))
-
-    where_pre = ['pre' in a for a in pre_or_post]
-    where_post = ['post' in a for a in pre_or_post]
 
     # Add column for is this WFS measurement made immediately after a correction
     opdtable['wfs_measurement_type'] = pre_or_post
@@ -698,7 +694,7 @@ def download_wfsc_images(program=None, obs=None, verbose=False, **kwargs):
         filetable = query_wfsc_images_latest(**kwargs)
     else:
         if verbose:
-            print(f'Querying WFSC images from program {prog}, observation {obs}')
+            print(f'Querying WFSC images from program {program}, observation {obs}')
         filetable = query_wfsc_images_by_program(program, obs, **kwargs)
 
     # If we found > 0 available files for that visit, then we're done searching and can go on to download

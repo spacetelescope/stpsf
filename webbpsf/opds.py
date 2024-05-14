@@ -261,7 +261,7 @@ class OPD(poppy.FITSOpticalElement):
 
         """
 
-        # import SFT
+        import SFT
 
         def tvcircle(radius=1, xcen=0, ycen=0, center=None, **kwargs):
             """
@@ -1362,8 +1362,6 @@ class OTE_Linear_Model_WSS(OPD):
         _log.info('Set OPD to zero WFE!')
 
     def print_state(self):
-        keys = self.state.keys()
-
         print('Segment poses in Control coordinates: (microns for decenter & piston, microradians for tilts and clocking):')
         print('  \t %10s %10s %10s %10s %10s %10s' % tuple(self._control_modes))
         for i, segment in enumerate(self.segnames[0:18]):
@@ -1492,7 +1490,7 @@ class OTE_Linear_Model_WSS(OPD):
                 del self.meta[f'S{iseg:02d}PISTN']
                 del self.meta[f'S{iseg:02d}XTILT']
                 del self.meta[f'S{iseg:02d}YTILT']
-            except:
+            except KeyError:
                 pass
 
         for i in range(len(hexike_coeffs)):
@@ -2979,7 +2977,7 @@ def random_unstack(ote, radius=1, verbose=False):
 
 def test_OPDbender():
     plt.figure(1)
-    tel = OPDbender()
+    tel = OPDbender()  # TODO remove this whole test?
     tel.displace('A1', 1, 0, 0, display=False)
     tel.displace('A2', 0, 1, 0, display=False)
     tel.displace('A3', 0, 0, 0.03, display=False)
@@ -3003,7 +3001,7 @@ def test_OPDbender():
 
 
 def test2_OPDbender(filename='OPD_RevV_nircam_132.fits'):
-    orig = OPDbender(filename)
+    orig = OPDbender(filename) # TODO remove this whole test?
 
     plot_kwargs = {'colorbar_orientation': 'horizontal', 'clear': False}
 
@@ -3480,7 +3478,6 @@ def get_coarse_blur_parameters(
     pcsmodel = astropy.table.Table.read(os.path.join(__location__, 'otelm', f'coarse_track{case}_sim_pointing.fits'))
 
     wt = (t0 < pcsmodel['time']) & (pcsmodel['time'] < t0 + duration)
-    ns = wt.sum()
 
     # Extract coordinates for the requested time period
     coords = np.zeros((2, wt.sum()), float)

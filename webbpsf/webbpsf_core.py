@@ -1745,6 +1745,17 @@ class JWInstrument(SpaceTelescopeInstrument):
         opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
+    def _label_wl (nwavelengths, wavelength_slices):
+        # Allow up to 10,000 wavelength slices. The number matters because FITS
+        # header keys can only have up to 8 characters. Backward-compatible.
+        if nwavelengths < 100:
+            label = 'WAVELN{:02d}'.format(wavelength_slices)
+        elif nwavelengths < 10000:
+            label = 'WVLN{:04d}'.format(wavelength_slices)
+        else:
+            raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
+        return label
+
     def calc_datacube_fast(self, wavelengths, compare_methods=False, *args, **kwargs):
         """Calculate a spectral datacube of PSFs: Simplified, much MUCH faster version.
 
@@ -1787,16 +1798,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         """
 
-        # Allow up to 10,000 wavelength slices. The number matters because FITS
-        # header keys can only have up to 8 characters. Backward-compatible.
         nwavelengths = len(wavelengths)
-        if nwavelengths < 100:
-            label_wl = lambda i: 'WAVELN{:02d}'.format(i)
-        elif nwavelengths < 10000:
-            label_wl = lambda i: 'WVLN{:04d}'.format(i)
-        else:
-            raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
-
         # Set up cube and initialize structure based on PSF at first wavelength
         poppy.poppy_core._log.info('Starting multiwavelength data cube calculation.')
         REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
@@ -1810,7 +1812,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         ext = 0
         cubefast[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
         cubefast[ext].data[0] = psf[ext].data
-        cubefast[ext].header[label_wl(0)] = wavelengths[0]
+        cubefast[ext].header[self._label_wl(nwavelengths, 0)] = wavelengths[0]
 
         ### Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
@@ -1856,7 +1858,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in range(len(psf)):
                 cube[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
                 cube[ext].data[0] = psf[ext].data
-                cube[ext].header[label_wl(0)] = wavelengths[0]
+                cube[ext].header[self._label_wl(nwavelengths, 0)] = wavelengths[0]
 
             # iterate rest of wavelengths
             print('Running standard way')
@@ -1865,7 +1867,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 psf = self.calc_psf(*args, monochromatic=wl, **kwargs)
                 for ext in range(len(psf)):
                     cube[ext].data[i] = psf[ext].data
-                    cube[ext].header[label_wl(i)] = wl
+                    cube[ext].header[self._label_wl(nwavelengths, i)] = wl
                     cube[ext].header.add_history('--- Cube Plane {} ---'.format(i))
                     for h in psf[ext].header['HISTORY']:
                         cube[ext].header.add_history(h)
@@ -1980,7 +1982,7 @@ class MIRI(JWInstrument):
         # This approach is required computationally so we can work in an unrotated frame
         # aligned with the FQPM axes.
 
-        defaultpupil = optsys.planes.pop(2)  # throw away the rotation of the entrance pupil we just added
+        optsys.planes.pop(2)  # throw away the rotation of the entrance pupil we just added
 
         if self.include_si_wfe:
             # temporarily remove the SI internal aberrations
@@ -2671,11 +2673,11 @@ class NIRCam(JWInstrument):
         shift_x, shift_y = self._get_pupil_shift()
         rotation = self.options.get('pupil_rotation', None)
 
-        # NIRCam as-built weak lenses, from WSS config file, PRDOPSFLT-027
-        WLP4_diversity = 8.3443  # microns
-        WLP8_diversity = 16.5932  # microns
-        WLM8_diversity = -16.5593  # microns
-        WL_wavelength = 2.12  # microns
+        # NIRCam as-built weak lenses, from WSS config file, PRDOPSFLT-027 # TODO - Okay to delete these unused defines?
+        # WLP4_diversity = 8.3443  # microns
+        # WLP8_diversity = 16.5932  # microns
+        # WLM8_diversity = -16.5593  # microns
+        # WL_wavelength = 2.12  # microns
 
         if self.pupil_mask == 'CIRCLYOT' or self.pupil_mask == 'MASKRND':
             optsys.add_pupil(

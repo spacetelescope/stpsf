@@ -5,30 +5,43 @@ import os
 import astropy.io.fits as fits
 import matplotlib.pyplot as plt
 import numpy as np
-
-_log = logging.getLogger('test_webbpsf')
-_log.addHandler(logging.NullHandler())
-
 import pytest
 
 import webbpsf
 
 from .. import webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
-
-# ------------------    NIRCam Tests    ----------------------------
 from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
-test_nircam = lambda: generic_output_test('NIRCam')
-test_nircam_source_offset_00 = lambda: do_test_source_offset('NIRCam', theta=0.0, monochromatic=2e-6)
-test_nircam_source_offset_45 = lambda: do_test_source_offset('NIRCam', theta=45.0, monochromatic=2e-6)
+_log = logging.getLogger('test_webbpsf')
+_log.addHandler(logging.NullHandler())
 
-test_nircam_set_siaf = lambda: do_test_set_position_from_siaf(
-    'NIRCam', ['NRCA5_SUB160', 'NRCA3_DHSPIL_SUB96', 'NRCA5_MASKLWB_F300M', 'NRCA2_TAMASK210R']
-)
 
-test_nircam_blc_circ_45 = lambda: do_test_nircam_blc(kind='circular', angle=45)
-test_nircam_blc_circ_0 = lambda: do_test_nircam_blc(kind='circular', angle=0)
+# ------------------    NIRCam Tests    ----------------------------
+
+def _close_enough(a, b):
+    # 1.5% variance accomodates the differences between the various NRC detectors in each channel
+    return np.isclose(a, b, rtol=0.015)
+
+def test_nircam():
+    return generic_output_test('NIRCam')
+
+def test_nircam_source_offset_00():
+    return do_test_source_offset('NIRCam', theta=0.0, monochromatic=2e-6)
+
+def test_nircam_source_offset_45():
+    return do_test_source_offset('NIRCam', theta=45.0, monochromatic=2e-6)
+
+def test_nircam_set_siaf():
+    return  do_test_set_position_from_siaf(
+                'NIRCam', ['NRCA5_SUB160', 'NRCA3_DHSPIL_SUB96', 'NRCA5_MASKLWB_F300M', 'NRCA2_TAMASK210R']
+            )
+
+def test_nircam_blc_circ_45():
+    return do_test_nircam_blc(kind='circular', angle=45)
+
+def test_nircam_blc_circ_0():
+    return do_test_nircam_blc(kind='circular', angle=0)
 
 
 def test_nircam_blc_wedge_0(**kwargs):
@@ -37,7 +50,6 @@ def test_nircam_blc_wedge_0(**kwargs):
 
 def test_nircam_blc_wedge_45(**kwargs):
     return do_test_nircam_blc(kind='linear', angle=-45, **kwargs)
-
 
 # The test setup for this one is not quite right yet
 #  See https://github.com/mperrin/webbpsf/issues/30
@@ -194,24 +206,20 @@ def test_nircam_get_detector():
 def test_nircam_auto_pixelscale():
     # This test now uses approximate equality in all the checks, to accomodate the fact that
     # NIRCam pixel scales are drawn directly from SIAF for the aperture, and thus vary for each detector/
-    #
-    # 1.5% variance accomodates the differences between the various NRC detectors in each channel
-    close_enough = lambda a, b: np.isclose(a, b, rtol=0.015)
-
     nc = webbpsf_core.NIRCam()
 
     nc.filter = 'F200W'
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
     assert nc.channel == 'short'
 
     # auto switch to long
     nc.filter = 'F444W'
-    assert close_enough(nc.pixelscale, nc._pixelscale_long)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_long)
     assert nc.channel == 'long'
 
     # and it can switch back to short:
     nc.filter = 'F200W'
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
     assert nc.channel == 'short'
 
     nc.pixelscale = 0.0123  # user is allowed to set something custom
@@ -222,46 +230,45 @@ def test_nircam_auto_pixelscale():
     nc.pixelscale = nc._pixelscale_long
     # switch short again
     nc.filter = 'F212N'
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
     assert nc.channel == 'short'
 
     # And test we can switch based on detector names too
     nc.detector = 'NRCA5'
-    assert close_enough(nc.pixelscale, nc._pixelscale_long)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_long)
     assert nc.channel == 'long'
 
     nc.detector = 'NRCB1'
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
     assert nc.channel == 'short'
 
     nc.detector = 'NRCA3'
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
     assert nc.channel == 'short'
 
     nc.auto_channel = False
     # now we can switch filters and nothing else should change:
     nc.filter = 'F480M'
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
     assert nc.channel == 'short'
 
     # but changing the detector explicitly always updates pixelscale, regardless
     # of auto_channel being False
 
     nc.detector = 'NRCA5'
-    assert close_enough(nc.pixelscale, nc._pixelscale_long)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_long)
     assert nc.channel == 'long'
 
 
 def test_validate_nircam_wavelengths():
     # Same as above test: allow for up to 1.5% variance between NIRCam detectors in each channel
-    close_enough = lambda a, b: np.isclose(a, b, rtol=0.015)
 
     nc = webbpsf_core.NIRCam()
 
     # wavelengths fit on shortwave channel -> no exception
     nc.filter = 'F200W'
     nc._validate_config(wavelengths=np.linspace(nc.SHORT_WAVELENGTH_MIN, nc.SHORT_WAVELENGTH_MAX, 3))
-    assert close_enough(nc.pixelscale, nc._pixelscale_short)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_short)
 
     # short wave is selected but user tries a long wave calculation
     with pytest.raises(RuntimeError) as excinfo:
@@ -271,7 +278,7 @@ def test_validate_nircam_wavelengths():
     # wavelengths fit on long channel -> no exception
     nc.filter = 'F444W'
     nc._validate_config(wavelengths=np.linspace(nc.LONG_WAVELENGTH_MIN, nc.LONG_WAVELENGTH_MAX, 3))
-    assert close_enough(nc.pixelscale, nc._pixelscale_long)
+    assert _close_enough(nc.pixelscale, nc._pixelscale_long)
 
     # long wave is selected but user tries a short  wave calculation
     with pytest.raises(RuntimeError) as excinfo:
@@ -395,7 +402,7 @@ def test_nircam_coron_wfe_offset(fov_pix=15, oversample=2, fit_gaussian=True):
             fit_gaussian = False
 
     # Ensure oversample to >1 no Gaussian fitting
-    if fit_gaussian == False:
+    if fit_gaussian is False:
         oversample = 2 if oversample < 2 else oversample
         rtol = 0.2
     else:

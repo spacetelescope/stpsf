@@ -155,7 +155,7 @@ class CreatePSFLibrary:
             from photutils.psf import GriddedPSFModel
         except ImportError:
             try:
-                from photutils import GriddedPSFModel
+                from photutils import GriddedPSFModel # noqa
             except ImportError:
                 raise ImportError('This method requires photutils >= 0.6')
 
@@ -232,7 +232,7 @@ class CreatePSFLibrary:
                 det = CreatePSFLibrary.nrca_short_detectors
             elif self.instr == 'NIRCam' and filt in CreatePSFLibrary.nrca_long_filters:
                 det = CreatePSFLibrary.nrca_long_detectors
-        elif type(detectors) is str:
+        elif isinstance(detectors, str):
             det = detectors.split()
         else:
             raise TypeError('Method of setting detectors is not valid')
@@ -583,7 +583,10 @@ def display_psf_grid(grid, zoom_in=True, figsize=(14, 12), scale_range=1e-4, dif
     import matplotlib
     import matplotlib.pyplot as plt
 
-    tuple_to_int = lambda t: (int(t[0]), int(t[1]))
+    def tuple_to_int(t):
+        if isinstance(t, tuple):
+            return (int(t[0]), int(t[1]))
+
 
     def show_grid_helper(grid, data, title='Grid of PSFs', vmax=0, vmin=0, scale='log'):
         npsfs = grid.data.shape[0]
