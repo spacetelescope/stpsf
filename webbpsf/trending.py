@@ -1024,7 +1024,7 @@ def wavefront_drift_plots(
 
         deltas_shown.append(delta_opd)
 
-        title = f'{date[0:10]}  {date[11:16]}\n$\Delta T =${deltat * 24:.1f} hr' # noqa
+        title = f'{date[0:10]}  {date[11:16]}\n$\\Delta T =${deltat * 24:.1f} hr'
         if label_cid:
             title = f'{cid}\n' + title
         if label_visit:
@@ -1376,7 +1376,7 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
             (ees_at_rad - median_ee) / median_ee,
             ls='-',
             color=color,
-            label=f'$\Delta$EE within {ee_rad:.2f} arcsec ({ee_npix} pix)', # noqa
+            label=f'$\\Delta$EE within {ee_rad:.2f} arcsec ({ee_npix} pix)',
         )
 
         axes[1].text(
@@ -1498,9 +1498,9 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
                 20, 20, f'{webbpsf.utils.rms(delta_opd, mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
             )
 
-    for i, l in enumerate(['Measured\nWFE', 'Drifts', 'Mirror\nCorrections']): # noqa
+    for i, label in enumerate(['Measured\nWFE', 'Drifts', 'Mirror\nCorrections']):
         im_axes[i, 0].yaxis.set_visible(True)
-        im_axes[i, 0].set_ylabel(l + '\n\n', fontsize=fs, fontweight='bold')
+        im_axes[i, 0].set_ylabel(label + '\n\n', fontsize=fs, fontweight='bold')
 
     for j in range(npoints, min_n_im_axes):
         for i in range(3):
@@ -1890,7 +1890,7 @@ def show_wfs_during_program(
 
     # Look up wavefront sensing and mirror move corrections for that range
     opdtable = get_opdtable_for_daterange(start_date, end_date)
-    
+
     # Iterate over the WFS measurements to retrieve the OPDs and RMS WFE
     wfs_dates = []
     rms_obs = []
@@ -2009,7 +2009,7 @@ def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filena
         show_opd_image(delta_opd * nanmask, ax=ax, vmax=vmax)
         plt.colorbar(mappable=ax.images[0], label='WFE [microns]')
 
-        ax.set_title(f'$\Delta$WFE in the {post_delta_t - prev_delta_t:.2f} d around {datetime}') # noqa
+        ax.set_title(f'$\\Delta$WFE in the {post_delta_t - prev_delta_t:.2f} d around {datetime}')
         ax.set_xlabel(f'{post_opd_fn} - \n{prev_opd_fn}')
         ax.set_xticks([])
         ax.xaxis.set_visible(True)

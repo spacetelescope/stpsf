@@ -839,7 +839,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             if poppy.accel_math._USE_NUMEXPR:
                 import numexpr as ne
 
-                jn1 = scipy.special.j1(sigmar)  # noqa
+                jn1 = scipy.special.j1(sigmar)  # noqa - used via ne.evaluate()
                 self.transmission = ne.evaluate('(1 - (2 * jn1 / sigmar) ** 2)')
             else:
                 self.transmission = 1 - (2 * scipy.special.j1(sigmar) / sigmar) ** 2

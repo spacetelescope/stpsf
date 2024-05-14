@@ -346,7 +346,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     ax.text(
         0.96,
         0.92,
-        f'45$^\circ$, {slew_delta_time}', # noqa
+        f'45$^\\circ$, {slew_delta_time}',
         transform=ax.transAxes,
         horizontalalignment='right',
     )
@@ -361,7 +361,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
         annotate_budget='Image motion (as equiv. WFE)',
         instname=inst.name,
     )
-    ax.text(0.04, 0.92, f'LOS jitter: {jitter}, 1$\sigma$/axis', transform=ax.transAxes) # noqa sigma not escape char
+    ax.text(0.04, 0.92, f'LOS jitter: {jitter}, 1$\\sigma$/axis', transform=ax.transAxes)
 
     # ISIM and SI
     show_opd(
