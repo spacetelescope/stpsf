@@ -1745,7 +1745,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
-    def _label_wl (nwavelengths, wavelength_slices):
+    def _label_wl (self, nwavelengths, wavelength_slices):
         # Allow up to 10,000 wavelength slices. The number matters because FITS
         # header keys can only have up to 8 characters. Backward-compatible.
         if nwavelengths < 100:
