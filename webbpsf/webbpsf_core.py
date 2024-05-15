@@ -1797,12 +1797,15 @@ class JWInstrument(SpaceTelescopeInstrument):
             many times changing only the wavelength for just the last DFT step to the detector.
         2) Assumes we do not need the binned-to-detector-resolution nor distorted versions;
             we just want the oversampled PSF datacube at many wavelengths as fast as possible.
+            (If the binned output is also desired, it can be computed post facto.
+            TODO: A future revision of this function may also add here an option for computing those
+            derived versions as well.)
 
         Testing for NIRSpec IFU indicates this achieves ~150x speedup,
         and the differences in computed oversampled PSF are typically ~1/100th or less
         relative to the local PSF values in any given pixel.
 
-        A consequence of the above iassumption 1 is that this methiod is not well applicable
+        A consequence of the above assumption 1 is that this method is not well applicable
         for cases that have image plane masks, nor for NIRCam in general. It does seem to be
         reasonably applicable for NIRSpec IFU calculations within the current limited fidelity
         of webbpsf for that mode, IF we also neglect the image plane stop around the IFU FOV.
@@ -1840,16 +1843,30 @@ class JWInstrument(SpaceTelescopeInstrument):
         else:
             raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
 
-        # Set up cube and initialize structure based on PSF at first wavelength
-        poppy.poppy_core._log.info('Starting multiwavelength data cube calculation.')
-        REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
+        # Set up cube and initialize structure based on PSF at a representative wavelength
+        _log.info('Starting fast/simplified multiwavelength data cube calculation.')
+        ref_wave = np.mean(wavelengths)
+        MIN_REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
+        if ref_wave < MIN_REF_WAVE:
+            ref_wave = MIN_REF_WAVE
+            _log.info(f"Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns; minimum set to avoid phase wrap of segment C3 surface.")
+        else:
+            _log.info(f"Performing initial propagation at average wavelength {ref_wave*1e6:.2f} microns.")
 
-        psf, waves = self.calc_psf(*args, monochromatic=REF_WAVE, return_intermediates=True, **kwargs)
+        psf, waves = self.calc_psf(*args, monochromatic=ref_wave, return_intermediates=True, **kwargs)
         from copy import deepcopy
         # Setup arrays to save data
 
         # Copy the first (oversampled) HDU only
         cubefast = astropy.io.fits.HDUList(deepcopy(psf[0]))
+        try:
+            # This is cosmetic only. Delete some exteraneous/redundant header keywords from poppy.
+            # This function will below add a complete set of wavelength keywords
+            del cubefast[0].header['WAVE0']
+            del cubefast[0].header['WGHT0']
+        except KeyError:
+            pass
+
         ext = 0
         cubefast[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
         cubefast[ext].data[0] = psf[ext].data
@@ -1884,6 +1901,8 @@ class JWInstrument(SpaceTelescopeInstrument):
             wl = wavelengths[i]
             psfw = quickosys.calc_psf(wavelength=wl, normalize='None')
             cubefast[0].data[i] = psfw[0].data
+            cubefast[ext].header[label_wl(i)] = wavelengths[i]
+
         cubefast[0].header['NWAVES'] = nwavelengths
 
         ### OPTIONAL
