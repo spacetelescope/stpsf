@@ -2709,6 +2709,9 @@ class NIRCam(JWInstrument):
     @JWInstrument.detector.setter  # override setter in this subclass, to implement auto channel switch
     def detector(self, value):
         """Set detector, including reloading the relevant info from SIAF"""
+        if value.upper().endswith('LONG'):
+            # treat NRCALONG and NRCBLONG as synonyms to NRCA5 and NRCB5
+            value = value[:-4]+ '5'
         if value.upper() not in self.detector_list:
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
         # set the channel based on the requested detector
