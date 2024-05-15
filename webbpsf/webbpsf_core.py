@@ -1784,7 +1784,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
-    def calc_datacube_fast(self, wavelengths, compare_methods=False, *args, **kwargs):
+    def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None, *args, **kwargs):
         """Calculate a spectral datacube of PSFs: Simplified, much MUCH faster version.
 
         This is adapted from poppy.Instrument.calc_datacube, optimized and simplified
@@ -1919,6 +1919,11 @@ class JWInstrument(SpaceTelescopeInstrument):
             print(f'Standard way: {t2-t1:.3f} s')
 
             return cube, cubefast, waves, waves2  # return extra stuff for compariosns
+
+        if outfile is not None:
+            cubefast[0].header["FILENAME"] = (os.path.basename(outfile), "Name of this file")
+            cubefast.writeto(outfile, overwrite=True)
+            _log.info("Saved result to " + outfile)
 
         return cubefast
 
