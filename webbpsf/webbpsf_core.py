@@ -1891,7 +1891,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             wl = wavelengths[i]
             psfw = quickosys.calc_psf(wavelength=wl, normalize='None')
             cubefast[0].data[i] = psfw[0].data
-            cubefast[ext].header[label_wl(i)] = wavelengths[i]
+            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i]
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
