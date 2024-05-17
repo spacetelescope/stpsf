@@ -94,11 +94,11 @@ class Conf(_config.ConfigNamespace):
 
 conf = Conf()
 
-from . import utils
-from . import trending
-from .utils import setup_logging, restart_logging, system_diagnostic, measure_strehl
+from . import utils # noqa - must go after config
+from . import trending # noqa - must go after config
+from .utils import setup_logging, restart_logging, system_diagnostic, measure_strehl # noqa - must go after config
 
-from poppy import (
+from poppy import ( # noqa
     display_psf,
     display_psf_difference,
     display_ee,
@@ -113,7 +113,7 @@ from poppy import (
     fwcentroid,
 )
 
-from .webbpsf_core import (
+from .webbpsf_core import ( # noqa
     instrument,
     SpaceTelescopeInstrument,
     JWInstrument,
@@ -124,8 +124,8 @@ from .webbpsf_core import (
     FGS,
 )
 
-from .opds import enable_adjustable_ote
+from .opds import enable_adjustable_ote # noqa
 
-from .roman import WFI, RomanCoronagraph
+from .roman import WFI, RomanCoronagraph # noqa
 
-from .match_data import setup_sim_to_match_file
+from .match_data import setup_sim_to_match_file # noqa
