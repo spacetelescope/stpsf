@@ -1,12 +1,9 @@
 import logging
-import matplotlib
+
 import astropy.io.fits as fits
-
 import poppy
-from . import webbpsf_core
-from . import roman
-from . import utils
 
+from . import roman, webbpsf_core
 
 _log = logging.getLogger('webbpsf')
 
@@ -35,16 +32,17 @@ def show_notebook_interface_wfi(instrument):
     # (Currently not a hard dependency for the full webbpsf package, so we import
     # within the function.)
     import ipywidgets as widgets
-    from IPython.display import display, clear_output
+    from IPython.display import clear_output, display
     from matplotlib import pyplot as plt
 
     try:
         import synphot
     except ImportError:
-        raise ImportError(f'For now, synphot must be installed to use the notebook interface')
+        raise ImportError('For now, synphot must be installed to use the notebook interface')
 
     # Clean up some warnings we know about so as not to scare the users
     import warnings
+
     from matplotlib.cbook import MatplotlibDeprecationWarning
 
     warnings.simplefilter('ignore', MatplotlibDeprecationWarning)
@@ -219,7 +217,7 @@ def show_notebook_interface_jwst(instrument):
     # (Currently not a hard dependency for the full webbpsf package, so we import
     # within the function.)
     import ipywidgets as widgets
-    from IPython.display import display, clear_output
+    from IPython.display import clear_output, display
     from matplotlib import pyplot as plt
 
     if isinstance(instrument, str):
@@ -228,10 +226,11 @@ def show_notebook_interface_jwst(instrument):
     try:
         import synphot
     except ImportError:
-        raise ImportError(f'For now, synphot must be installed to use the notebook interface')
+        raise ImportError('For now, synphot must be installed to use the notebook interface')
 
     # Clean up some warnings we know about so as not to scare the users
     import warnings
+
     from matplotlib.cbook import MatplotlibDeprecationWarning
 
     warnings.simplefilter('ignore', MatplotlibDeprecationWarning)

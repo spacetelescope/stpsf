@@ -25,7 +25,6 @@ dependencies = [
     "photutils>=1.10.0",
     "poppy>=1.0.0",
     "pysiaf>=0.19.1",
-    "soc_roman_tools>=0.1.0",
     "synphot>=1.0.0",
     "astroquery>=0.4.6",
 ]

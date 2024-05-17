@@ -1,23 +1,23 @@
-import sys, os
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.io.fits as fits
 import copy
-
 import logging
+import os
+
+import astropy.io.fits as fits
+import matplotlib.pyplot as plt
+import numpy as np
 
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
+import pytest
+
 import webbpsf
+
 from .. import webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
 
-import pytest
-
-
 # ------------------    NIRCam Tests    ----------------------------
-from .test_webbpsf import generic_output_test, do_test_source_offset, do_test_set_position_from_siaf
+from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
 test_nircam = lambda: generic_output_test('NIRCam')
 test_nircam_source_offset_00 = lambda: do_test_source_offset('NIRCam', theta=0.0, monochromatic=2e-6)
@@ -390,7 +390,7 @@ def test_nircam_coron_wfe_offset(fov_pix=15, oversample=2, fit_gaussian=True):
     # Disable Gaussian fit if astropy not installed
     if fit_gaussian:
         try:
-            from astropy.modeling import models, fitting
+            from astropy.modeling import fitting, models
         except ImportError:
             fit_gaussian = False
 
@@ -458,7 +458,6 @@ def test_nircam_auto_aperturename():
     """
     Test that correct apertures are chosen depending on channel, module, detector, mode, etc.
     """
-    import pysiaf
 
     nc = webbpsf_core.NIRCam()
 
@@ -624,3 +623,13 @@ def test_coron_extra_lyot_plane():
 
     assert len(planes2) == len(planes) + 1, 'There should be an added plane for coron_include_pre_lyot_plane'
     assert np.allclose(psf[0].data, psf2[0].data), 'The PSF output should be the same either way'
+
+
+def test_ways_to_specify_detectors():
+    nrc = webbpsf_core.NIRCam()
+
+    nrc.detector = 'NRCALONG'
+    assert nrc.detector == 'NRCA5', "NRCALONG should be synonymous to NRCA5"
+
+    nrc.detector = 'nrcblong'
+    assert nrc.detector == 'NRCB5', "nrcblong should be synonymous to nrcb5"

@@ -1,22 +1,16 @@
-import sys, os
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.io.fits as fits
-import astropy.units as u
-import pysiaf
-
 import logging
+
+import astropy.units as u
+import numpy as np
+import pysiaf
 
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
 from .. import webbpsf_core
-import poppy
-
 
 # ------------------    NIRSpec Tests    ----------------------------
-
-from .test_webbpsf import generic_output_test, do_test_source_offset, do_test_set_position_from_siaf
+from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
 test_nirspec = lambda: generic_output_test('NIRSpec')
 
@@ -52,3 +46,36 @@ def test_calc_datacube_fast():
     waves = np.linspace(3e-6, 5e-6, 3)
 
     cube = nrs.calc_datacube_fast(waves, fov_pixels=30, oversample=1, compare_methods=True)
+
+
+def test_mode_switch():
+    """ Test switch between IFU and imaging modes """
+    nrs = webbpsf_core.NIRSpec()
+    # check mode swith to IFU
+    nrs.mode = 'IFU'
+    assert 'IFU' in nrs.aperturename
+    assert nrs.band == 'PRISM/CLEAR'
+
+    # check switch of which IFU band
+    nrs.disperser = 'G395H'
+    nrs.filter = 'F290LP'
+    assert nrs.band == 'G395H/F290LP'
+
+    # check mode switch back to imaging
+    nrs.mode = 'imaging'
+    assert 'IFU' not in nrs.aperturename
+
+def test_IFU_wavelengths():
+    """ Test computing the wqvelength sampling for a sim IFU cube """
+    nrs = webbpsf_core.NIRSpec()
+    # check mode swith to IFU
+    nrs.mode = 'IFU'
+    nrs.disperser = 'G235H'
+    nrs.filter = 'F170LP'
+    waves = nrs.get_IFU_wavelengths()
+    assert isinstance(waves, u.Quantity)
+
+    assert len(waves) > 3000  # there are lots of wavelengths in the high-resolution grating cubes
+    # and test we can specify a reduced wavelength sampling:
+    for n in (10, 100):
+        assert len(nrs.get_IFU_wavelengths(n)) == n

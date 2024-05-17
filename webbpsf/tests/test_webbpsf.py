@@ -1,17 +1,15 @@
-import sys, os
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.io.fits as fits
-
-
 import logging
+import os
+
+import numpy as np
 
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
 
-from .. import webbpsf_core
 import poppy
+
+from .. import webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
 
 
@@ -175,8 +173,8 @@ def test_cast_to_str():
 
 
 def test_return_intermediates():
-    import poppy
     import astropy.io.fits
+    import poppy
 
     nc = webbpsf_core.NIRCam()
     nc.image_mask = 'maskswb'

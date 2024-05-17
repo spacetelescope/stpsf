@@ -1,11 +1,11 @@
+from datetime import datetime
+
+import astropy.io.fits as fits
+import basis
 import numpy as np
 import pint
 
 units = pint.UnitRegistry()
-import astropy.io.fits as fits
-import basis
-import matplotlib.pyplot as plt
-from datetime import datetime
 
 # Script that reads in a set of CodeV Pupil map OPD files across fields and instruments and fits Zernikes to the OPD
 # distribution at each field point and then Legendres to the variation of each Zernike coefficient across field.  The
@@ -19,9 +19,9 @@ def read_codeV_data_file(filename):
         for i, line in enumerate(fh):
             if i is headerlines:
                 break
-            if i is 6:
+            if i == 6:
                 x_field_deg = float(str.split(line)[3])
-            if i is 7:
+            if i == 7:
                 y_field_deg = float(str.split(line)[3])
     data = np.loadtxt(filename, skiprows=headerlines)
     data_defined = data != -99999
@@ -36,7 +36,7 @@ def main():
     num_wf_pts_x = 256
     num_wf_pts_y = 256
 
-        instruments = [
+    instruments = [
         'fgs',
         'nircam',
         'miri',

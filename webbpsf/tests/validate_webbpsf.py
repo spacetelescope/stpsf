@@ -1,14 +1,13 @@
-import os
-from astropy.io import fits
-import numpy as N
-import matplotlib
-import pylab as P
 import logging
-import poppy
+import os
 
+import matplotlib
+import numpy as N
+import poppy
+import pylab as P
+from astropy.io import fits
 
 from .. import webbpsf_core
-
 
 __doc__ = """
 
@@ -42,7 +41,7 @@ def validate_vs_russ_plot7(base_opd='OPD_RevV_nircam_155.fits'):
     ax2.set_ybound(0, 0.18)
     ax2.set_yticks([0.0, 0.05, 0.10, 0.15])
     ax2.set_xbound(0.6, 6)
-    ax2.set_xlabel('Wavelength ($\mu$m)')
+    ax2.set_xlabel(r'Wavelength ($\mu$m)')
     ax2.set_ylabel('FWHM (arcsec)')
     ax1.set_ylabel('Flux within 0.15 arcsec')
 
@@ -445,8 +444,8 @@ def validate_vs_krist_sims(clobber=False, normalize=False, which='spot', no_sam=
     fig.text(0.50, 0.95, 'Perrin', horizontalalignment='center', size=18)
     fig.text(0.80, 0.95, 'Difference P-K', horizontalalignment='center', size=18)
 
-    fig.text(0.05, 1.0 / 6, 'off-axis 4.6$\mu$m', verticalalignment='center', rotation='vertical', size=18)
-    fig.text(0.05, 0.48, 'occulted 4.6$\mu$m', verticalalignment='center', rotation='vertical', size=18)
+    fig.text(0.05, 1.0 / 6, r'off-axis 4.6$\mu$m', verticalalignment='center', rotation='vertical', size=18)
+    fig.text(0.05, 0.48, r'occulted 4.6$\mu$m', verticalalignment='center', rotation='vertical', size=18)
     fig.text(0.05, 5.0 / 6 - 0.05, image_mask + ' occulter', verticalalignment='center', rotation='vertical', size=18)
 
     P.subplot(331)

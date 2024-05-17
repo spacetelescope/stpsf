@@ -1,5 +1,4 @@
 import calendar
-import datetime
 import functools
 import os
 
@@ -7,14 +6,14 @@ import astropy
 import astropy.io.fits as fits
 import astropy.time
 import astropy.units as u
-from astroquery.mast import Observations
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
-import scipy.interpolate
-
 import poppy
+import scipy.interpolate
+from astroquery.mast import Observations
+from matplotlib.backends.backend_pdf import PdfPages
+
 import webbpsf
 
 
@@ -323,7 +322,7 @@ def wfe_histogram_plot(
     dates = astropy.time.Time(opdtable1['date'], format='isot')
 
     # Interpolate those RMSes into an even grid over time
-    interp_fn = scipy.interpolate.interp1d(mjds, rmses, kind='linear')
+    interp_fn = scipy.interpolate.interp1d(mjds, rmses, kind='nearest')
 
     mjdrange = np.linspace(np.min(mjds), np.max(mjds), 2048)
     interp_rmses = interp_fn(mjdrange)
@@ -399,7 +398,7 @@ def wfe_histogram_plot(
     )
 
     if thresh:
-        axes[0].axhline(thresh, color='C2', label=f'OTE Correction threshold', linestyle='dashed')
+        axes[0].axhline(thresh, color='C2', label='OTE Correction threshold', linestyle='dashed')
 
     axes[0].tick_params(right=True, which='both', direction='in')
 
@@ -751,7 +750,7 @@ def single_measurement_trending_plot(
 
         iax = axes[0, 3]
         show_opd_image((post_opd - opd) * nanmask, ax=iax, title=None, vmax=vmax, mask=mask, maskc3=mask_without_C3)
-        iax.set_title(f'Mirror Move Measured\nDelta WFE', fontsize=fontsize)
+        iax.set_title('Mirror Move Measured\nDelta WFE', fontsize=fontsize)
 
     else:
         for ax in axes[0, 1:4]:
@@ -775,12 +774,12 @@ def single_measurement_trending_plot(
     # Panel 2-3: proposed correction
     iax = axes[1, 2]
     show_opd_image(fit, ax=iax, vmax=vmax, deltatime_hrs=deltatime_hrs, fontsize=fontsize)
-    iax.set_title(f'Controllable Modes\nin difference', fontsize=fontsize * 1.1)
+    iax.set_title('Controllable Modes\nin difference', fontsize=fontsize * 1.1)
 
     # Panel 2-4:
     iax = axes[1, 3]
     show_opd_image(delta_opd - fit, ax=iax, vmax=vmax, fontsize=fontsize)
-    iax.set_title(f'High order WFE\nin difference', fontsize=fontsize * 1.1)
+    iax.set_title('High order WFE\nin difference', fontsize=fontsize * 1.1)
 
     ####### Row 3
 
@@ -803,18 +802,18 @@ def single_measurement_trending_plot(
         correction -= np.nanmean(correction[correction_mask == 1])
 
         show_opd_image(-correction, ax=iax, vmax=vmax, mask=correction_mask, fontsize=fontsize)
-        iax.set_title(f'Controllable modes\nfrom WSS proposed correction', fontsize=fontsize * 1.1)
+        iax.set_title('Controllable modes\nfrom WSS proposed correction', fontsize=fontsize * 1.1)
 
     #        show_opd_image(fit2, ax=axes[2,3], vmax=vmax, mask=mask, fontsize=fontsize)
 
     else:
         show_opd_image(fit2, ax=iax, vmax=vmax, mask=mask, fontsize=fontsize)
-        iax.set_title(f'Controllable Modes\nin difference', fontsize=fontsize * 1.1)
+        iax.set_title('Controllable Modes\nin difference', fontsize=fontsize * 1.1)
 
     # Panel 3-4:
     iax = axes[2, 3]
     show_opd_image(delta_opd2 - fit2, ax=iax, vmax=vmax, maskc3=mask_without_C3, fontsize=fontsize)
-    iax.set_title(f'High order WFE\nin difference', fontsize=fontsize * 1.1)
+    iax.set_title('High order WFE\nin difference', fontsize=fontsize * 1.1)
 
     cax = fig.add_axes([0.91, 0.41, 0.01, 0.4])
 
@@ -2085,7 +2084,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
     nrc = webbpsf.setup_sim_to_match_file(hdul, verbose=False)
     opdname = nrc.pupilopd[0].header['CORR_ID'] + '-NRCA3_FP1-1.fits'
     if verbose:
-        print(f'Calculating PSF to match that TA image...')
+        print('Calculating PSF to match that TA image...')
     psf = nrc.calc_psf(fov_pixels=im_obs.shape[0])
 
     # Align and Shift:

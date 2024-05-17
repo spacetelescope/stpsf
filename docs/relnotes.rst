@@ -28,10 +28,13 @@ Version History and Change Log
 -------------------------------
 
 Version 1.3.0
-===============
 
+*Date TBD*
 
- - Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
+This release comes with new features and improvements including but not limited to:
+
+X. Improved support for NIRSpec and MIRI IFU PSF calculations, including addition of a ``mode`` attribute for toggling between imaging mode and IFU mode simulations; an option for much faster (but slightly simplified) IFU datacube PSF calculations. Spectral bandpass information added for the IFU bands for both NIRSpec and MIRI. For NIRSpec, IFU mode PSF outputs are rotated by an additional 90 degrees to match the convention used in pipeline-output s3d datacubes made using the IFUAlign orientation. This extra rotation can be optionally disabled if so desired; see the NIRSpec class docstring. 
+X. Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
 
 
 
@@ -41,6 +44,9 @@ Minor documentation updates
 
 Version 1.2.0
 =============
+
+*2023 August*
+
 We are pleased to announce the release of the latest version of WebbPSF version 1.2.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
 
 1. The addition of detector effects for JWST simulations. H2RG detector effects are included in two flavors, a simple ad hoc Gaussian convolution to model charge diffusion effects and a set of convolution kernels to model interpixel capacitance (IPC) and post-pixel coupling effects. We have found that these effects greatly improve the agreement between observations and simulations. See `JWST Detector Effects for more details. <https://webbpsf.readthedocs.io/en/latest/jwst_detector_effects.html>`_

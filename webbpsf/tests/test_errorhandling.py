@@ -1,22 +1,16 @@
 # This file contains code for testing various error handlers and user interface edge cases,
 # as opposed to testing the main body of functionality of the code.
 
-import sys, os
-import os.path
 import logging
+import os
+import os.path
 
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
-import numpy as np
-import matplotlib.pyplot as plt
-import astropy.io.fits as fits
 import pytest
 
-import poppy
-from .. import webbpsf_core
-from .. import utils
-from .. import conf
+from .. import conf, utils, webbpsf_core
 
 
 def _exception_message_starts_with(excinfo, message_body):

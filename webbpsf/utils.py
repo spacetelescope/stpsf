@@ -1,13 +1,15 @@
-from collections import OrderedDict
-import os, sys
-import warnings
-import astropy.io.fits as fits
-from astropy.nddata import NDData
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy
-import astropy.units as u
 import logging
+import os
+import sys
+import warnings
+from collections import OrderedDict
+
+import astropy.io.fits as fits
+import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy
+from astropy.nddata import NDData
 
 _log = logging.getLogger('webbpsf')
 
@@ -309,9 +311,9 @@ def system_diagnostic():
     # There is probably a more clever way to do the following via introspection?
 
     import platform
-    import os
-    import poppy
+
     import numpy
+    import poppy
     import scipy
 
     try:
@@ -491,8 +493,9 @@ def measure_strehl(HDUlist_or_filename=None, ext=0, slice=0, center=None, displa
 
     """
 
-    from .webbpsf_core import instrument
     from poppy import display_psf
+
+    from .webbpsf_core import instrument
 
     if isinstance(HDUlist_or_filename, str):
         HDUlist = fits.open(HDUlist_or_filename)
@@ -790,7 +793,6 @@ def _run_benchmark(timer, iterations=1):
 
 def benchmark_imaging(iterations=1, nlambda=1, add_distortion=True):
     """Performance benchmark function for standard imaging"""
-    import poppy
     import timeit
 
     timer = timeit.Timer(
@@ -808,7 +810,6 @@ nlambda={nlambda:d}""".format(nlambda=nlambda),
 
 def benchmark_nircam_coronagraphy(iterations=1, nlambda=1, add_distortion=True):
     """Performance benchmark function for standard imaging"""
-    import poppy
     import timeit
 
     timer = timeit.Timer(
@@ -828,7 +829,6 @@ nlambda={nlambda:d}""".format(nlambda=nlambda),
 
 def benchmark_miri_coronagraphy(iterations=1, nlambda=1):
     """Performance benchmark function for standard imaging"""
-    import poppy
     import timeit
 
     timer = timeit.Timer(
@@ -976,7 +976,7 @@ def determine_inst_name_from_v2v3(v2v3):
         _log.debug('Field coordinates determined to be in NIRSpec field')
     elif (
         (v2v3[0] <= -6.2 * u.arcmin)
-        and (v2v3[0] >= -8.3 * u.arcmin)
+        and (v2v3[0] >= -8.5 * u.arcmin)
         and (v2v3[1] <= -5.2 * u.arcmin)
         and (v2v3[1] >= -7.3 * u.arcmin)
     ):

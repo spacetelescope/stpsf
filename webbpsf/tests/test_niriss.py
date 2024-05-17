@@ -1,15 +1,12 @@
-import logging
 
 import numpy as np
 
 # _log = logging.getLogger('test_webbpsf')
 # _log.addHandler(logging.NullHandler())
-
 from .. import webbpsf_core
 
 # ------------------    NIRISS Tests    ----------------------------
-
-from .test_webbpsf import generic_output_test, do_test_source_offset, do_test_set_position_from_siaf
+from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
 test_niriss = lambda: generic_output_test('NIRISS')
 test_niriss_source_offset_00 = lambda: do_test_source_offset('NIRISS', theta=0.0, monochromatic=3.0e-6)

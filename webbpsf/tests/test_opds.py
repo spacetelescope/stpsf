@@ -3,15 +3,14 @@ Tests for opds.py
 """
 import os
 
-from astropy.io import fits
 import astropy.units as u
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pysiaf
 import pytest
+
 import webbpsf
-import matplotlib.pyplot as plt
 
 # Set up a pinned pysiaf version so as not to break tests with any pysiaf value updates
 prd_data_dir = pysiaf.constants.JWST_PRD_DATA_ROOT.rsplit('PRD', 1)[0]
@@ -242,9 +241,10 @@ def test_sur_basics():
 
 def test_move_sur(plot=False):
     """Test we can move mirrors using Segment Update Requests"""
-    import webbpsf
-    import os
     import glob
+    import os
+
+    import webbpsf
 
     surdir = os.path.join(webbpsf.__path__[0], 'tests', 'surs')
     surs = glob.glob(surdir + '/*sur.xml')
