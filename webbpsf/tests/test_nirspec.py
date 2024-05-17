@@ -55,6 +55,7 @@ def test_mode_switch():
     nrs.mode = 'IFU'
     assert 'IFU' in nrs.aperturename
     assert nrs.band == 'PRISM/CLEAR'
+    assert nrs.image_mask is None
 
     # check switch of which IFU band
     nrs.disperser = 'G395H'
