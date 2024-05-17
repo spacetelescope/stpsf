@@ -2538,7 +2538,7 @@ class NIRCam(JWInstrument):
             'WLP8',
             'WLM8',
             'WLP12',
-        ]
+        ] + [f'DHS_{i+1:02d}' for i in range(10)]
 
         self._detectors = dict()
         det_list = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5']
@@ -2915,9 +2915,10 @@ class NIRCam(JWInstrument):
             (self.pupil_mask is not None)
             and ('LENS' not in self.pupil_mask.upper())
             and ('WL' not in self.pupil_mask.upper())
+            and ('DHS'  not in self.pupil_mask.upper())
         ):
             # no occulter selected but coronagraphic mode anyway. E.g. off-axis PSF
-            # but don't add this image plane for weak lens calculations
+            # but don't add this image plane for weak lens or DHS calculations
             optsys.add_image(poppy.ScalarTransmission(name='No Image Mask Selected!'), index=2)
             trySAM = False
         else:
@@ -3022,6 +3023,11 @@ class NIRCam(JWInstrument):
 
         elif self.pupil_mask is None and self.image_mask is not None:
             optsys.add_pupil(poppy.ScalarTransmission(name='No Lyot Mask Selected!'), index=3)
+        elif self.pupil_mask.startswith('DHS'):
+            optsys.add_pupil(transmission=self._datapath + f"/optics/NIRCam_{self.pupil_mask}_npix1024.fits.gz", name=self.pupil_mask,
+                             flip_y=True, shift_x=shift_x, shift_y=shift_y, rotation=rotation, index=3)
+            optsys.planes[3].wavefront_display_hint = 'intensity'
+
         else:
             optsys.add_pupil(
                 transmission=self._WebbPSF_basepath + '/tricontagon_oversized_4pct.fits.gz',
