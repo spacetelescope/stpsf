@@ -246,99 +246,6 @@ class OPD(poppy.FITSOpticalElement):
         """Write OPD to a FITS file on disk"""
         self.as_fits(**kwargs).writeto(outname, overwrite=overwrite)
 
-    # ---- display and analysis
-    def powerspectrum(self, max_cycles=50, sampling=5, vmax=100, iterate=False):
-        """
-        Compute the spatial power spectrum of an aberrated wavefront.
-
-        Produces nice plots on screen.
-
-        Returns an array [low, mid, high] giving the RMS spatial frequencies in the
-        different JWST-defined spatial frequency bins:
-            low:   <=5 cycles/aperture
-            mid:   5 < cycles <= 30
-            high:  30 < cycles
-
-        """
-
-        # import SFT
-
-        def tvcircle(radius=1, xcen=0, ycen=0, center=None, **kwargs):
-            """
-            draw a circle on an image.
-
-                radius
-                xcen
-                ycen
-                center=     tuple in (Y,X) order.
-            """
-            if center is not None:
-                xcen = center[1]
-                ycen = center[0]
-            t = np.arange(0, np.pi * 2.0, 0.01)
-            t = t.reshape((len(t), 1))
-            x = radius * np.cos(t) + xcen
-            y = radius * np.sin(t) + ycen
-            plt.plot(x, y, **kwargs)
-
-        cmap = copy.copy(matplotlib.cm.get_cmap(poppy.conf.cmap_diverging))
-        cmap.set_bad('0.3')
-
-        plt.clf()
-        plt.subplot(231)
-        self.display(title='full wavefront', clear=False, colorbar=False, vmax=vmax)
-
-        ps_pixel_size = 1.0 / sampling  # how many cycles per pixel
-        trans = SFT.SFT3(self.data, max_cycles * 2, max_cycles * 2 * sampling)
-
-        abstrans = np.abs(trans)
-
-        extent = [-max_cycles, max_cycles, -max_cycles, max_cycles]
-
-        plt.subplot(233)
-        plt.imshow(abstrans, extent=extent, origin='lower')
-        plt.title('Power Spectrum of the phase')
-        plt.ylabel('cycles/aperture')
-        tvcircle(radius=5, color='k', linewidth=1)  # , ls='--')
-        tvcircle(radius=30, color='k', linewidth=1)  # 2, ls='--')
-        plt.gca().set_xbound(-max_cycles, max_cycles)
-        plt.gca().set_ybound(-max_cycles, max_cycles)
-
-        y, x = np.indices(abstrans.shape)
-        y -= abstrans.shape[0] / 2.0
-        x -= abstrans.shape[1] / 2.0
-        r = np.sqrt(x**2 + y**2) * ps_pixel_size
-
-        mask = np.ones_like(self.data)
-        mask[np.where(self.amplitude == 0)] = np.nan
-        wgood = np.where(self.amplitude != 0)
-
-        components = []
-        for i, label in enumerate(['low', 'mid', 'high']):
-            plt.subplot(2, 3, i + 4)
-            if label == 'low':
-                condition = r <= 5
-            elif label == 'mid':
-                condition = (r > 5) & (r <= 30)
-            else:
-                condition = r > 30
-            filtered = trans * condition
-
-            inverse = SFT.SFT3(filtered, max_cycles * 2, self.opd.shape[0], inverse=True)
-            inverse = inverse[
-                ::-1, ::-1
-            ]  # I thought SFT did this but apparently this is necessary to get the high freqs right...
-
-            plt.imshow(
-                inverse.real * mask, vmin=(-vmax) / 1000.0, vmax=vmax / 1000, cmap=cmap, origin='lower'
-            )  # vmax is in nm, but WFE is in microns, so convert
-            plt.title(label + ' spatial frequencies')
-            rms = np.sqrt((inverse.real[wgood] ** 2).mean()) * 1000
-
-            components.append(rms)
-            plt.xlabel('%.3f nm RMS WFE' % rms)
-
-        return np.asarray(components)
 
     def display_opd(
         self,
@@ -1362,8 +1269,6 @@ class OTE_Linear_Model_WSS(OPD):
         _log.info('Set OPD to zero WFE!')
 
     def print_state(self):
-        keys = self.state.keys()
-
         print('Segment poses in Control coordinates: (microns for decenter & piston, microradians for tilts and clocking):')
         print('  \t %10s %10s %10s %10s %10s %10s' % tuple(self._control_modes))
         for i, segment in enumerate(self.segnames[0:18]):
@@ -1492,7 +1397,7 @@ class OTE_Linear_Model_WSS(OPD):
                 del self.meta[f'S{iseg:02d}PISTN']
                 del self.meta[f'S{iseg:02d}XTILT']
                 del self.meta[f'S{iseg:02d}YTILT']
-            except:
+            except KeyError:
                 pass
 
         for i in range(len(hexike_coeffs)):
@@ -2974,52 +2879,6 @@ def random_unstack(ote, radius=1, verbose=False):
     ote.update_opd(verbose=verbose)
 
 
-# --------------------------------------------------------------------------------
-
-
-def test_OPDbender():
-    plt.figure(1)
-    tel = OPDbender()
-    tel.displace('A1', 1, 0, 0, display=False)
-    tel.displace('A2', 0, 1, 0, display=False)
-    tel.displace('A3', 0, 0, 0.03, display=False)
-    tel.displace('A4', 0, -1, 0, display=False)
-    tel.displace('A5', 1, -1, 0, display=False)
-
-    tel.tilt('B1', 0.1, 0, 0)
-    tel.tilt('B2', 0, 0.1, 0)
-    tel.tilt('B3', 0, 0, 100)
-
-    tel.display()
-
-    plt.figure(2)
-    tel.zern_seg('B3')
-
-    print('')
-    print('')
-    print('RMS WFE is ', tel.rms())
-
-    tel.print_state()
-
-
-def test2_OPDbender(filename='OPD_RevV_nircam_132.fits'):
-    orig = OPDbender(filename)
-
-    plot_kwargs = {'colorbar_orientation': 'horizontal', 'clear': False}
-
-    plt.clf()
-    plt.subplot(131)
-    orig.draw(title='Input OPD from \n' + filename, **plot_kwargs)
-
-    perturbed = orig.copy()
-    perturbed.perturb_all(multiplier=0.2, draw=False)
-
-    plt.subplot(132)
-    perturbed.draw(title='OPD after small random perturbation', **plot_kwargs)
-
-    plt.subplot(133)
-    diff = perturbed - orig
-    diff.draw(title='Difference ({0:.1f} nm rms)'.format(diff.rms()), **plot_kwargs)
 
 
 # -------------------------------------------------------------------------------
@@ -3480,7 +3339,6 @@ def get_coarse_blur_parameters(
     pcsmodel = astropy.table.Table.read(os.path.join(__location__, 'otelm', f'coarse_track{case}_sim_pointing.fits'))
 
     wt = (t0 < pcsmodel['time']) & (pcsmodel['time'] < t0 + duration)
-    ns = wt.sum()
 
     # Extract coordinates for the requested time period
     coords = np.zeros((2, wt.sum()), float)

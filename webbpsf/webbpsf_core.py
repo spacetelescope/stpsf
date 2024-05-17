@@ -36,6 +36,7 @@ import scipy.interpolate
 import scipy.ndimage
 
 import webbpsf.mast_wss
+from webbpsf.utils import label_wavelength
 
 from . import DATA_VERSION_MIN, constants, detectors, distortion, gridded_library, opds, optics, utils
 
@@ -1829,19 +1830,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         """
 
-        # Allow up to 10,000 wavelength slices. The number matters because FITS
-        # header keys can only have up to 8 characters. Backward-compatible.
-
-        if isinstance(wavelengths, units.Quantity):
-            wavelengths = wavelengths.to_value(units.m)
 
         nwavelengths = len(wavelengths)
-        if nwavelengths < 100:
-            label_wl = lambda i: 'WAVELN{:02d}'.format(i)
-        elif nwavelengths < 10000:
-            label_wl = lambda i: 'WVLN{:04d}'.format(i)
-        else:
-            raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
 
         # Set up cube and initialize structure based on PSF at a representative wavelength
         _log.info('Starting fast/simplified multiwavelength data cube calculation.')
@@ -1870,7 +1860,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         ext = 0
         cubefast[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
         cubefast[ext].data[0] = psf[ext].data
-        cubefast[ext].header[label_wl(0)] = wavelengths[0]
+        cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
 
         ### Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
@@ -1901,7 +1891,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             wl = wavelengths[i]
             psfw = quickosys.calc_psf(wavelength=wl, normalize='None')
             cubefast[0].data[i] = psfw[0].data
-            cubefast[ext].header[label_wl(i)] = wavelengths[i]
+            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i]
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
@@ -1918,7 +1908,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in range(len(psf)):
                 cube[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
                 cube[ext].data[0] = psf[ext].data
-                cube[ext].header[label_wl(0)] = wavelengths[0]
+                cube[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
 
             # iterate rest of wavelengths
             print('Running standard way')
@@ -1927,7 +1917,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 psf = self.calc_psf(*args, monochromatic=wl, **kwargs)
                 for ext in range(len(psf)):
                     cube[ext].data[i] = psf[ext].data
-                    cube[ext].header[label_wl(i)] = wl
+                    cube[ext].header[label_wavelength(nwavelengths, i)] = wl
                     cube[ext].header.add_history('--- Cube Plane {} ---'.format(i))
                     for h in psf[ext].header['HISTORY']:
                         cube[ext].header.add_history(h)
@@ -2134,7 +2124,7 @@ class MIRI(JWInstrument_with_IFU):
         # This approach is required computationally so we can work in an unrotated frame
         # aligned with the FQPM axes.
 
-        defaultpupil = optsys.planes.pop(2)  # throw away the rotation of the entrance pupil we just added
+        optsys.planes.pop(2)  # throw away the rotation of the entrance pupil we just added
 
         if self.include_si_wfe:
             # temporarily remove the SI internal aberrations
@@ -2936,12 +2926,6 @@ class NIRCam(JWInstrument):
         # add pupil plane mask
         shift_x, shift_y = self._get_pupil_shift()
         rotation = self.options.get('pupil_rotation', None)
-
-        # NIRCam as-built weak lenses, from WSS config file, PRDOPSFLT-027
-        WLP4_diversity = 8.3443  # microns
-        WLP8_diversity = 16.5932  # microns
-        WLM8_diversity = -16.5593  # microns
-        WL_wavelength = 2.12  # microns
 
         if self.pupil_mask == 'CIRCLYOT' or self.pupil_mask == 'MASKRND':
             optsys.add_pupil(

@@ -36,7 +36,7 @@ def show_notebook_interface_wfi(instrument):
     from matplotlib import pyplot as plt
 
     try:
-        import synphot
+        import synphot  # noqa TODO verify synphot is indeeded needed
     except ImportError:
         raise ImportError('For now, synphot must be installed to use the notebook interface')
 
@@ -224,7 +224,7 @@ def show_notebook_interface_jwst(instrument):
         instrument = instrument(instrument)
 
     try:
-        import synphot
+        import synphot # noqa TODO verify synphot is indeeded needed
     except ImportError:
         raise ImportError('For now, synphot must be installed to use the notebook interface')
 

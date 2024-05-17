@@ -1,20 +1,25 @@
 
 import numpy as np
 
-# _log = logging.getLogger('test_webbpsf')
-# _log.addHandler(logging.NullHandler())
 from .. import webbpsf_core
-
-# ------------------    NIRISS Tests    ----------------------------
 from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
-test_niriss = lambda: generic_output_test('NIRISS')
-test_niriss_source_offset_00 = lambda: do_test_source_offset('NIRISS', theta=0.0, monochromatic=3.0e-6)
-test_niriss_source_offset_45 = lambda: do_test_source_offset('NIRISS', theta=45.0, monochromatic=3.0e-6)
+# ------------------    NIRISS Tests    ----------------------------
 
-test_niriss_set_siaf = lambda: do_test_set_position_from_siaf(
-    'NIRISS', ['NIS_FP1MIMF', 'NIS_SUB64', 'NIS_SOSSFULL', 'NIS_SOSSTA', 'NIS_AMI1']
-)
+def test_niriss():
+    return generic_output_test('NIRISS')
+
+def test_niriss_source_offset_00():
+    return do_test_source_offset('NIRISS', theta=0.0, monochromatic=3.0e-6)
+
+def test_niriss_source_offset_45():
+    return do_test_source_offset('NIRISS', theta=45.0, monochromatic=3.0e-6)
+
+def test_niriss_set_siaf():
+    return  do_test_set_position_from_siaf(
+                'NIRISS',
+                ['NIS_FP1MIMF', 'NIS_SUB64', 'NIS_SOSSFULL', 'NIS_SOSSTA', 'NIS_AMI1']
+            )
 
 
 def test_niriss_auto_pupil():

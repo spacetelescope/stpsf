@@ -74,7 +74,6 @@ def get_detector_ipc_model(inst, header):
     elif inst == 'MIRI':
         webbpsf.webbpsf_core._log.info('Detector IPC: MIRI')
 
-        a = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst]
         alpha = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][0]
         beta = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][1]
         c = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][2]  # real observation noise adjustment
@@ -107,7 +106,7 @@ def get_detector_ipc_model(inst, header):
         nchannel = int(yposition) // 512
         try:
             flag = maskimage[nchannel, int(xposition)]
-        except:
+        except IndexError:
             # This marks the pixel as non-void by default if the maskimage is not
             # read in properly
             flag = 0

@@ -1,31 +1,41 @@
 import logging
 import os
+
 import astropy.units as u
-import pysiaf
 import numpy as np
+import pysiaf
+
+from .. import webbpsf_core
+from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
-from .. import webbpsf_core
 
 # ------------------    MIRI Tests    ----------------------------
 
-from .test_webbpsf import generic_output_test, do_test_source_offset, do_test_set_position_from_siaf
+def test_miri():
+    return generic_output_test('MIRI')
 
-test_miri = lambda: generic_output_test('MIRI')
-test_miri_source_offset_00 = lambda: do_test_source_offset('MIRI', theta=0.0, monochromatic=8e-6)
-test_miri_source_offset_45 = lambda: do_test_source_offset('MIRI', theta=45.0, monochromatic=8e-6)
 
-test_miri_set_siaf = lambda: do_test_set_position_from_siaf(
-    'MIRI',
-    [
-        'MIRIM_SUB128',
-        'MIRIM_FP1MIMF',
-        'MIRIM_BRIGHTSKY',
-        'MIRIM_TASLITLESSPRISM',
-    ],
-)
+def test_miri_source_offset_00():
+    return do_test_source_offset('MIRI', theta=0.0, monochromatic=8e-6)
+
+
+def test_miri_source_offset_45():
+    return do_test_source_offset('MIRI', theta=45.0, monochromatic=8e-6)
+
+
+def test_miri_set_siaf():
+    return  do_test_set_position_from_siaf(
+                'MIRI',
+                [
+                    'MIRIM_SUB128',
+                    'MIRIM_FP1MIMF',
+                    'MIRIM_BRIGHTSKY',
+                    'MIRIM_TASLITLESSPRISM',
+                ],
+            )
 
 
 def do_test_miri_fqpm(
