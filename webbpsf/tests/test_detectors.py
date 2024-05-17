@@ -60,10 +60,12 @@ def test_apply_miri_scattering():
         # Test that the 4 corners of the box contain very small (close to 0) values
         ylen, xlen = diff.shape
 
-        # Choose the start/stop points for these squares (each will take up 1/3 of the total array)
+        # Choose the start/stop points for these squares (each will take up 1/10th of the total array per side)
+        # Following the addition of the radial term to the cruciform model, we restrict to just the very corners
+        # to avoid including much from that circular halo term.
         first = 0
-        second = int(0.33 * xlen)
-        third = int(0.67 * xlen)
+        second = int(0.1 * xlen)
+        third = int(0.9 * xlen)
         fourth = xlen - 1
 
         # Pull these squares out of the data

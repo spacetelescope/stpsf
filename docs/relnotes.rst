@@ -28,12 +28,14 @@ Version History and Change Log
 -------------------------------
 
 Version 1.3.0
-=============
+
 *Date TBD*
 
 This release comes with new features and improvements including but not limited to:
 
 X. Improved support for NIRSpec and MIRI IFU PSF calculations, including addition of a ``mode`` attribute for toggling between imaging mode and IFU mode simulations; an option for much faster (but slightly simplified) IFU datacube PSF calculations. Spectral bandpass information added for the IFU bands for both NIRSpec and MIRI. For NIRSpec, IFU mode PSF outputs are rotated by an additional 90 degrees to match the convention used in pipeline-output s3d datacubes made using the IFUAlign orientation. This extra rotation can be optionally disabled if so desired; see the NIRSpec class docstring. 
+X. Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
+
 
 
 Version 1.2.1
