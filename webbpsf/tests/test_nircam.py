@@ -630,3 +630,13 @@ def test_coron_extra_lyot_plane():
 
     assert len(planes2) == len(planes) + 1, 'There should be an added plane for coron_include_pre_lyot_plane'
     assert np.allclose(psf[0].data, psf2[0].data), 'The PSF output should be the same either way'
+
+
+def test_ways_to_specify_detectors():
+    nrc = webbpsf_core.NIRCam()
+
+    nrc.detector = 'NRCALONG'
+    assert nrc.detector == 'NRCA5', "NRCALONG should be synonymous to NRCA5"
+
+    nrc.detector = 'nrcblong'
+    assert nrc.detector == 'NRCB5', "nrcblong should be synonymous to nrcb5"

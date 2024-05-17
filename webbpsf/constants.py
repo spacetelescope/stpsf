@@ -400,3 +400,4 @@ INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS = {
 # See Gaspar et al. 2021 for illustrative figures.
 # This is a rough approximation of a detector-position-dependent phenomenon
 MIRI_CRUCIFORM_INNER_RADIUS_PIX = 12
+MIRI_CRUCIFORM_RADIAL_SCALEFACTOR = 0.005   # Brightness factor for the diffuse circular halo
