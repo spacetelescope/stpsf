@@ -109,6 +109,10 @@ def test_miri_slit_apertures():
     assert np.isclose(miri._tel_coords()[0].to_value(u.arcsec), ap.V2Ref)
     assert np.isclose(miri._tel_coords()[1].to_value(u.arcsec), ap.V3Ref)
 
+    # Test we can switch back from SLIT to regular type apertures without any error
+    miri.set_position_from_aperture_name("MIRIM_SLIT")
+    miri.set_position_from_aperture_name('MIRIM_FULL')
+
 
 def test_lrs_psf():
     """Test that we can at least run an LRS mode PSF calculation
