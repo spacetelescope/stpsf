@@ -2105,8 +2105,6 @@ class MIRI(JWInstrument_with_IFU):
 
     def _validate_config(self, **kwargs):
         """Validate instrument config for MIRI"""
-        if self.filter.startswith('MRS-IFU'):
-            raise NotImplementedError('The MIRI MRS is not yet implemented.')
         return super(MIRI, self)._validate_config(**kwargs)
 
     def _addAdditionalOptics(self, optsys, oversample=2):
@@ -3142,8 +3140,6 @@ class NIRSpec(JWInstrument_with_IFU):
         self._si_wfe_class = optics.NIRSpecFieldDependentAberration  # note we end up adding 2 instances of this.
 
     def _validate_config(self, **kwargs):
-        if self.filter.startswith('IFU'):
-            raise NotImplementedError('The NIRSpec IFU is not yet implemented.')
         return super(NIRSpec, self)._validate_config(**kwargs)
 
     def _addAdditionalOptics(self, optsys, oversample=2):
@@ -3259,6 +3255,9 @@ class NIRSpec(JWInstrument_with_IFU):
                     if self._disperser is None:
                         self.disperser = 'PRISM'  # Set some default spectral mode
                         self.filter = 'CLEAR'
+                    if self.image_mask not in ['IFU', None]:
+                        _log.info("The currently-selected image mask (slit) is not compatible with IFU mode. Setting image_mask=None")
+                        self.image_mask = None
                 else:
                     self._mode = 'imaging' # More to implement here later!
 
