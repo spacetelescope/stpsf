@@ -1,20 +1,13 @@
-import astropy.io.fits as fits
-import numpy as np
-
-try:
-
-    _HAVE_PYTEST = True
-except:
-    _HAVE_PYTEST = False
-
 import logging
 
-_log = logging.getLogger('test_webbpsf')
-_log.addHandler(logging.NullHandler())
+import astropy.io.fits as fits
+import numpy as np
 
 from .. import conf, utils, webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
 
+_log = logging.getLogger('test_webbpsf')
+_log.addHandler(logging.NullHandler())
 
 def test_logging_restart():
     """Test turning off and on the logging, and then put it back the way it was."""
@@ -44,7 +37,7 @@ def test_logging_setup():
 
     try:
         import pytest
-    except:
+    except ImportError:
         _log.warning('Skipping last step in test_logging_setup because pytest is not installed.')
         return  # We can't do this next test if we don't have the pytest.raises function.
 

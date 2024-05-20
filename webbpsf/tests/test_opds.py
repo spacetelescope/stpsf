@@ -12,6 +12,8 @@ import pytest
 
 import webbpsf
 
+from ..utils import rms
+
 # Set up a pinned pysiaf version so as not to break tests with any pysiaf value updates
 prd_data_dir = pysiaf.constants.JWST_PRD_DATA_ROOT.rsplit('PRD', 1)[0]
 PRD34_NRC = os.path.join(prd_data_dir, 'PRDOPSSOC-034/SIAFXML/SIAFXML/NIRCam_SIAF.xml')
@@ -205,7 +207,7 @@ def test_thermal_slew_reproducibility():
     ote.thermal_slew(12 * u.hour, start_angle=-5, end_angle=45, case='EOL')
     opd3 = ote.opd.copy()
 
-    assert np.allclose(opd1, opd2) == False, "OPDs expected to differ didn't"
+    assert np.allclose(opd1, opd2) is False, "OPDs expected to differ didn't"
     assert np.allclose(opd1, opd3), "OPDs expected to match didn't"
 
 
@@ -343,7 +345,6 @@ def test_apply_field_dependence_model():
     dependence. Thus there are several calls to manually set only the nominal field dep to True
 
     """
-    rms = lambda array, mask: np.sqrt((array[mask] ** 2).mean())
 
     # Get the OPD without any sort of field dependence
     ote = webbpsf.opds.OTE_Linear_Model_WSS(v2v3=None)
@@ -535,7 +536,7 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
             axs[i, 0].axhline(y=fov_pix / 2)
             axs[i, 0].axvline(x=fov_pix / 2)
             # PLOT RESULTING OPD:
-            im = axs[i, 1].imshow(ote.opd, vmin=-4e-6, vmax=4e-6, origin='lower')
+            axs[i, 1].imshow(ote.opd, vmin=-4e-6, vmax=4e-6, origin='lower')
             axs[i, 1].set_title('OPD (yellow +)')
             axs[i, 2].imshow(psfx[0].data, norm=matplotlib.colors.LogNorm(vmax=1e-2, vmin=1e-5), origin='lower')
             axs[i, 2].set_title(iseg + ': xtilt {} um'.format(tilt))
@@ -560,7 +561,7 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
 
         # PLOT RESULTING OPD:
         if plot:
-            im = axs[i, 3].imshow(ote.opd, vmin=-4e-6, vmax=4e-6, origin='lower')
+            axs[i, 3].imshow(ote.opd, vmin=-4e-6, vmax=4e-6, origin='lower')
             axs[i, 3].set_title('OPD (yellow +)')
             axs[i, 4].imshow(psfy[0].data, norm=matplotlib.colors.LogNorm(vmax=1e-2, vmin=1e-5), origin='lower')
             axs[i, 4].set_title(iseg + ': ytilt {} um'.format(tilt))

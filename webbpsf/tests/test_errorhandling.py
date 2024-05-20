@@ -5,13 +5,12 @@ import logging
 import os
 import os.path
 
-_log = logging.getLogger('test_webbpsf')
-_log.addHandler(logging.NullHandler())
-
 import pytest
 
 from .. import conf, utils, webbpsf_core
 
+_log = logging.getLogger('test_webbpsf')
+_log.addHandler(logging.NullHandler())
 
 def _exception_message_starts_with(excinfo, message_body):
     return excinfo.value.args[0].startswith(message_body)
@@ -24,7 +23,7 @@ def test_calc_psf_catch_incompatible_oversampling():
     nc.filter = 'F212N'
 
     with pytest.raises(ValueError) as excinfo:
-        psf = nc.calc_psf(oversample=2, detector_oversample=10, fft_oversample=4)
+        nc.calc_psf(oversample=2, detector_oversample=10, fft_oversample=4)
     assert _exception_message_starts_with(excinfo, 'You cannot specify')
 
 

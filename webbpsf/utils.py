@@ -11,9 +11,10 @@ import numpy as np
 import scipy
 from astropy.nddata import NDData
 
+from . import conf
+
 _log = logging.getLogger('webbpsf')
 
-from . import conf
 
 _DISABLE_FILE_LOGGING_VALUE = 'none'
 
@@ -395,12 +396,12 @@ def system_diagnostic():
             freq=psutil.cpu_freq()[0] / 1000,
             percent=psutil.cpu_percent(),
         )
-    except:
+    except ImportError:
         try:
             import multiprocessing
 
             cpu_info = '  Cores: {}'.format(multiprocessing.cpu_count())
-        except:
+        except ImportError:
             cpu_info = 'No CPU info available'
 
     # Get numpy config - the following is a modified version of
@@ -408,7 +409,7 @@ def system_diagnostic():
 
     numpyconfig = ''
     for name, info_dict in numpy.__config__.__dict__.items():
-        if name[0] == '_' or type(info_dict) is not type({}):
+        if name[0] == '_' or not isinstance(info_dict, dict):
             continue
         numpyconfig += name + ':\n'
         if not info_dict:
@@ -994,3 +995,15 @@ def determine_inst_name_from_v2v3(v2v3):
         raise ValueError(f'Given V2V3 coordinates {v2v3} do not fall within an instrument FOV region')
 
     return instrument
+
+
+def label_wavelength (nwavelengths, wavelength_slices):
+    # Allow up to 10,000 wavelength slices. The number matters because FITS
+    # header keys can only have up to 8 characters. Backward-compatible.
+    if nwavelengths < 100:
+        label = 'WAVELN{:02d}'.format(wavelength_slices)
+    elif nwavelengths < 10000:
+        label = 'WVLN{:04d}'.format(wavelength_slices)
+    else:
+        raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
+    return label

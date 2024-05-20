@@ -4,6 +4,8 @@ import astropy
 
 import stsynphot
 
+from synphot.exceptions import SynphotError
+
 WebbPSF_basepath = os.getenv(
     'WEBBPSF_PATH', default=os.path.dirname(os.path.dirname(os.path.abspath(webbpsf.__file__))) + os.sep + 'data'
 )
@@ -21,11 +23,11 @@ def norm_one_filter(instrument, filter_, clobber=False):
         t.add_keyword('TELESCOP', 'JWST')
         t.add_keyword('INSTRUME', instrument)
         t.add_keyword('FILTER', filter_)
-        t.add_keyword('SOURCE', f'{_SYNPHOT_PKG}, normalized to peak=1')
+        t.add_keyword('SOURCE', f'{_SYNPHOT_PKG}, normalized to peak=1') # TODO - NOT DEFINED _SYNPHOT_PKG
 
         t.write('%s/%s/filters/%s_throughput.fits' % (WebbPSF_basepath, instrument, filter_))
         print('Wrote throughput.fits for %s %s' % (instrument, filter_))
-    except:
+    except SynphotError:
         print('Error for %s %s' % (instrument, filter_))
 
 

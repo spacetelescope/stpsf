@@ -186,7 +186,9 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
         Be more verbose
     """
 
-    vprint = lambda x: print(x) if verbose else None
+    def vprint(x):
+        if verbose:
+            print(x)
 
     loc = f'{inst.detector} at {inst.detector_position}'
 
@@ -344,7 +346,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     ax.text(
         0.96,
         0.92,
-        f'45$^\circ$, {slew_delta_time}',
+        f'45$^\\circ$, {slew_delta_time}',
         transform=ax.transAxes,
         horizontalalignment='right',
     )
@@ -359,7 +361,7 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
         annotate_budget='Image motion (as equiv. WFE)',
         instname=inst.name,
     )
-    ax.text(0.04, 0.92, f'LOS jitter: {jitter}, 1$\sigma$/axis', transform=ax.transAxes)
+    ax.text(0.04, 0.92, f'LOS jitter: {jitter}, 1$\\sigma$/axis', transform=ax.transAxes)
 
     # ISIM and SI
     show_opd(
@@ -423,10 +425,6 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
         fig.text(
             between_col2_col3, meany_row, '+', color='purple', horizontalalignment='center', fontweight='bold', fontsize=18
         )
-
-    # Annotate first column to show WFE summation
-    between_row1_row2 = (bounds(axes[1, 0])[0, 1] + bounds(axes[2, 0])[1, 1]) / 2
-    between_row2_row3 = (bounds(axes[2, 0])[0, 1] + bounds(axes[3, 0])[1, 1]) / 2
 
     meanx_col0 = bounds(axes[0, 0])[:, 0].mean()
     for irow, symbol in enumerate(['=', '+', '+']):

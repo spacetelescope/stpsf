@@ -18,22 +18,22 @@ import math
 
 # Disable Pint's old fallback behavior (must come before importing Pint)
 import os
+import copy
 
 os.environ['PINT_ARRAY_PROTOCOL_FALLBACK'] = '0'
 
-import pint
+import pint # noqa
 
 units = pint.UnitRegistry()
 Q_ = units.Quantity
 
 # Silence NEP 18 warning
-import warnings
+import warnings # noqa
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     Q_([])
 
-import copy
 
 
 def embed(n, m):

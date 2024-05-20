@@ -36,6 +36,7 @@ import scipy.interpolate
 import scipy.ndimage
 
 import webbpsf.mast_wss
+from webbpsf.utils import label_wavelength
 
 from . import DATA_VERSION_MIN, constants, detectors, distortion, gridded_library, opds, optics, utils
 
@@ -1004,9 +1005,10 @@ class JWInstrument(SpaceTelescopeInstrument):
                 # and if it's custom then don't override that.
                 # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
                 # and also check first that it's not a SLIT type aperture, for which the usual _get_pixelscale_from_apername won't work.
+                # and also check neither current nor requested aperture are of type SLIT since that doesn't have a pixelscale to get.
                 has_custom_pixelscale = (
                     self._aperturename
-                    and (self._detector_geom_info.aperture.AperType != 'SLIT')
+                    and  (self.siaf[self._aperturename].AperType != 'SLIT')
                     and (self.pixelscale != self._get_pixelscale_from_apername(self._aperturename))
                     and ap.AperType != 'SLIT'
                 )
@@ -1831,19 +1833,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         """
 
-        # Allow up to 10,000 wavelength slices. The number matters because FITS
-        # header keys can only have up to 8 characters. Backward-compatible.
-
-        if isinstance(wavelengths, units.Quantity):
-            wavelengths = wavelengths.to_value(units.m)
 
         nwavelengths = len(wavelengths)
-        if nwavelengths < 100:
-            label_wl = lambda i: 'WAVELN{:02d}'.format(i)
-        elif nwavelengths < 10000:
-            label_wl = lambda i: 'WVLN{:04d}'.format(i)
-        else:
-            raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
 
         # Set up cube and initialize structure based on PSF at a representative wavelength
         _log.info('Starting fast/simplified multiwavelength data cube calculation.')
@@ -1872,7 +1863,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         ext = 0
         cubefast[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
         cubefast[ext].data[0] = psf[ext].data
-        cubefast[ext].header[label_wl(0)] = wavelengths[0]
+        cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
 
         ### Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
@@ -1903,7 +1894,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             wl = wavelengths[i]
             psfw = quickosys.calc_psf(wavelength=wl, normalize='None')
             cubefast[0].data[i] = psfw[0].data
-            cubefast[ext].header[label_wl(i)] = wavelengths[i]
+            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i]
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
@@ -1920,7 +1911,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in range(len(psf)):
                 cube[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
                 cube[ext].data[0] = psf[ext].data
-                cube[ext].header[label_wl(0)] = wavelengths[0]
+                cube[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
 
             # iterate rest of wavelengths
             print('Running standard way')
@@ -1929,7 +1920,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 psf = self.calc_psf(*args, monochromatic=wl, **kwargs)
                 for ext in range(len(psf)):
                     cube[ext].data[i] = psf[ext].data
-                    cube[ext].header[label_wl(i)] = wl
+                    cube[ext].header[label_wavelength(nwavelengths, i)] = wl
                     cube[ext].header.add_history('--- Cube Plane {} ---'.format(i))
                     for h in psf[ext].header['HISTORY']:
                         cube[ext].header.add_history(h)
@@ -2117,8 +2108,6 @@ class MIRI(JWInstrument_with_IFU):
 
     def _validate_config(self, **kwargs):
         """Validate instrument config for MIRI"""
-        if self.filter.startswith('MRS-IFU'):
-            raise NotImplementedError('The MIRI MRS is not yet implemented.')
         return super(MIRI, self)._validate_config(**kwargs)
 
     def _addAdditionalOptics(self, optsys, oversample=2):
@@ -2136,7 +2125,7 @@ class MIRI(JWInstrument_with_IFU):
         # This approach is required computationally so we can work in an unrotated frame
         # aligned with the FQPM axes.
 
-        defaultpupil = optsys.planes.pop(2)  # throw away the rotation of the entrance pupil we just added
+        optsys.planes.pop(2)  # throw away the rotation of the entrance pupil we just added
 
         if self.include_si_wfe:
             # temporarily remove the SI internal aberrations
@@ -2550,7 +2539,7 @@ class NIRCam(JWInstrument):
             'WLP8',
             'WLM8',
             'WLP12',
-        ]
+        ] + [f'DHS_{i+1:02d}' for i in range(10)]
 
         self._detectors = dict()
         det_list = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5']
@@ -2711,6 +2700,9 @@ class NIRCam(JWInstrument):
     @JWInstrument.detector.setter  # override setter in this subclass, to implement auto channel switch
     def detector(self, value):
         """Set detector, including reloading the relevant info from SIAF"""
+        if value.upper().endswith('LONG'):
+            # treat NRCALONG and NRCBLONG as synonyms to NRCA5 and NRCB5
+            value = value[:-4]+ '5'
         if value.upper() not in self.detector_list:
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
         # set the channel based on the requested detector
@@ -2924,9 +2916,10 @@ class NIRCam(JWInstrument):
             (self.pupil_mask is not None)
             and ('LENS' not in self.pupil_mask.upper())
             and ('WL' not in self.pupil_mask.upper())
+            and ('DHS'  not in self.pupil_mask.upper())
         ):
             # no occulter selected but coronagraphic mode anyway. E.g. off-axis PSF
-            # but don't add this image plane for weak lens calculations
+            # but don't add this image plane for weak lens or DHS calculations
             optsys.add_image(poppy.ScalarTransmission(name='No Image Mask Selected!'), index=2)
             trySAM = False
         else:
@@ -2935,12 +2928,6 @@ class NIRCam(JWInstrument):
         # add pupil plane mask
         shift_x, shift_y = self._get_pupil_shift()
         rotation = self.options.get('pupil_rotation', None)
-
-        # NIRCam as-built weak lenses, from WSS config file, PRDOPSFLT-027
-        WLP4_diversity = 8.3443  # microns
-        WLP8_diversity = 16.5932  # microns
-        WLM8_diversity = -16.5593  # microns
-        WL_wavelength = 2.12  # microns
 
         if self.pupil_mask == 'CIRCLYOT' or self.pupil_mask == 'MASKRND':
             optsys.add_pupil(
@@ -3037,6 +3024,11 @@ class NIRCam(JWInstrument):
 
         elif self.pupil_mask is None and self.image_mask is not None:
             optsys.add_pupil(poppy.ScalarTransmission(name='No Lyot Mask Selected!'), index=3)
+        elif self.pupil_mask.startswith('DHS'):
+            optsys.add_pupil(transmission=self._datapath + f"/optics/NIRCam_{self.pupil_mask}_npix1024.fits.gz", name=self.pupil_mask,
+                             flip_y=True, shift_x=shift_x, shift_y=shift_y, rotation=rotation, index=3)
+            optsys.planes[3].wavefront_display_hint = 'intensity'
+
         else:
             optsys.add_pupil(
                 transmission=self._WebbPSF_basepath + '/tricontagon_oversized_4pct.fits.gz',
@@ -3151,8 +3143,6 @@ class NIRSpec(JWInstrument_with_IFU):
         self._si_wfe_class = optics.NIRSpecFieldDependentAberration  # note we end up adding 2 instances of this.
 
     def _validate_config(self, **kwargs):
-        if self.filter.startswith('IFU'):
-            raise NotImplementedError('The NIRSpec IFU is not yet implemented.')
         return super(NIRSpec, self)._validate_config(**kwargs)
 
     def _addAdditionalOptics(self, optsys, oversample=2):
@@ -3268,6 +3258,9 @@ class NIRSpec(JWInstrument_with_IFU):
                     if self._disperser is None:
                         self.disperser = 'PRISM'  # Set some default spectral mode
                         self.filter = 'CLEAR'
+                    if self.image_mask not in ['IFU', None]:
+                        _log.info("The currently-selected image mask (slit) is not compatible with IFU mode. Setting image_mask=None")
+                        self.image_mask = None
                 else:
                     self._mode = 'imaging' # More to implement here later!
 

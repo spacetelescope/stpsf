@@ -125,7 +125,7 @@ def test_WFI_pupil_controller():
         assert wfi._pupil_controller._auto_pupil_mask, 'Pupil mask is locked and should not be'
 
         # Test pupil lock/unlock
-        with pytest.raises(FileNotFoundError) as err:
+        with pytest.raises(FileNotFoundError):
             assert wfi.lock_pupil('file_that_does_not_exist.fits'), 'FileNotFoundError was not raised'
 
         this_file = __file__
@@ -184,17 +184,6 @@ def test_WFI_includes_aberrations():
 def test_swapping_modes(wfi=None):
     if wfi is None:
         wfi = roman.WFI()
-
-    # change detector string to match file format (e.g., "SCA01" -> "SCA_1")
-    detector_substr = lambda det: f'{det[:3]}_{str(int((det[3:])))}'
-
-    # dynamically generate current pupil path for a given WFI instance
-    pupil_path = lambda self, mask=None: os.path.join(
-        self._pupil_controller._pupil_basepath,
-        self._pupil_controller.pupil_file_formatters[
-            self._pupil_controller._get_filter_mask(self.filter) if mask is None else mask
-        ],
-    ).format(detector_substr(self.detector))
 
     tests = [
         # [filter, mode, pupil_file]

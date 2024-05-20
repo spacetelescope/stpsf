@@ -99,7 +99,7 @@ def validate_vs_russ_plot7(base_opd='OPD_RevV_nircam_155.fits'):
     P.draw()
 
     P.savefig('results_makidon_2007_fig7.pdf')
-    stop()
+    stop() # noqa
 
 
 def validate_vs_russ_plot6(nlambda=5, ax=None):
@@ -369,11 +369,8 @@ def validate_vs_krist_blc(which='spot'):
     nc.options['no_sam'] = True
     nc.pixelscale = 0.065  # match the Krist sims exactly. vs 0.648 official
 
-    cor_vmin = 1e-12
-    cor_vmax = 1e-5
-
     P.clf()
-    mask1 = 'nircam_4600nm_%s_occ.fits' % wedge
+    mask1 = 'nircam_4600nm_%s_occ.fits' % wedge   # noqa TODO - no context for me to fix this
     mask1f = fits.open(mask1)
 
     # P.subplot(332)
@@ -476,7 +473,7 @@ def validate_vs_krist_sims(clobber=False, normalize=False, which='spot', no_sam=
     P.colorbar(P.gca().images[0], orientation='vertical')
     try:
         fits.PrimaryHDU(trans).writeto('test_nircam_4600nm_%s_occ.fits' % which, clobber=clobber)
-    except:
+    except: # noqa - adequate errors that we are ignoring
         pass
 
     # ---- occulted --
@@ -522,7 +519,7 @@ def validate_vs_krist_sims(clobber=False, normalize=False, which='spot', no_sam=
     print('shape of %s is %s' % (my1, mypsf1[1].data.shape))
 
     P.savefig('results_nircam_coron_comparison_%s.pdf' % which)
-    stop()
+    stop() # noqa
 
 
 # ---- MIRI ---------------------
@@ -563,9 +560,9 @@ def validate_miri_coron():
     P.subplot(211)
     poppy.display_PSF(im_nd_offaxis, colorbar=False)
     P.subplot(212)
-    poppyt.display_PSF(im_nd_onaxis, colorbar=False)
+    poppy.display_PSF(im_nd_onaxis, colorbar=False)
 
-    stop()
+    stop() # noqa
 
 
 # ---- TFI
@@ -658,7 +655,7 @@ def validate_vs_jwpsf_nircam():
         ('MIRI', 'F1000W', 'f1000w', '/Users/mperrin/software/jwpsf_v3.0/data/MIRI/OPD/MIRI_OPDisim1.fits', 0.11, True),
     ]
 
-    fig = P.figure(1, figsize=(13, 8.5), dpi=80)
+    P.figure(1, figsize=(13, 8.5), dpi=80)
     oversamp = 4
     for params in models:
         nc = webbpsf_core.Instrument(params[0])
@@ -775,7 +772,7 @@ def compare_revs_tv(nlambda=20, oversample=16, fov_arcsec=4):
             '   Rev V:  FWHM=%.4f    EE(0.4, 0.5, 0.6) = %.3f, %0.3f, %.3f'
             % (mean_fwhm_v, mean_eer_v[0], mean_eer_v[1], mean_eer_v[2])
         )
-    stop()
+    stop() # noqa
 
 
 def compare_pupils_tv(oversample=8, vmax=1e-5, skipone=True):
@@ -799,7 +796,7 @@ def compare_pupils_tv(oversample=8, vmax=1e-5, skipone=True):
     )
 
     if not skipone:
-        ax = P.subplot(1, 3, 1)
+        P.subplot(1, 3, 1)
         poppy.display_PSF(psf_tri, normalize='peak', colorbar=False, title='Tricontagon')
 
         for i, rev in enumerate(['T', 'V']):
@@ -814,7 +811,7 @@ def compare_pupils_tv(oversample=8, vmax=1e-5, skipone=True):
             P.subplot(1, 3, i + 2)
             poppy.display_PSF(psf, normalize='peak', colorbar=(rev == 'V'), title='OTE Rev ' + rev)
 
-        stop()
+        stop() # noqa
         P.clf()
 
     psf_V = fits.open('test_NIRCam_perfect_rev%s_o%d.fits' % ('V', oversample))
@@ -850,7 +847,7 @@ def compare_pupils_tv(oversample=8, vmax=1e-5, skipone=True):
     ax4.set_xbound(0, 4)
     P.draw()
 
-    stop()
+    stop()  #noqa
 
 
 def validate_nircam_ee():
@@ -859,11 +856,11 @@ def validate_nircam_ee():
     # Encircled energies at 1 micron, field position (0,0),
     # page 18
     # from Code V model I think
-    EE_fraction = [10, 20, 30, 40, 50, 60, 70, 80, 90]
-    EE_radius = [0.004592, 0.009561, 0.015019, 0.021147, 0.028475, 0.037626, 0.052406, 0.081993, 0.204422]
+    EE_fraction = [10, 20, 30, 40, 50, 60, 70, 80, 90] # noqa remove this noqa once function is created
+    EE_radius = [0.004592, 0.009561, 0.015019, 0.021147, 0.028475, 0.037626, 0.052406, 0.081993, 0.204422] # noqa remove this noqa once function is created
 
     # same thing, page 24, from OSLO model
-    EE_radius = [0.006815, 0.013630, 0.020411, 0.026182, 0.031953, 0.037725, 0.058640, 0.090230, 0.210803]
+    EE_radius = [0.006815, 0.013630, 0.020411, 0.026182, 0.031953, 0.037725, 0.058640, 0.090230, 0.210803] # noqa remove this noqa once function is created
 
     # TODO write this function sometime...
 
