@@ -57,7 +57,8 @@ class Conf(_config.ConfigNamespace):
 
     default_output_mode = _config.ConfigItem(
         "both",
-        "Should output include the oversampled PSF, a copy rebinned onto the integer detector spacing, or both? Options: 'oversampled','detector','both' ",
+        "Should output include the oversampled PSF, a copy rebinned onto the integer detector spacing, or both?\
+        Options: 'oversampled','detector','both' ",
     )
     default_fov_arcsec = _config.ConfigItem(
         5.0, "Default field of view size, in arcseconds per side of the square "
@@ -66,7 +67,8 @@ class Conf(_config.ConfigNamespace):
     # Should be package settings:
     WEBBPSF_PATH = _config.ConfigItem(
         "from_environment_variable",
-        "Directory path to data files required for WebbPSF calculations, such as OPDs and filter transmissions. This will be overridden by the environment variable $WEBBPSF_PATH, if present.",
+        "Directory path to data files required for WebbPSF calculations, such as OPDs and filter transmissions.\
+        This will be overridden by the environment variable $WEBBPSF_PATH, if present.",
     )
     autoconfigure_logging = _config.ConfigItem(
         False,
@@ -92,11 +94,11 @@ class Conf(_config.ConfigNamespace):
 
 conf = Conf()
 
-from . import utils
-from . import trending
-from .utils import setup_logging, restart_logging, system_diagnostic, measure_strehl
+from . import utils  # noqa - must go after config
+from . import trending  # noqa - must go after config
+from .utils import setup_logging, restart_logging, system_diagnostic, measure_strehl  # noqa - must go after config
 
-from poppy import (
+from poppy import (  # noqa
     display_psf,
     display_psf_difference,
     display_ee,
@@ -111,7 +113,7 @@ from poppy import (
     fwcentroid,
 )
 
-from .webbpsf_core import (
+from .webbpsf_core import (  # noqa
     instrument,
     SpaceTelescopeInstrument,
     JWInstrument,
@@ -122,10 +124,8 @@ from .webbpsf_core import (
     FGS,
 )
 
-from .opds import enable_adjustable_ote
+from .opds import enable_adjustable_ote  # noqa
 
-from .roman import WFI, RomanCoronagraph
+from .roman import WFI, RomanCoronagraph  # noqa
 
-from .jupyter_gui import show_notebook_interface
-
-from .match_data import setup_sim_to_match_file
+from .match_data import setup_sim_to_match_file  # noqa
