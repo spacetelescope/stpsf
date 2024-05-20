@@ -55,6 +55,35 @@ one can create an instance of MIRI and configure it for coronagraphic observatio
    :align: center
    :alt: Sample PSF image
 
+Understanding output data products
+==================================
+
+PSF outputs are returned as FITS HDULists with multiple extensions. In most cases, there will be four extensions,
+for instance like this:
+
+.. code :
+
+    No.    Name      Ver    Type      Cards   Dimensions   Format            # Comment
+      0  OVERSAMP      1 PrimaryHDU     104   (236, 236)   float64           # Ideal PSF, oversampled
+      1  DET_SAMP      1 ImageHDU       106   (59, 59)   float64             # Ideal PSF, detector-sampled
+      2  OVERDIST      1 ImageHDU       153   (236, 236)   float64           # With distortions, oversampled
+      3  DET_DIST      1 ImageHDU       159   (59, 59)   float64             # With distortions, detector-sampled
+
+
+
+The first two extensions give the "ideal" diffractive PSF (i.e. "photons only"). The first extension is oversampled, and
+the second extension is binned down to the detector sampling pixel scale. Then, models of additional physical effects,
+such as geometric distortion and detector charge transfer effects,
+are added to these to produce the latter two extensions.
+
+**In general, the last ("DET_DIST") FITS extension of the output PSF FITS file are the output data product that most
+represents the PSF as actually observed on a detector.** Conversely, the first ("OVERSAMP") FITS extension represents
+best the nominal theoretical PSF as formed by JWST or Roman's optical systems, determined by the electrical field
+incident on the front surface of the detector.
+
+
+Customizing PSF Calculations
+=============================
 
 Input Source Spectra
 --------------------
@@ -177,9 +206,7 @@ As just explained, WebbPSF can easily calculate PSFs on a finer grid than the de
    >>> psf3 = nircam.calc_psf()      # 'psf3' will have the oversampled image as primary HDU, and
    >>>                              # the detector-sampled image as the first image extension HDU.
 
-.. warning::
-    The default behavior is `both`. Note that at some point in the future, this default is likely to change to detector sampling.
-    To future-proof your code, set `options['output_mode']` explicitly.
+The default behavior is `both`.
 
 Pixel scales, sampling, and oversampling
 ----------------------------------------
