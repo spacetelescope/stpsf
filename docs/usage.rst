@@ -181,10 +181,11 @@ you may also just set the desired number of pixels explicitly in the call to cal
     with a total number of data pixels that is even, but that correctly represents
     the PSF located at the center of an odd number of detector pixels.
 
+
 Output format options for sampling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As just explained, WebbPSF can easily calculate PSFs on a finer grid than the detector's native pixel scale. You can select whether the output data should include this oversampled image, a copy that has instead been rebinned down to match the detector scale, or optionally both. This is done using the ``options['output_mode']`` parameter.
+As explained above, WebbPSF by default calculates PSFs on a finer grid than the detector's native pixel scale, and also bins down to detector sampling. You can select whether the output data should include this oversampled image, a copy that has instead been rebinned down to match the detector scale, or optionally both. This is done using the ``options['output_mode']`` parameter.
 
    >>> nircam.options['output_mode'] = 'oversampled'
    >>> psf = nircam.calc_psf()       # the 'psf' variable will be an oversampled PSF, formatted as a FITS HDUlist
@@ -197,6 +198,42 @@ As just explained, WebbPSF can easily calculate PSFs on a finer grid than the de
    >>>                              # the detector-sampled image as the first image extension HDU.
 
 The default behavior is `both`.
+
+
+Specifying Positions: Detector Position vs. Aperture Name vs. Source Offset
+------------------------------------------------------------------------------
+
+There are a few related ways of specifying PSF position within an instrument. First, you may simply
+specify a detector position, and a detector (for instruments with more than one)::
+
+    >>> nrc = webbpsf.NIRCam()
+    >>> nrc.detector = 'NRCA3'
+    >>> nrc.detector_position = (500, 1700)  # note this is X, Y order
+
+Conceptually you should think of this as specifying *which detector pixel is in the center of the subarray that
+is computed for the PSF*. This information is also used to look up reference info about field-dependent aberrations
+across the field of view.
+
+Secondly, you can specify one of the many named instrument apertures (i.e. subarrays), as defined in the
+`science instrument aperture file <https://pysiaf.readthedocs.io/en/latest/>`_. By selecting a named
+aperture, webbpsf will be configured to calculate a PSF at the center of that subarray, selecting
+the appropriate detector and position. Note that when the selected aperture is not a full frame, the
+X and Y position values for ``detector_position`` represent pixel position *within that subarray*.::
+
+    >>> nrc.aperturename = 'NRCB1_SUB400P'
+    >>> print(nrc.detector, nrc.detector_position)
+    NRCB1 (234, 198)
+
+Conceptually, the detector position and aperturename options are equivalent ways of specifying a location within
+the field of view of one of the science instruments. By default, if not set explicitly, the aperture name defaults to
+full-frame aperture for the selected detector. Because this is defining the location of a subarray, the detector position
+attribute is always considered as an **integer**; if you try to set it to fractional pixels, the fractional part is ignored.
+
+Thirdly, you can specify an offset position for the PSF source within that subarray. This can be done with the
+``options['source_offset_*']`` parameters, as noted above. These parameters allow to control the
+position of the PSF *relative to the center of the subarray (defined by the detector position and/or aperturename)*.
+In particular, this can be used to specify subpixel offsets.
+
 
 Pixel scales, sampling, and oversampling
 ----------------------------------------
@@ -370,3 +407,8 @@ are not yet tuned to fully reflect the on-orbit performance of these IFU modes; 
     miri.band= '2A'
     waves = miri.get_IFU_wavelengths()
     cube = miri.calc_datacube_fast(waves)
+
+
+Note, when IFU mode is selected, the output PSF orientations are set to match the PSFs as seen in pipeline outputs that use the
+``coord_sys="ifualign"`` option in the Cube Build pipeline step. In particular this includes a 90 degree rotation applied to
+NIRSpec IFU PSFs.
