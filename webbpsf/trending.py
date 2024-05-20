@@ -1938,7 +1938,7 @@ def show_wfs_during_program(
 
     # Plot!
     if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 4), ncols=1, nrows=1)
+        fig, ax = plt.subplots(figsize=(12, 6), ncols=1, nrows=1)
 
     ax.plot_date(
         wfs_dates_array.plot_date, rms_obs, '+', color='C1', ls='-', label='Measured RMS Wavefront Error at NIRCam NRCA3'
@@ -1963,7 +1963,7 @@ def show_wfs_during_program(
     )
     for row in science_visit_table:
         ax.fill_betweenx([0, 120], row['start_mjd'].plot_date, (row['end_mjd']).plot_date, color='gray', alpha=0.2)
-        ax.text(row['start_mjd'].plot_date, plot_sci_y + 4, row['visit_id'], rotation=45, fontsize='small')
+        ax.text(row['start_mjd'].plot_date, plot_sci_y + 4, row['visit_id'], rotation=45, fontsize='small', clip_on=True)
 
     ax.set_ylim(0, 120)
     ax.legend(framealpha=0.99)
