@@ -43,39 +43,49 @@ Contents
 
 .. toctree::
    :maxdepth: 1
+   :caption: Getting Started
 
    intro.rst
    installation.rst
    relnotes.rst
    usage.rst
+   psf_grids.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Modeling JWST PSFs
+
    jwst.rst
    jwst_measured_opds.ipynb
    jwst_detector_effects.ipynb
    jwst_matching_psfs_to_data.ipynb
    jwst_optical_budgets.ipynb
    jwst_wavefront_deltas.ipynb
-   roman.rst
-   psf_grids.rst
    more_examples.rst
-   poppy.rst
-
-Advanced Usage
-^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
+   :caption: Modeling Roman PSFs
+
+   roman.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Package Documentation
 
    api_reference.rst
    help.rst
    performance.rst
    sampling.rst
    fft_optimization.rst
+   poppy.rst
 
 Appendices and Reference
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
+   :caption: Developer
 
    available_opds.rst
    field_dependence/multifield_documentation.ipynb
