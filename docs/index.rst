@@ -63,6 +63,7 @@ Contents
    jwst_optical_budgets.ipynb
    jwst_psf_subtraction.ipynb
    jwst_wavefront_deltas.ipynb
+   less_common_usage.rst
 
 .. toctree::
    :maxdepth: 1
