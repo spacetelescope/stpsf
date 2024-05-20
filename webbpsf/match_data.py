@@ -74,8 +74,9 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
             inst.image_mask = 'LYOT2300'
         elif header['FILTER'] == 'P750L':
             inst.pupil_mask = 'P750L'
-            if header['APERNAME'] == 'MIRIM_SLIT':
-                inst.image_mask = 'LRS slit'
+
+        if header['APERNAME'] == 'MIRIM_SLIT':
+            inst.image_mask = 'LRS slit'
 
     # TODO add other per-instrument keyword checks
 

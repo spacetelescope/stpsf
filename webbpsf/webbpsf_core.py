@@ -1004,6 +1004,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 # The point is to check if the pixel scale is set to a custom or default value,
                 # and if it's custom then don't override that.
                 # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
+                # and also check first that it's not a SLIT type aperture, for which the usual _get_pixelscale_from_apername won't work.
                 # and also check neither current nor requested aperture are of type SLIT since that doesn't have a pixelscale to get.
                 has_custom_pixelscale = (
                     self._aperturename

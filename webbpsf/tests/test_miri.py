@@ -196,6 +196,21 @@ def test_mode_switch():
     assert miri.aperturename == 'MIRIFU_CHANNEL2A'
     assert imager_pixelscale < miri.pixelscale < 2*imager_pixelscale
 
+
+    # Test also we can switch to LRS, and then back to a regular imaging aperture
+    # this tests another edge case for aperture and pixel scale switches
+    miri.set_position_from_aperture_name('MIRIM_SLIT')
+    assert 'IFU' not in miri.aperturename
+    assert miri.detector =='MIRIM'
+    assert miri.aperturename == 'MIRIM_SLIT'
+    assert miri.pixelscale == imager_pixelscale
+    miri.set_position_from_aperture_name('MIRIM_FULL')
+    assert 'IFU' not in miri.aperturename
+    assert miri.detector =='MIRIM'
+    assert miri.aperturename == 'MIRIM_FULL'
+    assert miri.pixelscale == imager_pixelscale
+
+
 def test_IFU_wavelengths():
     """ Test computing the wqvelength sampling for a sim IFU cube """
     miri = webbpsf_core.MIRI()
