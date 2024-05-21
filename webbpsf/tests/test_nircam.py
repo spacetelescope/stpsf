@@ -641,6 +641,7 @@ def test_ways_to_specify_detectors():
     nrc.detector = 'nrcblong'
     assert nrc.detector == 'NRCB5', "nrcblong should be synonymous to nrcb5"
 
+
 def test_dhs():
     """Basic test that it's possible to calculate a PSF for one of the NIRCam DHS subapertures"""
     nrc = webbpsf_core.NIRCam()
