@@ -12,7 +12,7 @@ message:  # Customize the comment made by the bot
     no_errors: "There are no PEP8 issues in this Pull Request."
 
 scanner:
-    diff_only: False  # If True, errors caused by only the patch are shown
+    diff_only: True  # If True, errors caused by only the patch are shown
 
 pycodestyle:
     max-line-length: 125  # Default is 79 in PEP8
