@@ -979,7 +979,8 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {detector_apername}'
+                        f'Pixelscale updated to {self.pixelscale} \
+                          based on average X+Y SciScale at SIAF aperture {detector_apername}'
                     )
             elif ap.AperType == 'COMPOUND' and self.name == 'MIRI':
                 # For MIRI, many of the relevant IFU apertures are of COMPOUND type.
