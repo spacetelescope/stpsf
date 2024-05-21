@@ -302,7 +302,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         if x < 0 or y < 0:
             raise ValueError('Detector pixel coordinates must be nonnegative integers')
         if isinstance(self._detector_npixels, tuple):
-            det_npix_y, det_npix_x = self._detector_npixels  # A tuple has been provided for a non-square detector with different Y and X dimensions
+            # A tuple has been provided for a non-square detector with different Y and X dimensions
+            det_npix_y, det_npix_x = self._detector_npixels
         else:
             det_npix_y = det_npix_x = self._detector_npixels  # same dimensions in both X and Y
 
@@ -388,8 +389,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         _log.info('Creating optical system model:')
 
-        self._extra_keywords = OrderedDict()  # Place to save info we later want to put
-                                              # into the FITS header for each PSF.
+        self._extra_keywords = OrderedDict()  # Place to save info we later want to put into the FITS header for each PSF.
 
         if options is None:
             options = self.options
@@ -727,7 +727,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         if single_psf_centered is True:
             if isinstance(self._detector_npixels, tuple):
-                det_npix_y, det_npix_x = self._detector_npixels  # A tuple has been provided for a non-square detector with different Y and X dimensions
+                # A tuple has been provided for a non-square detector with different Y and X dimensions
+                det_npix_y, det_npix_x = self._detector_npixels
             else:
                 det_npix_y = det_npix_x = self._detector_npixels  # same dimensions in both X and Y
             psf_location = (int(det_npix_x - 1) // 2, int(det_npix_y - 1) // 2)  # center pt
@@ -754,7 +755,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         return gridmodel
 
 
-#######  JWInstrument classes  #####
+#  JWInstrument classes  #####
 
 
 @utils.combine_docstrings
@@ -985,7 +986,8 @@ class JWInstrument(SpaceTelescopeInstrument):
                 has_custom_pixelscale = False  # custom scales not supported for MIRI IFU (yet?)
                 # Unlike NIRSpec, there simply do not exist full-detector SIAF apertures for the MIRI IFU detectors
                 _log.info(
-                    f'Aperture {value} is of type COMPOUND for MIRI; There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
+                    f'Aperture {value} is of type COMPOUND for MIRI; \
+                      There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
                 )
 
                 # Now apply changes:
@@ -1006,9 +1008,13 @@ class JWInstrument(SpaceTelescopeInstrument):
                 # First, check some info from current settings, wich we will use below as part of auto pixelscale code
                 # The point is to check if the pixel scale is set to a custom or default value,
                 # and if it's custom then don't override that.
-                # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
-                # and also check first that it's not a SLIT type aperture, for which the usual _get_pixelscale_from_apername won't work.
-                # and also check neither current nor requested aperture are of type SLIT since that doesn't have a pixelscale to get.
+                # Note:
+                #     check self._aperturename first to account for the edge case when
+                #     this is called from __init__ before _aperturename is set
+                #     and also check first that it's not a SLIT type aperture,
+                #     for which the usual _get_pixelscale_from_apername won't work.
+                #     and also check neither current nor requested aperture are of type
+                #     SLIT since that doesn't have a pixelscale to get.
                 has_custom_pixelscale = (
                     self._aperturename
                     and (self.siaf[self._aperturename].AperType != 'SLIT')
@@ -1028,7 +1034,8 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                        f'Pixelscale updated to {self.pixelscale} \
+                          based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
 
     def _tel_coords(self):
@@ -1450,7 +1457,9 @@ class JWInstrument(SpaceTelescopeInstrument):
         elif local_options['jitter'].lower() == 'pcs=coarse_like_itm':
             # JWST coarse point, assumptions in ITM
             # Acton says:
-            #  it is actually 0.4 for a boresight error, 0.4 smear, and 0.2 jitter. Boresight error is a random term for image placement, smear is mostly a linear uniform blur, and jitter is gaussian.
+            #  it is actually 0.4 for a boresight error, 0.4 smear, and 0.2 jitter.
+            #  Boresight error is a random term for image placement,
+            #  smear is mostly a linear uniform blur, and jitter is gaussian.
 
             # First we do the fast jitter part
             local_options['jitter_sigma'] = 0.2
@@ -1606,7 +1615,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         filename : str
             Name of OPD file to load
         output_path : str
-            Downloaded OPD are saved in this location. This option is convinient for STScI users using /grp/jwst/ote/webbpsf-data/.
+            Downloaded OPD are saved in this location.
+            This option is convinient for STScI users using /grp/jwst/ote/webbpsf-data/.
             Default is $WEBBPSF_PATH/MAST_JWST_WSS_OPDs
         backout_si_wfe : bool
             Subtract model for science instrument WFE at the sensing field point? Generally this should be true
@@ -1875,7 +1885,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         cubefast[ext].data[0] = psf[ext].data
         cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
 
-        ### Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
+        # Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
             import time
 
@@ -1908,8 +1918,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
-        ### OPTIONAL
-        ### Also do the slower traditional way for comparison / debugging tests
+        # OPTIONAL
+        # Also do the slower traditional way for comparison / debugging tests
 
         if compare_methods:
             psf2, waves2 = quickosys.calc_psf(wavelengths[0], return_intermediates=True)
@@ -2022,7 +2032,8 @@ class MIRI(JWInstrument_with_IFU):
         # Modes and default SIAF apertures for each
         self._modes_list = {'imaging': 'MIRIM_FULL', 'IFU': 'MIRIFU_CHANNEL1A'}
 
-        # Coordinate system note: The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
+        # Coordinate system note:
+        # The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
         # and is thus flipped in Y relative to the V frame entrance pupil. Therefore flip sign of pupil_shift_y
         self.options['pupil_shift_x'] = -0.0068  # In flight measurement. See Wright, Sabatke, Telfer 2022, Proc SPIE
         self.options['pupil_shift_y'] = -0.0110  # Sign intentionally flipped relative to that paper!! See note above.
@@ -2047,7 +2058,8 @@ class MIRI(JWInstrument_with_IFU):
         }
         # The above tuples give the pixel resolution (first the 'alpha' direction, perpendicular to the slice,
         # then the 'beta' direction, along the slice).
-        # The pixels are not square.  See https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument/miri-observing-modes/miri-medium-resolution-spectroscopy
+        # The pixels are not square. See:
+        # https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument/miri-observing-modes/miri-medium-resolution-spectroscopy
 
         # Mappings between alternate names used for MRS subbands
         self._MRS_dichroic_to_subband = {'SHORT': 'A', 'MEDIUM': 'B', 'LONG': 'C'}
@@ -2211,7 +2223,8 @@ class MIRI(JWInstrument_with_IFU):
             )
             if self.options.get('lrs_use_mft', True):
                 # Force the LRS slit to be rasterized onto a fine spatial sampling with gray subpixels
-                # let's do a 3 arcsec box, sampled to 0.02 arcsec, with gray subpixels; note poppy does not support non-square wavefront here
+                # let's do a 3 arcsec box, sampled to 0.02 arcsec, with gray subpixels;
+                # note poppy does not support non-square wavefront here
                 lrs_pixscale = 0.02  # implicitly u.arcsec/u.pixel
                 sampling = poppy.Wavefront(npix=int(5.5 / lrs_pixscale), pixelscale=lrs_pixscale)
                 lrs_slit = poppy.fixed_sampling_optic(lrs_slit, sampling, oversample=8)
@@ -2604,7 +2617,8 @@ class NIRCam(JWInstrument):
                 else:
                     apname = 'NRCA2_FULL_WEDGE_RND' if self.module == 'A' else 'NRCB1_MASK210R'
                     _log.debug(
-                        f'Inferred {apname} from coronagraph Lyot mask selected, and channel={self.channel}, module={self.module}'
+                        f'Inferred {apname} from coronagraph Lyot mask selected, \
+                          and channel={self.channel}, module={self.module}'
                     )
         else:
             apname = self._detectors[self._detector]
@@ -2648,7 +2662,8 @@ class NIRCam(JWInstrument):
                 # Set alternative aperture name as bandaid to continue
                 value = newval
                 _log.warning(
-                    'Possibly running an old version of pysiaf missing some NIRCam apertures. Continuing with old aperture names.'
+                    'Possibly running an old version of pysiaf missing some NIRCam apertures. \
+                     Continuing with old aperture names.'
                 )
             else:
                 return
@@ -2658,7 +2673,8 @@ class NIRCam(JWInstrument):
             # First, check some info from current settings, wich we will use below as part of auto pixelscale code
             # The point is to check if the pixel scale is set to a custom or default value,
             # and if it's custom then don't override that.
-            # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
+            # Note, check self._aperturename first to account for the edge case when
+            # this is called from __init__ before _aperturename is set
             has_custom_pixelscale = self._aperturename and (
                 self.pixelscale != self._get_pixelscale_from_apername(self._aperturename)
             )
@@ -2682,7 +2698,8 @@ class NIRCam(JWInstrument):
             if not has_custom_pixelscale:
                 self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
                 _log.debug(
-                    f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                    f'Pixelscale updated to {self.pixelscale} \
+                      based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                 )
 
     @property
@@ -3234,7 +3251,8 @@ class NIRSpec(JWInstrument_with_IFU):
         except KeyError:
             raise ValueError(f'Aperture name {value} not a valid SIAF aperture name for {self.name}')
 
-        # NIRSpec apertures can either be per detector (i.e. "NRS1_FULL") or for the focal plane but not per detector (i.e. "NRS_FULL_IFU")
+        # NIRSpec apertures can either be per detector (i.e. "NRS1_FULL")
+        # or for the focal plane but not per detector (i.e. "NRS_FULL_IFU")
 
         if value[0:4] in ['NRS1', 'NRS2']:
             # this is a regular per-detector aperture, so just call the regular code in the superclass
@@ -3249,7 +3267,8 @@ class NIRSpec(JWInstrument_with_IFU):
                 # First, check some info from current settings, which we will use below as part of auto pixelscale code
                 # The point is to check if the pixel scale is set to a custom or default value,
                 # and if it's custom then don't override that.
-                # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
+                # Note, check self._aperturename first to account for the edge case when this is
+                # called from __init__ before _aperturename is set
                 has_custom_pixelscale = self._aperturename and (
                     self.pixelscale != self._get_pixelscale_from_apername(detector_apername)
                 )
@@ -3266,7 +3285,8 @@ class NIRSpec(JWInstrument_with_IFU):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                        f'Pixelscale updated to {self.pixelscale} \
+                          based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
 
                 if 'IFU' in self.aperturename:
@@ -3276,7 +3296,8 @@ class NIRSpec(JWInstrument_with_IFU):
                         self.filter = 'CLEAR'
                     if self.image_mask not in ['IFU', None]:
                         _log.info(
-                            'The currently-selected image mask (slit) is not compatible with IFU mode. Setting image_mask=None'
+                            'The currently-selected image mask (slit) is not compatible with IFU mode. \
+                             Setting image_mask=None'
                         )
                         self.image_mask = None
                 else:

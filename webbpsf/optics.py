@@ -17,7 +17,7 @@ from . import constants, utils, webbpsf_core
 _log = logging.getLogger('webbpsf')
 
 
-#######  Classes for modeling aspects of JWST's segmented active primary #####
+#  Classes for modeling aspects of JWST's segmented active primary #####
 
 
 def segment_zernike_basis(segnum=1, nterms=15, npix=512, outside=np.nan):
@@ -186,7 +186,7 @@ class WebbOTEPupil(poppy.FITSOpticalElement):
             # TODO apply that to as a modification to the OPD array.
 
 
-#######  Custom Optics used in JWInstrument classes  #####
+#  Custom Optics used in JWInstrument classes  #####
 
 
 class NIRSpec_three_MSA_shutters(poppy.AnalyticOpticalElement):
@@ -442,7 +442,8 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # self.pupil_demagnification =  173.56 # meters on the primary / meters in the NIRISS pupil
 
         # Anand says:
-        #  nominally the circumscribing circle at the PW of NIRISS is ~40mm.  I use 39mm for the nrm, but it's slightly field-dependent.  Compare that to the 6.6... PM circle?
+        #  nominally the circumscribing circle at the PW of NIRISS is ~40mm.
+        #  I use 39mm for the nrm, but it's slightly field-dependent.  Compare that to the 6.6... PM circle?
         self.pupil_demagnification = 6.6 / 0.040  # about 165
 
         # perform an initial population of the OPD array for display etc.
@@ -512,8 +513,8 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # now compute the spatially dependent sag of the cylinder, as projected onto the primary
 
         # what is the pupil scale at the *reimaged pupil* of the grism?
-        pupil_scale_m_per_pix = 38.0255e-6  # Based on UdeM info in wfe_cylindricallens.pro # TODO - unused, can be deleted or just commented out?
-        # sag = np.sqrt(self.cylinder_radius**2 - (x*self.amplitude_header['PUPLSCAL']/self.pupil_demagnification)**2) - self.cylinder_radius
+        pupil_scale_m_per_pix = 38.0255e-6  # Based on UdeM info in wfe_cylindricallens.pro # noqa TODO - unused, can be deleted or just commented out?
+        # sag = np.sqrt(self.cylinder_radius**2 - (x*self.amplitude_header['PUPLSCAL']/self.pupil_demagnification)**2) - self.cylinder_radius  # noqa
         sag = np.sqrt(self.cylinder_radius**2 - (x / self.pupil_demagnification) ** 2) - self.cylinder_radius
         # sag = self.cylinder_radius -  np.sqrt(self.cylinder_radius**2 - (x * pupil_scale_m_per_pix )**2 )
 
@@ -1405,7 +1406,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
                 )
                 # cut out central region to match the OPD, which is hard coded
                 # to 1024
-                self.amplitude = self.amplitude[256 : 256 + 1024, 256 : 256 + 1024]
+                self.amplitude = self.amplitude[256: 256 + 1024, 256: 256 + 1024]
             elif self.instrument.name == 'MIRI':
                 self.amplitude = fits.getdata(
                     os.path.join(

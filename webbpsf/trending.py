@@ -2018,7 +2018,7 @@ def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filena
     return delta_opd
 
 
-## Functions for image comparisons
+# Functions for image comparisons
 def show_nrc_ta_img(visitid, ax=None, return_handles=False):
     """Retrieve and display a NIRCam target acq image"""
 

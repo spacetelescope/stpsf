@@ -1,6 +1,7 @@
 from docutils.nodes import SkipNode, Text, caption, figure, raw, reference
 from sphinx.roles import XRefRole
 
+
 # Element classes
 class page_ref(reference):
     pass

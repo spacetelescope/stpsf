@@ -61,7 +61,8 @@ def get_detector_ipc_model(inst, header):
 
         # PPC effect
         # read the SCA extension for the detector
-        ## TODO: This depends on detector coordinates, and which readout amplifier. if in subarray, then the PPC effect is always like in amplifier 1
+        # TODO: This depends on detector coordinates, and which readout amplifier.
+        # If in subarray, then the PPC effect is always like in amplifier 1
         sca_path_ppc = os.path.join(utils.get_webbpsf_data_path(), 'NIRCam', 'IPC', 'KERNEL_PPC_CUBE.fits')
         kernel_ppc = CustomKernel(fits.open(sca_path_ppc)[det2sca[det]].data[0])  # we read the first slice in the cube
 
@@ -168,7 +169,7 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
 
     """
 
-    # In cases for which the user has asked for the IPC to be applied to a not-present extension, we have nothing to add this to
+    # Cases for which user has asked for the IPC to be applied to a not-present extension, we have nothing to add this to
     if extname not in psf_hdulist:
         webbpsf.webbpsf_core._log.debug(f'Skipping IPC simulation since ext {extname} is not found')
         return
@@ -284,7 +285,8 @@ def oversample_ipc_model(kernel, oversample):
 
 # Functions for applying MIRI Detector Scattering Effect
 
-# Lookup tables of shifts of the cruciform, estimated roughly from F560W ePSFs (ePSFs by Libralatto, shift estimate by Perrin)
+# Lookup tables of shifts of the cruciform
+# Estimated roughly from F560W ePSFs (ePSFs by Libralatto, shift estimate by Perrin)
 cruciform_xshifts = scipy.interpolate.interp1d([0, 357, 1031], [1.5, 0.5, -0.9], kind='linear', fill_value='extrapolate')
 cruciform_yshifts = scipy.interpolate.interp1d([0, 511, 1031], [1.6, 0, -1.6], kind='linear', fill_value='extrapolate')
 
@@ -315,7 +317,7 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
     cen = (npix - 1) // 2
     kernel_2d = np.zeros((npix, npix), float)
 
-    ### make 1d kernels for the main cruciform bright lines
+    # make 1d kernels for the main cruciform bright lines
     # Compute 1d indices
     x = np.arange(npix, dtype=float)
     x -= (npix - 1) / 2
@@ -338,7 +340,7 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
     kernel_2d[cen + int(round(yshift * oversample))] = kernel_x
     kernel_2d[:, cen + int(round(xshift * oversample))] = kernel_y
 
-    ### create and add in the more diffuse radial term
+    # create and add in the more diffuse radial term
     # Model this as an expoential falloff outside the inner radius, times some scale factor relative to the above
     y, x = np.indices(kernel_2d.shape)
     r = np.sqrt((x - cen) ** 2 + (y - cen) ** 2) / oversample

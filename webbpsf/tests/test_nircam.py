@@ -197,7 +197,8 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
         # regular propagation rather than semi-analytic. See poppy issue #169
         assert (
             abs(totflux - exp_flux) < 1e-4
-        ), f'Total flux {totflux} is out of tolerance relative to expectations {exp_flux}, for offset={offset}, angle={angle}'
+        ), f'Total flux {totflux} is out of tolerance relative to expectations {exp_flux}, \
+            for offset={offset}, angle={angle}'
         # assert( abs(totflux - exp_flux) < 1e-2 )
         _log.info('File {0} has the expected total flux based on prior reference calculation: {1}'.format(fnout, totflux))
 
@@ -326,7 +327,8 @@ def test_defocus(fov_arcsec=1, display=False):
     via either a weak lens, or via the options dict,
     and we get consistent results either way.
 
-    Note this is now an *inexact* comparison, because the weak lenses now include non-ideal effects, in particular field dependent astigmatism
+    Note this is now an *inexact* comparison, because the weak lenses now include non-ideal effects,
+    in particular field dependent astigmatism
 
     Test for #59 among other things
     """

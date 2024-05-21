@@ -215,7 +215,7 @@ class PolynomialBasis(BaseBasis):
     def numpolys(self, new_numpolys):
         polynomials_copy = self._polynomials
         self._polynomials = np.zeros((new_numpolys, self._pts_x, self._pts_y))
-        self._polynomials[0 : self._numpolys,:,:] = polynomials_copy
+        self._polynomials[0: self._numpolys, :, :] = polynomials_copy  # noqa
         self._numpolys = new_numpolys
 
     def project(self, in_data):

@@ -45,12 +45,13 @@ def main():
     ]
 
     # Zernike fitting order for each instrument
-    order = {'fgs': 15,
-            'nircam': 15,
-            'miri': 15,
-            'nirspec': 15,
-            'niriss': 15
-            }
+    order = {
+        'fgs': 15,
+        'nircam': 15,
+        'miri': 15,
+        'nirspec': 15,
+        'niriss': 15
+        }
 
     # Define the origin of the CodeV coordinate system in V2/V3 space
     v2_origin_degrees = 0
