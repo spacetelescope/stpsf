@@ -89,16 +89,16 @@ def wavefront_time_series_plot(
         '2022-03-22T22:55:00': ('Cooler State 4', 'red'),
         '2022-04-10T17:24:00': ('Cooler State 6', 'red'),
         '2022-04-07T20:13:00': ('Cooler State 5', 'red'),
-        #'2022-04-15T06:33:00': ("NIRISS FPA Heater on (NIS-24)", 'orange'),
+        # '2022-04-15T06:33:00': ("NIRISS FPA Heater on (NIS-24)", 'orange'),
         # '2022-04-10T04:30':  ('NIRSpec FPA CCH to level 30','orange'),
-        #'2022-04-10T01:00': ('NIRSpc bench & FPA heaters adjust', 'orange'),  # to level 10
-        #'2022-04-11T16:00:00': ('FGS trim heater 0 to 4', 'orange'),
+        # '2022-04-10T01:00': ('NIRSpc bench & FPA heaters adjust', 'orange'),  # to level 10
+        # '2022-04-11T16:00:00': ('FGS trim heater 0 to 4', 'orange'),
         '2022-04-23T06:30:00': ('OTE alignment complete', 'green'),
         '2022-05-12T18:30:00': ('Thermal slew cold attitude start', 'blue'),
         '2022-05-20T06:30:00': ('Thermal slew cold attitude end', 'blue'),
         '2022-05-23T00:00:00': ('Larger micrometeorite strike on C3', 'red'),
         '2022-06-19T18:00:00': ('Coarse move of C3 for astigmatism correction', 'red'),
-        #'2022-06-27T00:00:00': ('NIRSpec safing, not in thermal control', 'orange'),
+        # '2022-06-27T00:00:00': ('NIRSpec safing, not in thermal control', 'orange'),
         '2022-07-12T00:00:00': ('Large outlier tilt event on B5+C5', 'orange'),
         '2024-02-25T20:00:00': ('Large outlier wing tilt event on -V2 wing', 'orange'),
     }
@@ -379,7 +379,7 @@ def wfe_histogram_plot(
 
         for i, idate in enumerate(where_post):
             if idate:
-                xtmp = dates[i - 1 : i + 1]
+                xtmp = dates[i - 1: i + 1]
                 ytmp = [rms_nm[i - 1] - yoffsets[1], rms_nm[i] + yoffsets[1]]
                 axes[0].plot(xtmp.plot_date, ytmp, color='limegreen', lw=2, ls='-')
 
@@ -458,7 +458,7 @@ def wfe_histogram_plot(
     axes[0].legend()
 
 
-##### Wavefront Drifts Plot #####
+# Wavefront Drifts Plot #####
 
 
 def show_opd_image(
@@ -695,7 +695,7 @@ def single_measurement_trending_plot(
     else:
         show_correction = False
 
-    ############## Plotting
+    # Plotting ###########
     # Plot setup
     # fig, axes = plt.subplots(figsize=(8.5,11), nrows=3, ncols=4)
     fig, axes = plt.subplots(
@@ -710,7 +710,7 @@ def single_measurement_trending_plot(
         title += '\nNIRCam FP1 Target Phase Map Subtracted'
     plt.suptitle(title, fontweight='bold', fontsize=18)
 
-    ####### Row 1: Latest measurement, and correction if present
+    # Row 1: Latest measurement, and correction if present #####
     fontsize = 11
     # Panel 1: latest OPD
     iax = axes[0, 0]
@@ -756,7 +756,7 @@ def single_measurement_trending_plot(
         fig.text(
             0.55, 0.77, 'Sensing-only visit. No mirror moves.', alpha=0.3, horizontalalignment='center', fontsize=fontsize
         )
-    ####### Row 2
+    # Row 2 #####
     # Compare to immediate prior OPD
 
     # Panel 2-1: prior OPD
@@ -779,7 +779,7 @@ def single_measurement_trending_plot(
     show_opd_image(delta_opd - fit, ax=iax, vmax=vmax, fontsize=fontsize)
     iax.set_title('High order WFE\nin difference', fontsize=fontsize * 1.1)
 
-    ####### Row 3
+    # Row 3 #####
 
     # Panel 3-1: ref OPD
     iax = axes[2, 0]
@@ -939,7 +939,7 @@ def wavefront_drift_plots(
 
     sum(which_opds_mask)
 
-    ### Iterate over all relevant OPDs to retrieve the OPD, and calc the WFE RMS
+    # Iterate over all relevant OPDs to retrieve the OPD, and calc the WFE RMS
     # Setup arrays to store results from the iteration:
     n = np.sum(which_opds_mask)
     rms_obs = np.zeros(n)
@@ -1060,7 +1060,7 @@ def wavefront_drift_plots(
     plt.savefig('wf_drifts.pdf')
 
 
-##### Monthly Trending Plots, including OPDs, RMS WFE and PSF EE
+# Monthly Trending Plots, including OPDs, RMS WFE and PSF EE
 
 
 def get_month_start_end(year, month):
@@ -1089,7 +1089,7 @@ def filter_opdtable_for_daterange(start_date, end_date, opdtable):
     # we'll use this to compute the drift for the first WFS in the time period
     is_pre = [astropy.time.Time(row['date']) < start_date for row in opdtable]
     opdtable['is_pre'] = is_pre
-    opdtable = opdtable[np.sum(is_pre) - 1 :]
+    opdtable = opdtable[np.sum(is_pre) - 1:]
 
     return opdtable
 
@@ -1332,7 +1332,7 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
 
     fig.suptitle(f'WF Trending for {year}-{month:02d}', fontsize=fs * 1.5, fontweight='bold')
 
-    #### Plot 1: Wavefront Error
+    # Plot 1: Wavefront Error
 
     axes[0].plot_date(dates_array.plot_date, rms_obs * 1e9, color='C1', ls='-', label='Observatory WFE at NIRCam NRCA3')
     axes[0].plot_date(dates_array.plot_date, rms_ote * 1e9, color='C0', ls='-', label='Telescope WFE')
@@ -1356,7 +1356,7 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
     axes[0].set_ylabel('Wavefront Error\n[nm rms]', fontsize=fs, fontweight='bold')
     axes[0].set_xticklabels([])
 
-    #### Plot 2: Encircled Energies
+    # Plot 2: Encircled Energies
 
     ee_ax_ylim = 0.04
     ee_measurements = {}
@@ -1691,7 +1691,8 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     axes[0, 2].set_title('Difference\n ', fontsize=18)
 
     fig.suptitle(
-        f"{hdul1[0].header['CORR_ID']}, {hdul1[0].header['TSTAMP'][:-3]}   vs.   {hdul2[0].header['CORR_ID']},  {hdul2[0].header['TSTAMP'][:-3]}",
+        f"{hdul1[0].header['CORR_ID']}, {hdul1[0].header['TSTAMP'][:-3]}   vs.   \
+          {hdul2[0].header['CORR_ID']}, {hdul2[0].header['TSTAMP'][:-3]}",
         fontsize=20,
         fontweight='bold',
     )
@@ -2017,7 +2018,7 @@ def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filena
     return delta_opd
 
 
-#### Functions for image comparisons
+## Functions for image comparisons
 def show_nrc_ta_img(visitid, ax=None, return_handles=False):
     """Retrieve and display a NIRCam target acq image"""
 
@@ -2096,7 +2097,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
 
     # Plot
     if show_centroids:
-        ### OSS CENTROIDS ###
+        # OSS CENTROIDS ###
         # First, see if we can retrieve the on-board TA centroid measurment from the OSS engineering DB in MAST
         try:
             import misc_jwst  # Optional dependency, including engineering database access tools
@@ -2122,7 +2123,8 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
                 if verbose:
                     print(f'OSS centroid on board:  {oss_cen}  (full det coord frame, 1-based)')
                     print(
-                        f'OSS centroid converted: {oss_cen_sci_pythonic}  (sci frame in {nrc._detector_geom_info.aperture.AperName}, 0-based)'
+                        f'OSS centroid converted: {oss_cen_sci_pythonic}  \
+                          (sci frame in {nrc._detector_geom_info.aperture.AperName}, 0-based)'
                     )
                     full_ap = nrc.siaf[nrc._detector_geom_info.aperture.AperName[0:5] + '_FULL']
                     oss_cen_full_sci = np.asarray(full_ap.det_to_sci(*oss_cen)) - 1
@@ -2133,7 +2135,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
                     print('Could not parse TA coordinates from log. TA may have failed?')
                 oss_cen_sci_pythonic = None
 
-            ### WCS COORDINATES ###
+            # WCS COORDINATES ###
             import jwst.datamodels
 
             model = jwst.datamodels.open(hdul)
@@ -2166,7 +2168,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
         except ImportError:
             oss_centroid_text = ''
 
-        ### WEBBPSF CENTROIDS ###
+        # WEBBPSF CENTROIDS ###
         cen = webbpsf.fwcentroid.fwcentroid(im_obs_clean)
         axes[0].scatter(cen[1], cen[0], color='red', marker='+', s=50)
         axes[0].text(cen[1], cen[0], '  webbpsf', color='red', verticalalignment='center')

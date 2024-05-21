@@ -21,7 +21,7 @@ _DISABLE_FILE_LOGGING_VALUE = 'none'
 _Strehl_perfect_cache = {}  # dict for caching perfect images used in Strehl calcs.
 
 
-### Helper routines for logging: ###
+# Helper routines for logging: ###
 
 
 class FilterLevelRange(object):
@@ -160,7 +160,7 @@ def setup_logging(level='INFO', filename=None):
     restart_logging(verbose=True)
 
 
-### Helper routines for data handling and system setup: ###
+# Helper routines for data handling and system setup: ###
 
 MISSING_WEBBPSF_DATA_MESSAGE = """
  ***********  ERROR  ******  ERROR  ******  ERROR  ******  ERROR  ***********
@@ -443,7 +443,7 @@ def system_diagnostic():
     return result
 
 
-### Helper routines for image manipulation: ###
+# Helper routines for image manipulation: ###
 
 
 def rms(opd, mask):
@@ -548,8 +548,8 @@ def measure_strehl(HDUlist_or_filename=None, ext=0, slice=0, center=None, displa
         # average across a group of 4
         bot = [int(np.floor(f)) for f in center]
         top = [int(np.ceil(f) + 1) for f in center]
-        meas_peak = image[bot[1] : top[1], bot[0] : top[0]].mean()
-        ref_peak = comparison_image[bot[1] : top[1], bot[0] : top[0]].mean()
+        meas_peak = image[bot[1]: top[1], bot[0]: top[0]].mean()
+        ref_peak = comparison_image[bot[1]: top[1], bot[0]: top[0]].mean()
     strehl = meas_peak / ref_peak
 
     if display:
@@ -649,7 +649,7 @@ def border_extrapolate_pad(image, mask):
     return image_extrapolated
 
 
-### Helper routines for display customization: ###
+# Helper routines for display customization: ###
 # use via poppy's display_annotate feature by assigning these to
 # the display_annotate attribute of an OpticalElement class
 
@@ -997,7 +997,7 @@ def determine_inst_name_from_v2v3(v2v3):
     return instrument
 
 
-def label_wavelength (nwavelengths, wavelength_slices):
+def label_wavelength(nwavelengths, wavelength_slices):
     # Allow up to 10,000 wavelength slices. The number matters because FITS
     # header keys can only have up to 8 characters. Backward-compatible.
     if nwavelengths < 100:

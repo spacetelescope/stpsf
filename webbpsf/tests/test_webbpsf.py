@@ -10,6 +10,7 @@ from .test_errorhandling import _exception_message_starts_with
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
+
 # The following functions are used in each of the test_<SI> files to
 # test the individual SIs
 def generic_output_test(iname):
@@ -214,7 +215,7 @@ def test_calc_psf_format_output():
 
 
 def test_instrument():
-    webbpsf_core.instrument('NIRCam') # TODO - assert success
+    webbpsf_core.instrument('NIRCam')  # TODO - assert success
 
     try:
         import pytest

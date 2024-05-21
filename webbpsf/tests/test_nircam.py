@@ -19,26 +19,33 @@ _log.addHandler(logging.NullHandler())
 
 # ------------------    NIRCam Tests    ----------------------------
 
+
 def _close_enough(a, b):
     # 1.5% variance accomodates the differences between the various NRC detectors in each channel
     return np.isclose(a, b, rtol=0.015)
 
+
 def test_nircam():
     return generic_output_test('NIRCam')
+
 
 def test_nircam_source_offset_00():
     return do_test_source_offset('NIRCam', theta=0.0, monochromatic=2e-6)
 
+
 def test_nircam_source_offset_45():
     return do_test_source_offset('NIRCam', theta=45.0, monochromatic=2e-6)
 
+
 def test_nircam_set_siaf():
-    return  do_test_set_position_from_siaf(
-                'NIRCam', ['NRCA5_SUB160', 'NRCA3_DHSPIL_SUB96', 'NRCA5_MASKLWB_F300M', 'NRCA2_TAMASK210R']
-            )
+    return do_test_set_position_from_siaf(
+        'NIRCam', ['NRCA5_SUB160', 'NRCA3_DHSPIL_SUB96', 'NRCA5_MASKLWB_F300M', 'NRCA2_TAMASK210R']
+    )
+
 
 def test_nircam_blc_circ_45():
     return do_test_nircam_blc(kind='circular', angle=45)
+
 
 def test_nircam_blc_circ_0():
     return do_test_nircam_blc(kind='circular', angle=0)
@@ -50,6 +57,7 @@ def test_nircam_blc_wedge_0(**kwargs):
 
 def test_nircam_blc_wedge_45(**kwargs):
     return do_test_nircam_blc(kind='linear', angle=-45, **kwargs)
+
 
 # The test setup for this one is not quite right yet
 #  See https://github.com/mperrin/webbpsf/issues/30
@@ -636,7 +644,7 @@ def test_ways_to_specify_detectors():
     nrc = webbpsf_core.NIRCam()
 
     nrc.detector = 'NRCALONG'
-    assert nrc.detector == 'NRCA5', "NRCALONG should be synonymous to NRCA5"
+    assert nrc.detector == 'NRCA5', 'NRCALONG should be synonymous to NRCA5'
 
     nrc.detector = 'nrcblong'
-    assert nrc.detector == 'NRCB5', "nrcblong should be synonymous to nrcb5"
+    assert nrc.detector == 'NRCB5', 'nrcblong should be synonymous to nrcb5'

@@ -12,6 +12,7 @@ from .. import conf, utils, webbpsf_core
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
+
 def _exception_message_starts_with(excinfo, message_body):
     return excinfo.value.args[0].startswith(message_body)
 

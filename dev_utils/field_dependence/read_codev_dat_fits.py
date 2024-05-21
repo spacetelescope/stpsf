@@ -45,7 +45,7 @@ def main():
     ]
 
     # Zernike fitting order for each instrument
-    order= {'fgs': 15,
+    order = {'fgs': 15,
             'nircam': 15,
             'miri': 15,
             'nirspec': 15,

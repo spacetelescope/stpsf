@@ -17,7 +17,6 @@ from . import constants, utils, webbpsf_core
 _log = logging.getLogger('webbpsf')
 
 
-
 #######  Classes for modeling aspects of JWST's segmented active primary #####
 
 
@@ -386,7 +385,9 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         if which == 'LLNL':
             raise NotImplementedError('Rotated field mask for LLNL grism not yet implemented!')
         elif which == 'Bach':
-            transmission = os.path.join(utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz')  # TODO - Unused value, delete entire statement?
+            transmission = os.path.join(
+                utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz'
+            )  # TODO - Unused value, delete entire statement?
         else:
             raise NotImplementedError('Unknown grating name:' + which)
 
@@ -547,7 +548,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
     def get_transmission(self, wave):
         """Make array for the pupil obscuration appropriate to the grism"""
 
-        if isinstance(wave, poppy.Wavefront):   # TODO - Wavelength isn't used, safe to delete in this function?
+        if isinstance(wave, poppy.Wavefront):  # TODO - Wavelength isn't used, safe to delete in this function?
             wavelength = wave.wavelength
         else:
             wave = poppy.Wavefront(wavelength=float(wave))
@@ -908,53 +909,31 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             # coronagraph regions
             # Note: 180 deg rotation needed relative to Krist's figures for the flight SCI orientation:
 
-            if ((self.module == 'A' and self.name == 'MASKLWB') or
-                (self.module == 'B' and self.name == 'MASK210R')):
+            if (self.module == 'A' and self.name == 'MASKLWB') or (self.module == 'B' and self.name == 'MASK210R'):
                 # left edge:
                 # has one fully in the corner and one half in the other corner, half outside the 10x10 box
-                wnd_5 = np.where(
-                    ((y < -5) & (y > -10)) &
-                    (
-                            ((x > 5) & (x < 10)) |
-                            ((x < -7.5) & (x > -12.5))
-                    )
-                )
-                wnd_2 = np.where(
-                    ((y < 10) & (y > 8)) &
-                    (
-                            ((x > 8) & (x < 10)) |
-                            ((x < -9) & (x > -11))
-                    )
-                )
-            elif ((self.module == 'A' and self.name == 'MASK210R') or
-                  (self.module == 'B' and self.name == 'MASKSWB')):
+                wnd_5 = np.where(((y < -5) & (y > -10))
+                                 & (((x > 5) & (x < 10))
+                                    | ((x < -7.5) & (x > -12.5))))
+                wnd_2 = np.where(((y < 10) & (y > 8))
+                                 & (((x > 8) & (x < 10))
+                                    | ((x < -9) & (x > -11))))
+            elif (self.module == 'A' and self.name == 'MASK210R') or (self.module == 'B' and self.name == 'MASKSWB'):
                 # right edge
-                wnd_5 = np.where(
-                    ((y < -5) & (y > -10)) &
-                    (
-                            ((x < 12.5) & (x > 7.5)) |
-                            ((x < -5) & (x > -10))
-                    )
-                )
-                wnd_2 = np.where(
-                    ((y < 10) & (y > 8)) &
-                    (
-                            ((x < 11) & (x > 9)) |
-                            ((x < -8) & (x > -10))
-                    )
-                )
+                wnd_5 = np.where(((y < -5) & (y > -10))
+                                 & (((x < 12.5) & (x > 7.5))
+                                    | ((x < -5) & (x > -10))))
+                wnd_2 = np.where(((y < 10) & (y > 8))
+                                 & (((x < 11) & (x > 9))
+                                    | ((x < -8) & (x > -10))))
             else:
                 # the others have two, one in each corner, both halfway out of the 10x10 box.
-                wnd_5 = np.where(
-                    ((y < -5) & (y > -10)) &
-                    (np.abs(x) > 7.5) &
-                    (np.abs(x) < 12.5)
-                )
-                wnd_2 = np.where(
-                    ((y < 10) & (y > 8)) &
-                    (np.abs(x) > 9) &
-                    (np.abs(x) < 11)
-                )
+                wnd_5 = np.where(((y < -5) & (y > -10))
+                                 & (np.abs(x) > 7.5)
+                                 & (np.abs(x) < 12.5))
+                wnd_2 = np.where(((y < 10) & (y > 8))
+                                 & (np.abs(x) > 9)
+                                 & (np.abs(x) < 11))
 
             self.transmission[wnd_5] = np.sqrt(1e-3)
             self.transmission[wnd_2] = np.sqrt(1e-3)
@@ -2029,7 +2008,7 @@ class NIRCamFieldDependentWeakLens(poppy.OpticalElement):
 
         self.ztable_full = None
 
-        ## REFERENCE:
+        # REFERENCE:
         # NIRCam weak lenses, values from WSS config file, PRDOPSFLT-027
         #                  A         B
         # WLP4_diversity =   8.27309     8.3443         diversity in microns

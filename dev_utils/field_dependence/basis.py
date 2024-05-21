@@ -22,18 +22,17 @@ import copy
 
 os.environ['PINT_ARRAY_PROTOCOL_FALLBACK'] = '0'
 
-import pint # noqa
+import pint  # noqa
 
 units = pint.UnitRegistry()
 Q_ = units.Quantity
 
 # Silence NEP 18 warning
-import warnings # noqa
+import warnings  # noqa
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     Q_([])
-
 
 
 def embed(n, m):
@@ -216,7 +215,7 @@ class PolynomialBasis(BaseBasis):
     def numpolys(self, new_numpolys):
         polynomials_copy = self._polynomials
         self._polynomials = np.zeros((new_numpolys, self._pts_x, self._pts_y))
-        self._polynomials[0 : self._numpolys, :, :] = polynomials_copy
+        self._polynomials[0 : self._numpolys,:,:] = polynomials_copy
         self._numpolys = new_numpolys
 
     def project(self, in_data):
@@ -480,7 +479,8 @@ class NollZernikeBasis(ZernikeBasis):
     #                 next_order_start = (self._term_order[index] + 1) * (self._term_order[index] + 2) / 2
     #                 radial_term_index = order_start + self._term_order[index] / 2
     #                 if index < radial_term_index:
-    #                     self._polynomial_map[index] = next_order_start - (index - order_start) * 2 - (self._term_order[index] - 1) / 2
+    #                     self._polynomial_map[index] =
+    #                         next_order_start - (index - order_start) * 2 - (self._term_order[index] - 1) / 2
     #                 elif index > radial_term_index:
     #                     self._polynomial_map[index] =
     #

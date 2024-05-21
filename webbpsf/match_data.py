@@ -1,4 +1,4 @@
-## Functions to match or fit PSFs to observed JWST data
+# Functions to match or fit PSFs to observed JWST data
 import astropy
 import astropy.io.fits as fits
 import pysiaf
@@ -156,7 +156,7 @@ def get_nrc_coron_apname(input):
             # Find all instances of "_"
             inds = [pos for pos, char in enumerate(apname_pps) if char == '_']
             # Filter is always appended to end, but can have different string sizes (F322W2)
-            filter = apname_pps[inds[-1] + 1 :]
+            filter = apname_pps[inds[-1] + 1:]
             apname_new += f'_{filter}'
         elif last_str == 'NARROW':
             apname_new += '_NARROW'

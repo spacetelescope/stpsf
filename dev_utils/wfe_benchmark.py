@@ -9,11 +9,11 @@ webbpsf.webbpsf_core.poppy.conf.n_processes = ncores
 
 inst = webbpsf.NIRCam()
 inst.filter = "F430M"
-inst.detector_position = (1024,1024)
+inst.detector_position = (1024, 1024)
 
 # Baseline test: No SI WFE, no distortion
 inst.include_si_wfe = False
-%timeit psf = inst.calc_psf(add_distortion=False, monochromatic=4.3e-6) # noqa
+%timeit psf = inst.calc_psf(add_distortion=False, monochromatic=4.3e-6)  # noqa
 # Result: 911 ms ± 5.7 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 %timeit psf = inst.calc_psf(add_distortion=False, nlambda=ncores)  # noqa
 # Result: 5.62 s ± 177 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
@@ -26,8 +26,8 @@ inst.include_si_wfe = True
 # Result: 6.1 s ± 96.9 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 # Use pixel (0,0) to force extrapolation algorithm
-inst.detector_position = (0,0)
-%timeit psf = inst.calc_psf(add_distortion=False, monochromatic=4.3e-6) # noqa
+inst.detector_position = (0, 0)
+%timeit psf = inst.calc_psf(add_distortion=False, monochromatic=4.3e-6)  # noqa
 # Result: 1.8 s ± 12.7 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
-%timeit psf = inst.calc_psf(add_distortion=False, nlambda=ncores) # noqa
+%timeit psf = inst.calc_psf(add_distortion=False, nlambda=ncores)  # noqa
 # Result: 6.53 s ± 85.1 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
