@@ -640,3 +640,14 @@ def test_ways_to_specify_detectors():
 
     nrc.detector = 'nrcblong'
     assert nrc.detector == 'NRCB5', "nrcblong should be synonymous to nrcb5"
+
+def test_dhs():
+    """Basic test that it's possible to calculate a PSF for one of the NIRCam DHS subapertures"""
+    nrc = webbpsf_core.NIRCam()
+
+    nrc.pupil_mask = 'DHS_07'
+
+    psf = nrc.calc_psf(monochromatic=2e-6)
+
+    assert isinstance(psf, fits.HDUList), "the returned PSF should be a FITS HDUList"
+    assert 0.03 < psf[0].data.sum() < 0.05, "a DHS aperture should have low throughput around a few percent"
