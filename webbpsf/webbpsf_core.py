@@ -978,18 +978,20 @@ class JWInstrument(SpaceTelescopeInstrument):
                 )
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
-                    _log.debug(
-                        f'Pixelscale updated to {self.pixelscale}',
+                    debug_message = (
+                        f'Pixelscale updated to {self.pixelscale} '
                         f'based on average X+Y SciScale at SIAF aperture {detector_apername}'
                     )
+                    _log.debug(debug_message)
             elif ap.AperType == 'COMPOUND' and self.name == 'MIRI':
                 # For MIRI, many of the relevant IFU apertures are of COMPOUND type.
                 has_custom_pixelscale = False  # custom scales not supported for MIRI IFU (yet?)
                 # Unlike NIRSpec, there simply do not exist full-detector SIAF apertures for the MIRI IFU detectors
-                _log.info(
-                    f'Aperture {value} is of type COMPOUND for MIRI;',
+                info_message = (
+                    f'Aperture {value} is of type COMPOUND for MIRI; '
                     'There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
                 )
+                _log.info(info_message)
 
                 # Now apply changes:
                 self._aperturename = value
@@ -1001,10 +1003,11 @@ class JWInstrument(SpaceTelescopeInstrument):
 
             else:
                 if self.detector not in value:
-                    raise ValueError(
+                    error_message = (
                         f'Aperture name {value} does not match currently selected detector {self.detector}. '
                         f'Change detector attribute first, then set desired aperture.'
                     )
+                    raise ValueError(error_message)
 
                 # First, check some info from current settings, wich we will use below as part of auto pixelscale code
                 # The point is to check if the pixel scale is set to a custom or default value,
@@ -1860,10 +1863,11 @@ class JWInstrument(SpaceTelescopeInstrument):
         MIN_REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
         if ref_wave < MIN_REF_WAVE:
             ref_wave = MIN_REF_WAVE
-            _log.info(
-                f'Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns;',
+            log_message = (
+                f'Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns; '
                 'minimum set to avoid phase wrap of segment C3 surface.'
             )
+            _log.info(log_message)
         else:
             _log.info(f'Performing initial propagation at average wavelength {ref_wave*1e6:.2f} microns.')
 
@@ -2665,10 +2669,11 @@ class NIRCam(JWInstrument):
             if newval is not None:
                 # Set alternative aperture name as bandaid to continue
                 value = newval
-                _log.warning(
-                    'Possibly running an old version of pysiaf missing some NIRCam apertures.',
+                warning_message = (
+                    'Possibly running an old version of pysiaf missing some NIRCam apertures. '
                     'Continuing with old aperture names.'
                 )
+                _log.warning(warning_message)
             else:
                 return
 
@@ -2701,10 +2706,11 @@ class NIRCam(JWInstrument):
 
             if not has_custom_pixelscale:
                 self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
-                _log.debug(
-                    f'Pixelscale updated to {self.pixelscale}',
+                debug_message = (
+                    f'Pixelscale updated to {self.pixelscale} '
                     f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                 )
+                _log.debug(debug_message)
 
     @property
     def module(self):
@@ -3291,10 +3297,11 @@ class NIRSpec(JWInstrument_with_IFU):
 
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
-                    _log.debug(
-                        f'Pixelscale updated to {self.pixelscale}',
+                    debug_message = (
+                        f'Pixelscale updated to {self.pixelscale} '
                         f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
+                    _log.debug(debug_message)
 
                 if 'IFU' in self.aperturename:
                     self._mode = 'IFU'
@@ -3302,10 +3309,11 @@ class NIRSpec(JWInstrument_with_IFU):
                         self.disperser = 'PRISM'  # Set some default spectral mode
                         self.filter = 'CLEAR'
                     if self.image_mask not in ['IFU', None]:
-                        _log.info(
-                            'The currently-selected image mask (slit) is not compatible with IFU mode.',
+                        info_message = (
+                            'The currently-selected image mask (slit) is not compatible with IFU mode. '
                             'Setting image_mask=None'
                         )
+                        _log.info(info_message)
                         self.image_mask = None
                 else:
                     self._mode = 'imaging'  # More to implement here later!

@@ -195,10 +195,13 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
 
         # FIXME tolerance temporarily increased to 1% in final flux, to allow for using
         # regular propagation rather than semi-analytic. See poppy issue #169
+        assert_string = (
+            f'Total flux {totflux} is out of tolerance relative to expectations '
+            f'{exp_flux}, for offset={offset}, angle={angle}'
+        )
         assert (
             abs(totflux - exp_flux) < 1e-4
-        ), f'Total flux {totflux} is out of tolerance relative to expectations {exp_flux}, \
-            for offset={offset}, angle={angle}'
+        ), assert_string
         # assert( abs(totflux - exp_flux) < 1e-2 )
         _log.info('File {0} has the expected total flux based on prior reference calculation: {1}'.format(fnout, totflux))
 

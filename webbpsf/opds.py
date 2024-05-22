@@ -152,10 +152,11 @@ class OPD(poppy.FITSOpticalElement):
 
         self._segment_masks = fits.getdata(full_seg_mask_file)
         if not self._segment_masks.shape[0] == self.npix:
-            raise ValueError(
-                f'The shape of the segment mask file {self._segment_masks.shape} \
-                  does not match the shape expect: ({self.npix}, {self.npix})'
+            error_message = (
+                f'The shape of the segment mask file {self._segment_masks.shape} '
+                'does not match the shape expect: ({self.npix}, {self.npix})'
             )
+            raise ValueError(error_message)
 
         self._segment_masks_version = fits.getheader(full_seg_mask_file)['VERSION']
 
@@ -1749,12 +1750,13 @@ class OTE_Linear_Model_WSS(OPD):
             clip_dist = np.sqrt((x_field_pt - x_field_pt0) ** 2 + (y_field_pt - y_field_pt0) ** 2)
             if clip_dist > 0.1 * u.arcsec:
                 # warn the user we're making an adjustment here (but no need to do so if the distance is trivially small)
-                warnings.warn(
-                    f'For (V2,V3) = {v2v3}, Field point {x_field_pt}, {y_field_pt}',
-                    'not within valid region for field dependence model of OTE WFE for',
-                    f'{instrument}: {min_x_field}-{max_x_field}, {min_y_field}-{max_y_field}.',
+                warning_message = (
+                    f'For (V2,V3) = {v2v3}, Field point {x_field_pt}, {y_field_pt} '
+                    'not within valid region for field dependence model of OTE WFE for '
+                    f'{instrument}: {min_x_field}-{max_x_field}, {min_y_field}-{max_y_field}.  '
                     f'Clipping to closest available valid location, {clip_dist} away from the requested coordinates.'
                 )
+                warnings.warn(warning_message)
 
         # Get value of Legendre Polynomials at desired field point.  Need to implement model in G. Brady's prototype
         # polynomial basis code, independent of that code for now.  Perhaps at some point in the future this model
@@ -3290,11 +3292,12 @@ def sur_to_opd(sur_filename, ignore_missing=False, npix=256):
 
     if not os.path.exists(sur_filename):
         if not ignore_missing:
-            raise FileNotFoundError(
-                f'Missing SUR: {sur_filename}. Download of these should eventually be automated;',
-                'for now, manually retrieve from WSSTAS at',
+            error_message = (
+                f'Missing SUR: {sur_filename}. Download of these should eventually be automated; '
+                'for now, manually retrieve from WSSTAS at '
                 'https://wsstas.stsci.edu/wsstas/staticPage/showContent/RecentSURs?primary=master.png'
             )
+            raise FileNotFoundError(error_message)
         else:
             return np.zeros((npix, npix), float)
     ote.move_sur(sur_filename)

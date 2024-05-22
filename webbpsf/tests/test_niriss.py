@@ -19,8 +19,10 @@ def test_niriss_source_offset_45():
 
 
 def test_niriss_set_siaf():
-    return do_test_set_position_from_siaf('NIRISS',
-                                          ['NIS_FP1MIMF', 'NIS_SUB64', 'NIS_SOSSFULL', 'NIS_SOSSTA', 'NIS_AMI1'])
+    return do_test_set_position_from_siaf(
+        'NIRISS',
+        ['NIS_FP1MIMF', 'NIS_SUB64', 'NIS_SOSSFULL', 'NIS_SOSSTA', 'NIS_AMI1']
+    )
 
 
 def test_niriss_auto_pupil():

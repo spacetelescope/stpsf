@@ -1690,9 +1690,12 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     axes[0, 1].set_title(f'Measured: \n{os.path.basename(fn2)}', fontsize=18)
     axes[0, 2].set_title('Difference\n ', fontsize=18)
 
+    figure_title = (
+        f"{hdul1[0].header['CORR_ID']}, {hdul1[0].header['TSTAMP'][:-3]}   vs.   "
+        f"{hdul2[0].header['CORR_ID']}, {hdul2[0].header['TSTAMP'][:-3]}"
+    )
     fig.suptitle(
-        f"{hdul1[0].header['CORR_ID']}, {hdul1[0].header['TSTAMP'][:-3]}   vs.   \
-          {hdul2[0].header['CORR_ID']}, {hdul2[0].header['TSTAMP'][:-3]}",
+        figure_title,
         fontsize=20,
         fontweight='bold',
     )
@@ -2123,8 +2126,8 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
                 if verbose:
                     print(f'OSS centroid on board:  {oss_cen}  (full det coord frame, 1-based)')
                     print(
-                        f'OSS centroid converted: {oss_cen_sci_pythonic}  \
-                          (sci frame in {nrc._detector_geom_info.aperture.AperName}, 0-based)'
+                        f'OSS centroid converted: {oss_cen_sci_pythonic}',
+                        f'(sci frame in {nrc._detector_geom_info.aperture.AperName}, 0-based)'
                     )
                     full_ap = nrc.siaf[nrc._detector_geom_info.aperture.AperName[0:5] + '_FULL']
                     oss_cen_full_sci = np.asarray(full_ap.det_to_sci(*oss_cen)) - 1

@@ -108,10 +108,11 @@ def mast_wss_opds_around_date_query(date, verbose=True):
                 )
 
             if len(obs_table) == 0:
-                raise RuntimeError(
-                    'Cannot find ANY OPDs in MAST within a week before/after that date.',
+                error_message = (
+                    'Cannot find ANY OPDs in MAST within a week before/after that date.'
                     'Date is likely outside the range of valid data.'
                 )
+                raise RuntimeError(error_message)
             elif max(obs_table['date_obs_mjd']) < date.mjd:
                 # if len(obs_table) == 1 : #and min(obs_table['date_obs_mjd']) < date.mjd:
                 if verbose:
