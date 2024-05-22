@@ -103,14 +103,14 @@ def mast_wss_opds_around_date_query(date, verbose=True):
         if tdelta >= 6 * u.day:
             if verbose:
                 print(
-                    'Could not find JWST OPDs both before and after the specified date. \
-                        Date outside of the available range of WFS data.'
+                    'Could not find JWST OPDs both before and after the specified date.',
+                    'Date outside of the available range of WFS data.'
                 )
 
             if len(obs_table) == 0:
                 raise RuntimeError(
-                    'Cannot find ANY OPDs in MAST within a week before/after that date. \
-                        Date is likely outside the range of valid data.'
+                    'Cannot find ANY OPDs in MAST within a week before/after that date.',
+                    'Date is likely outside the range of valid data.'
                 )
             elif max(obs_table['date_obs_mjd']) < date.mjd:
                 # if len(obs_table) == 1 : #and min(obs_table['date_obs_mjd']) < date.mjd:
@@ -233,8 +233,8 @@ def get_opd_at_time(date, choice='closest', verbose=False, output_path=None):
         )
         if verbose:
             print(
-                f'User requested choosing OPD time closest in time to {date}, \
-                    which is {closest_fn}, delta time {closest_dt:.3f} days'
+                f'User requested choosing OPD time closest in time to {date},',
+                f'which is {closest_fn}, delta time {closest_dt:.3f} days'
             )
         return mast_retrieve_opd(closest_fn, output_path=output_path)
 
@@ -506,8 +506,8 @@ def deduplicate_opd_table(opdtable, drop_f187n=True, verbose=False):
         if opdtable[row_index]['corr_id'] in invalid_aps:
             if verbose:
                 print(
-                    f"{opdtable[row_index]['fileName']} \
-                        is flaggd as an invalid AP due to known analysis issue(s). Ignoring it."
+                    f"{opdtable[row_index]['fileName']}",
+                    "is flaggd as an invalid AP due to known analysis issue(s). Ignoring it."
                 )
             continue
         elif opdtable[row_index]['date'] in measurement_dates_encountered:
@@ -705,8 +705,8 @@ def download_wfsc_images(program=None, obs=None, verbose=False, **kwargs):
     if verbose:
         date_obs = astropy.time.Time(filetable[0]['date_obs_mjd'], format='mjd')
         print(
-            f"Found {len(filetable)} level 3 data products from \
-                {filetable[0]['program']}:{filetable[0]['observtn']} around {date_obs.iso[0:16]}"
+            f"Found {len(filetable)} level 3 data products from",
+            f"{filetable[0]['program']}:{filetable[0]['observtn']} around {date_obs.iso[0:16]}"
         )
     if len(filetable) > 0:
         file_list = []

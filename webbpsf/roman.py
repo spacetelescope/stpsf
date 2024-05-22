@@ -313,8 +313,8 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
             self.options['add_distortion'] = False
             self.options['crop_psf'] = False
             _log.info(
-                'Geometric distortions are not implemented in WebbPSF for Roman CGI. \
-                 The add_distortion keyword must be set to False for this case.'
+                'Geometric distortions are not implemented in WebbPSF for Roman CGI.',
+                'The add_distortion keyword must be set to False for this case.'
             )
 
         # Run poppy calc_psf

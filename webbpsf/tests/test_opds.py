@@ -409,8 +409,7 @@ def test_apply_field_dependence_model():
     rms4 = rms(opd_nis_cen_v2, mask)
     assert np.isclose(
         rms4, 28.0e-9, atol=1e-9
-    ), "Field-dependent OTE WFE at selected field point (NIRISS center) \
-        didn't match expected value(test case: implicit call, assume_si_focus=True)"
+    ), "Field-dependent OTE WFE at selected field point (NIRISS center) didn't match expected value(test case: implicit call, assume_si_focus=True)"  # noqa
 
 
 def test_get_zernike_coeffs_from_smif():

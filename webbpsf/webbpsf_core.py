@@ -979,16 +979,16 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} \
-                          based on average X+Y SciScale at SIAF aperture {detector_apername}'
+                        f'Pixelscale updated to {self.pixelscale}',
+                        f'based on average X+Y SciScale at SIAF aperture {detector_apername}'
                     )
             elif ap.AperType == 'COMPOUND' and self.name == 'MIRI':
                 # For MIRI, many of the relevant IFU apertures are of COMPOUND type.
                 has_custom_pixelscale = False  # custom scales not supported for MIRI IFU (yet?)
                 # Unlike NIRSpec, there simply do not exist full-detector SIAF apertures for the MIRI IFU detectors
                 _log.info(
-                    f'Aperture {value} is of type COMPOUND for MIRI; \
-                      There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
+                    f'Aperture {value} is of type COMPOUND for MIRI;',
+                     'There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
                 )
 
                 # Now apply changes:
@@ -1035,8 +1035,8 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} \
-                          based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                        f'Pixelscale updated to {self.pixelscale}',
+                        f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
 
     def _tel_coords(self):
@@ -1861,8 +1861,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         if ref_wave < MIN_REF_WAVE:
             ref_wave = MIN_REF_WAVE
             _log.info(
-                f'Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns; \
-                  minimum set to avoid phase wrap of segment C3 surface.'
+                f'Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns;',
+                 'minimum set to avoid phase wrap of segment C3 surface.'
             )
         else:
             _log.info(f'Performing initial propagation at average wavelength {ref_wave*1e6:.2f} microns.')
@@ -2031,7 +2031,10 @@ class MIRI(JWInstrument_with_IFU):
         # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
         # Modes and default SIAF apertures for each
-        self._modes_list = {'imaging': 'MIRIM_FULL', 'IFU': 'MIRIFU_CHANNEL1A'}
+        self._modes_list = {
+            'imaging': 'MIRIM_FULL',
+            'IFU': 'MIRIFU_CHANNEL1A'
+        }
 
         # Coordinate system note:
         # The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
@@ -2618,8 +2621,8 @@ class NIRCam(JWInstrument):
                 else:
                     apname = 'NRCA2_FULL_WEDGE_RND' if self.module == 'A' else 'NRCB1_MASK210R'
                     _log.debug(
-                        f'Inferred {apname} from coronagraph Lyot mask selected, \
-                          and channel={self.channel}, module={self.module}'
+                        f'Inferred {apname} from coronagraph Lyot mask selected,',
+                        f'and channel={self.channel}, module={self.module}'
                     )
         else:
             apname = self._detectors[self._detector]
@@ -2663,8 +2666,8 @@ class NIRCam(JWInstrument):
                 # Set alternative aperture name as bandaid to continue
                 value = newval
                 _log.warning(
-                    'Possibly running an old version of pysiaf missing some NIRCam apertures. \
-                     Continuing with old aperture names.'
+                    'Possibly running an old version of pysiaf missing some NIRCam apertures.',
+                    'Continuing with old aperture names.'
                 )
             else:
                 return
@@ -2699,8 +2702,8 @@ class NIRCam(JWInstrument):
             if not has_custom_pixelscale:
                 self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
                 _log.debug(
-                    f'Pixelscale updated to {self.pixelscale} \
-                      based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                    f'Pixelscale updated to {self.pixelscale}',
+                    f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                 )
 
     @property
@@ -3125,7 +3128,10 @@ class NIRSpec(JWInstrument_with_IFU):
         # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
         # Modes and default SIAF apertures for each
-        self._modes_list = {'imaging': 'NRS1_FULL', 'IFU': 'NRS_FULL_IFU'}
+        self._modes_list = {
+            'imaging': 'NRS1_FULL',
+            'IFU': 'NRS_FULL_IFU'
+        }
 
         self._IFU_pixelscale = 0.1043  # same.
         self.monochromatic = 3.0
@@ -3286,8 +3292,8 @@ class NIRSpec(JWInstrument_with_IFU):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} \
-                          based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                        f'Pixelscale updated to {self.pixelscale}',
+                        f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
 
                 if 'IFU' in self.aperturename:
@@ -3297,8 +3303,8 @@ class NIRSpec(JWInstrument_with_IFU):
                         self.filter = 'CLEAR'
                     if self.image_mask not in ['IFU', None]:
                         _log.info(
-                            'The currently-selected image mask (slit) is not compatible with IFU mode. \
-                             Setting image_mask=None'
+                            'The currently-selected image mask (slit) is not compatible with IFU mode.',
+                            'Setting image_mask=None'
                         )
                         self.image_mask = None
                 else:

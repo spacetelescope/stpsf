@@ -849,9 +849,10 @@ class OTE_Linear_Model_Elliott(OPD):
         # local_vector = np.array([local_coordX, local_coordY, vector[2]])
         local_vector = vector
         if type == 'tilt':
+            # convert Z tilt to milliradians instead of microradians because that is what the sensitivity tables use
             local_vector[
                 2
-            ] /= 1000  # convert Z tilt to milliradians instead of microradians, that is what the sensitivity tables use
+            ] /= 1000
             units = 'microradians for tip/tilt, milliradians for clocking'
         else:
             units = 'microns'
@@ -1749,10 +1750,10 @@ class OTE_Linear_Model_WSS(OPD):
             if clip_dist > 0.1 * u.arcsec:
                 # warn the user we're making an adjustment here (but no need to do so if the distance is trivially small)
                 warnings.warn(
-                    f'For (V2,V3) = {v2v3}, Field point {x_field_pt}, {y_field_pt} \
-                      not within valid region for field dependence model of OTE WFE for \
-                      {instrument}: {min_x_field}-{max_x_field}, {min_y_field}-{max_y_field}. \
-                      Clipping to closest available valid location, {clip_dist} away from the requested coordinates.'
+                    f'For (V2,V3) = {v2v3}, Field point {x_field_pt}, {y_field_pt}',
+                     'not within valid region for field dependence model of OTE WFE for',
+                    f'{instrument}: {min_x_field}-{max_x_field}, {min_y_field}-{max_y_field}.',
+                    f'Clipping to closest available valid location, {clip_dist} away from the requested coordinates.'
                 )
 
         # Get value of Legendre Polynomials at desired field point.  Need to implement model in G. Brady's prototype
@@ -3290,9 +3291,9 @@ def sur_to_opd(sur_filename, ignore_missing=False, npix=256):
     if not os.path.exists(sur_filename):
         if not ignore_missing:
             raise FileNotFoundError(
-                f'Missing SUR: {sur_filename}. Download of these should eventually be automated; \
-                  for now, manually retrieve from WSSTAS at \
-                  https://wsstas.stsci.edu/wsstas/staticPage/showContent/RecentSURs?primary=master.png'
+                f'Missing SUR: {sur_filename}. Download of these should eventually be automated;',
+                 'for now, manually retrieve from WSSTAS at',
+                 'https://wsstas.stsci.edu/wsstas/staticPage/showContent/RecentSURs?primary=master.png'
             )
         else:
             return np.zeros((npix, npix), float)
