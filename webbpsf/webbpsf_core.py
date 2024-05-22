@@ -988,7 +988,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 # Unlike NIRSpec, there simply do not exist full-detector SIAF apertures for the MIRI IFU detectors
                 _log.info(
                     f'Aperture {value} is of type COMPOUND for MIRI;',
-                     'There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
+                    'There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
                 )
 
                 # Now apply changes:
@@ -1862,7 +1862,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             ref_wave = MIN_REF_WAVE
             _log.info(
                 f'Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns;',
-                 'minimum set to avoid phase wrap of segment C3 surface.'
+                'minimum set to avoid phase wrap of segment C3 surface.'
             )
         else:
             _log.info(f'Performing initial propagation at average wavelength {ref_wave*1e6:.2f} microns.')
