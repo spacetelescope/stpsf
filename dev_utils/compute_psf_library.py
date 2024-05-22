@@ -16,7 +16,7 @@ assert exists(os.environ['PYSYN_CDBS']), "Can't load synthetic photometry files!
 
 if not os.environ.get('WEBBPSF_PATH'):
     os.environ['WEBBPSF_PATH'] = '/grp/jwst/ote/webbpsf-data'
-import webbpsf # noqa
+import webbpsf  # noqa
 
 N_PROCESSES = 16
 

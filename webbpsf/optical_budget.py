@@ -9,7 +9,7 @@ import poppy
 import webbpsf
 from webbpsf.utils import rms
 
-### JWST Optical Budgets Information
+# JWST Optical Budgets Information
 # This module makes extensive use of information from the JWST Optical Budget
 # by Paul Lightsey et al.
 # See Lightsey's 'Guide to the Optical Budget'

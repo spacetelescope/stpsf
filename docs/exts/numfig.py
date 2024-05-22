@@ -1,10 +1,11 @@
 from docutils.nodes import SkipNode, Text, caption, figure, raw, reference
 from sphinx.roles import XRefRole
 
-# Element classes
 
+# Element classes
 class page_ref(reference):
     pass
+
 
 class num_ref(reference):
     pass
@@ -15,9 +16,11 @@ class num_ref(reference):
 def skip_page_ref(self, node):
     raise SkipNode
 
+
 def latex_visit_page_ref(self, node):
     self.body.append("\\pageref{%s:%s}" % (node['refdoc'], node['reftarget']))
     raise SkipNode
+
 
 def latex_visit_num_ref(self, node):
     fields = node['reftarget'].split('#')
@@ -57,7 +60,6 @@ def doctree_resolved(app, doctree, docname):
 
         i += 1
 
-
     # replace numfig nodes with links
     if app.builder.name != 'latex':
         for ref_info in doctree.traverse(num_ref):
@@ -75,15 +77,16 @@ def doctree_resolved(app, doctree, docname):
                 target_doc = app.builder.env.figid_docname_map[target]
                 link = "%s#%s" % (app.builder.get_relative_uri(docname, target_doc),
                                   target)
-                html = '<a class="pageref" href="%s">%s</a>' % (link, labelfmt %(figids[target]))
+                html = '<a class="pageref" href="%s">%s</a>' % (link, labelfmt % (figids[target]))
                 ref_info.replace_self(raw(html, html, format='html'))
             else:
                 ref_info.replace_self(Text(labelfmt % (figids[target])))
 
 
 def clean_env(app):
-    app.builder.env.i=1
+    app.builder.env.i = 1
     app.builder.env.figid_docname_map = {}
+
 
 def setup(app):
     app.add_config_value('number_figures', True, True)

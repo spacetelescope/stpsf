@@ -1,15 +1,16 @@
 import copy
-
 import os
+
+import astropy.convolution
 import numpy as np
 import scipy
-import webbpsf
-from webbpsf import utils, constants
-from astropy.convolution.kernels import CustomKernel
-from astropy.convolution import convolve
-from astropy.io import fits
-import astropy.convolution
 import scipy.signal as signal
+from astropy.convolution import convolve
+from astropy.convolution.kernels import CustomKernel
+from astropy.io import fits
+
+import webbpsf
+from webbpsf import constants, utils
 
 
 def get_detector_ipc_model(inst, header):
@@ -60,7 +61,8 @@ def get_detector_ipc_model(inst, header):
 
         # PPC effect
         # read the SCA extension for the detector
-        ## TODO: This depends on detector coordinates, and which readout amplifier. if in subarray, then the PPC effect is always like in amplifier 1
+        # TODO: This depends on detector coordinates, and which readout amplifier.
+        # If in subarray, then the PPC effect is always like in amplifier 1
         sca_path_ppc = os.path.join(utils.get_webbpsf_data_path(), 'NIRCam', 'IPC', 'KERNEL_PPC_CUBE.fits')
         kernel_ppc = CustomKernel(fits.open(sca_path_ppc)[det2sca[det]].data[0])  # we read the first slice in the cube
 
@@ -167,7 +169,8 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
 
     """
 
-    # In cases for which the user has asked for the IPC to be applied to a not-present extension, we have nothing to add this to
+    # In cases for which the user has asked for the IPC
+    # to be applied to a not-present extension, we have nothing to add this to
     if extname not in psf_hdulist:
         webbpsf.webbpsf_core._log.debug(f'Skipping IPC simulation since ext {extname} is not found')
         return
@@ -283,9 +286,11 @@ def oversample_ipc_model(kernel, oversample):
 
 # Functions for applying MIRI Detector Scattering Effect
 
-# Lookup tables of shifts of the cruciform, estimated roughly from F560W ePSFs (ePSFs by Libralatto, shift estimate by Perrin)
-cruciform_xshifts = scipy.interpolate.interp1d([0, 357, 1031], [1.5,0.5,-0.9], kind='linear', fill_value='extrapolate')
-cruciform_yshifts = scipy.interpolate.interp1d([0, 511, 1031], [1.6,0,-1.6], kind='linear', fill_value='extrapolate')
+# Lookup tables of shifts of the cruciform
+# Estimated roughly from F560W ePSFs (ePSFs by Libralatto, shift estimate by Perrin)
+cruciform_xshifts = scipy.interpolate.interp1d([0, 357, 1031], [1.5, 0.5, -0.9], kind='linear', fill_value='extrapolate')
+cruciform_yshifts = scipy.interpolate.interp1d([0, 511, 1031], [1.6, 0, -1.6], kind='linear', fill_value='extrapolate')
+
 
 def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength=5.5, detector_position=(0, 0)):
     """Improved / more complex model of the MIRI cruciform, with parameterization to model
@@ -310,13 +315,13 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
     """
     # make output array
     npix = in_psf.shape[0]
-    cen = (npix-1) // 2
-    kernel_2d = np.zeros( (npix, npix), float)
+    cen = (npix - 1) // 2
+    kernel_2d = np.zeros((npix, npix), float)
 
-    ### make 1d kernels for the main cruciform bright lines 
+    # make 1d kernels for the main cruciform bright lines
     # Compute 1d indices
     x = np.arange(npix, dtype=float)
-    x -= (npix-1)/2
+    x -= (npix - 1) / 2
     x /= oversample
     y = x  # we're working in 1d in this part, but clarify let's have separate coords for each axis
 
@@ -330,19 +335,22 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
 
     # Add in the offset copies of the main 1d kernels
     # Empirically, the 'center' of the cruciform shifts inwards towards the center of the detector
-    # i.e. for the upper right corner, the cruciform shifts down and left a bit, etc. 
+    # i.e. for the upper right corner, the cruciform shifts down and left a bit, etc.
     yshift = cruciform_yshifts(detector_position[1])
     xshift = cruciform_xshifts(detector_position[0])
-    kernel_2d[cen + int(round(yshift*oversample))] = kernel_x
-    kernel_2d[:, cen + int(round(xshift*oversample))] = kernel_y
+    kernel_2d[cen + int(round(yshift * oversample))] = kernel_x
+    kernel_2d[:, cen + int(round(xshift * oversample))] = kernel_y
 
-    ### create and add in the more diffuse radial term
+    # create and add in the more diffuse radial term
     # Model this as an expoential falloff outside the inner radius, times some scale factor relative to the above
     y, x = np.indices(kernel_2d.shape)
-    r = np.sqrt((x-cen)**2 + (y-cen)**2) / oversample
-    radial_term  = np.exp(-r/2/webbpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX) * kernel_amp \
-                   * (r > webbpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX) \
-                   * webbpsf.constants.MIRI_CRUCIFORM_RADIAL_SCALEFACTOR
+    r = np.sqrt((x - cen) ** 2 + (y - cen) ** 2) / oversample
+    radial_term = (
+        np.exp(-r / 2 / webbpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX)
+        * kernel_amp
+        * (r > webbpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX)
+        * webbpsf.constants.MIRI_CRUCIFORM_RADIAL_SCALEFACTOR
+    )
 
     kernel_2d += radial_term
 
@@ -373,9 +381,9 @@ def _apply_miri_scattering_kernel_2d(in_psf, kernel_2d, oversample):
     """
 
     # Convolve the input PSF with the kernel for scattering
-    im_conv = astropy.convolution.convolve_fft(in_psf, kernel_2d, boundary='fill', fill_value=0.0,
-                                                 normalize_kernel=False, nan_treatment='fill', allow_huge = True)
-
+    im_conv = astropy.convolution.convolve_fft(
+        in_psf, kernel_2d, boundary='fill', fill_value=0.0, normalize_kernel=False, nan_treatment='fill', allow_huge=True
+    )
 
     # Normalize.
     # Note, it appears we do need to correct the amplitude for the sampling factor. Might as well do that here.
@@ -489,9 +497,13 @@ def apply_miri_scattering(hdulist_or_filename=None, kernel_amp=None, old_method=
     in_psf = psf[ext].data
 
     # create cruciform model using improved method using a 2d convolution kernel, attempting to model more physics.
-    kernel_2d = _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample,
-        detector_position= (hdu_list[0].header['DET_X'], hdu_list[0].header['DET_Y']),
-        wavelength = hdu_list[0].header['WAVELEN']*1e6 )
+    kernel_2d = _make_miri_scattering_kernel_2d(
+        in_psf,
+        kernel_amp,
+        oversample,
+        detector_position=(hdu_list[0].header['DET_X'], hdu_list[0].header['DET_Y']),
+        wavelength=hdu_list[0].header['WAVELEN'] * 1e6,
+    )
     im_conv_both = _apply_miri_scattering_kernel_2d(in_psf, kernel_2d, oversample)
 
     # Add this 2D scattered light output to the PSF
@@ -511,25 +523,22 @@ def apply_miri_scattering(hdulist_or_filename=None, kernel_amp=None, old_method=
     return psf
 
 
-def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=(512,512), ax=None):
-    """ utility function for viewing/visualizing the cruciform kernel
-    """
+def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=(512, 512), ax=None):
+    """utility function for viewing/visualizing the cruciform kernel"""
     import matplotlib
 
-    placeholder = np.zeros((npix*oversample, npix*oversample))
+    placeholder = np.zeros((npix * oversample, npix * oversample))
     kernel_amp = get_miri_cruciform_amplitude(filt)
-    extent =[-npix/2, npix/2, -npix/2, npix/2]
+    extent = [-npix / 2, npix / 2, -npix / 2, npix / 2]
 
-    kernel_2d = _make_miri_scattering_kernel_2d(placeholder, kernel_amp, oversample,
-        detector_position= detector_position)
+    kernel_2d = _make_miri_scattering_kernel_2d(placeholder, kernel_amp, oversample, detector_position=detector_position)
     norm = matplotlib.colors.LogNorm(1e-6, 1)
     cmap = matplotlib.cm.viridis
     cmap.set_bad(cmap(0))
     if ax is None:
         ax = matplotlib.pyplot.gca()
     ax.imshow(kernel_2d, norm=norm, cmap=cmap, extent=extent, origin='lower')
-    ax.set_title(f"MIRI cruciform model for {filt}, position {detector_position}, oversample {oversample}")
-    ax.plot(0,0,marker='+', color='yellow')
+    ax.set_title(f'MIRI cruciform model for {filt}, position {detector_position}, oversample {oversample}')
+    ax.plot(0, 0, marker='+', color='yellow')
 
     matplotlib.pyplot.colorbar(mappable=ax.images[0])
-

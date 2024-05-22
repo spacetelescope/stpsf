@@ -13,16 +13,21 @@ _log.addHandler(logging.NullHandler())
 
 # ------------------    NIRSpec Tests    ----------------------------
 
+
 def test_nirspec():
     return generic_output_test('NIRSpec')
+
+
 # Use a larger than typical tolerance when testing NIRSpec offsets. The
 # pixels are so undersampled (0.1 arcsec!) that it's unreasonable to try for
 # better than 1/10th of a pixel precision using default settings.
 def test_nirspec_source_offset_00():
     return do_test_source_offset('NIRSpec', theta=0.0, tolerance=0.1, monochromatic=3e-6)
 
+
 def test_nirspec_source_offset_45():
     return do_test_source_offset('NIRSpec', theta=45.0, tolerance=0.1, monochromatic=3e-6)
+
 
 def test_nirspec_set_siaf():
     return do_test_set_position_from_siaf('NIRSpec')
@@ -51,11 +56,10 @@ def test_calc_datacube_fast():
     waves = np.linspace(3e-6, 5e-6, 3)
 
     nrs.calc_datacube_fast(waves, fov_pixels=30, oversample=1, compare_methods=True)  # TODO assert success
-    
 
 
 def test_mode_switch():
-    """ Test switch between IFU and imaging modes """
+    """Test switch between IFU and imaging modes"""
     nrs = webbpsf_core.NIRSpec()
     # check mode swith to IFU
     nrs.mode = 'IFU'
@@ -72,8 +76,9 @@ def test_mode_switch():
     nrs.mode = 'imaging'
     assert 'IFU' not in nrs.aperturename
 
+
 def test_IFU_wavelengths():
-    """ Test computing the wqvelength sampling for a sim IFU cube """
+    """Test computing the wqvelength sampling for a sim IFU cube"""
     nrs = webbpsf_core.NIRSpec()
     # check mode swith to IFU
     nrs.mode = 'IFU'

@@ -9,6 +9,7 @@ from .test_errorhandling import _exception_message_starts_with
 _log = logging.getLogger('test_webbpsf')
 _log.addHandler(logging.NullHandler())
 
+
 def test_logging_restart():
     """Test turning off and on the logging, and then put it back the way it was."""
     level = conf.logging_level

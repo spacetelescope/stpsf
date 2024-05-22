@@ -17,8 +17,7 @@ from . import constants, utils, webbpsf_core
 _log = logging.getLogger('webbpsf')
 
 
-
-#######  Classes for modeling aspects of JWST's segmented active primary #####
+#  Classes for modeling aspects of JWST's segmented active primary #####
 
 
 def segment_zernike_basis(segnum=1, nterms=15, npix=512, outside=np.nan):
@@ -187,7 +186,7 @@ class WebbOTEPupil(poppy.FITSOpticalElement):
             # TODO apply that to as a modification to the OPD array.
 
 
-#######  Custom Optics used in JWInstrument classes  #####
+#  Custom Optics used in JWInstrument classes  #####
 
 
 class NIRSpec_three_MSA_shutters(poppy.AnalyticOpticalElement):
@@ -386,7 +385,9 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         if which == 'LLNL':
             raise NotImplementedError('Rotated field mask for LLNL grism not yet implemented!')
         elif which == 'Bach':
-            transmission = os.path.join(utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz')  # TODO - Unused value, delete entire statement?
+            transmission = os.path.join(
+                utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz'
+            )  # TODO - Unused value, delete entire statement?
         else:
             raise NotImplementedError('Unknown grating name:' + which)
 
@@ -441,7 +442,8 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # self.pupil_demagnification =  173.56 # meters on the primary / meters in the NIRISS pupil
 
         # Anand says:
-        #  nominally the circumscribing circle at the PW of NIRISS is ~40mm.  I use 39mm for the nrm, but it's slightly field-dependent.  Compare that to the 6.6... PM circle?
+        #  nominally the circumscribing circle at the PW of NIRISS is ~40mm.
+        #  I use 39mm for the nrm, but it's slightly field-dependent.  Compare that to the 6.6... PM circle?
         self.pupil_demagnification = 6.6 / 0.040  # about 165
 
         # perform an initial population of the OPD array for display etc.
@@ -511,8 +513,8 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # now compute the spatially dependent sag of the cylinder, as projected onto the primary
 
         # what is the pupil scale at the *reimaged pupil* of the grism?
-        pupil_scale_m_per_pix = 38.0255e-6  # Based on UdeM info in wfe_cylindricallens.pro # TODO - unused, can be deleted or just commented out?
-        # sag = np.sqrt(self.cylinder_radius**2 - (x*self.amplitude_header['PUPLSCAL']/self.pupil_demagnification)**2) - self.cylinder_radius
+        pupil_scale_m_per_pix = 38.0255e-6  # Based on UdeM info in wfe_cylindricallens.pro # noqa TODO - unused, can be deleted or just commented out?
+        # sag = np.sqrt(self.cylinder_radius**2 - (x*self.amplitude_header['PUPLSCAL']/self.pupil_demagnification)**2) - self.cylinder_radius  # noqa
         sag = np.sqrt(self.cylinder_radius**2 - (x / self.pupil_demagnification) ** 2) - self.cylinder_radius
         # sag = self.cylinder_radius -  np.sqrt(self.cylinder_radius**2 - (x * pupil_scale_m_per_pix )**2 )
 
@@ -547,7 +549,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
     def get_transmission(self, wave):
         """Make array for the pupil obscuration appropriate to the grism"""
 
-        if isinstance(wave, poppy.Wavefront):   # TODO - Wavelength isn't used, safe to delete in this function?
+        if isinstance(wave, poppy.Wavefront):  # TODO - Wavelength isn't used, safe to delete in this function?
             wavelength = wave.wavelength
         else:
             wave = poppy.Wavefront(wavelength=float(wave))
@@ -908,53 +910,31 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             # coronagraph regions
             # Note: 180 deg rotation needed relative to Krist's figures for the flight SCI orientation:
 
-            if ((self.module == 'A' and self.name == 'MASKLWB') or
-                (self.module == 'B' and self.name == 'MASK210R')):
+            if (self.module == 'A' and self.name == 'MASKLWB') or (self.module == 'B' and self.name == 'MASK210R'):
                 # left edge:
                 # has one fully in the corner and one half in the other corner, half outside the 10x10 box
-                wnd_5 = np.where(
-                    ((y < -5) & (y > -10)) &
-                    (
-                            ((x > 5) & (x < 10)) |
-                            ((x < -7.5) & (x > -12.5))
-                    )
-                )
-                wnd_2 = np.where(
-                    ((y < 10) & (y > 8)) &
-                    (
-                            ((x > 8) & (x < 10)) |
-                            ((x < -9) & (x > -11))
-                    )
-                )
-            elif ((self.module == 'A' and self.name == 'MASK210R') or
-                  (self.module == 'B' and self.name == 'MASKSWB')):
+                wnd_5 = np.where(((y < -5) & (y > -10))
+                                 & (((x > 5) & (x < 10))
+                                    | ((x < -7.5) & (x > -12.5))))
+                wnd_2 = np.where(((y < 10) & (y > 8))
+                                 & (((x > 8) & (x < 10))
+                                    | ((x < -9) & (x > -11))))
+            elif (self.module == 'A' and self.name == 'MASK210R') or (self.module == 'B' and self.name == 'MASKSWB'):
                 # right edge
-                wnd_5 = np.where(
-                    ((y < -5) & (y > -10)) &
-                    (
-                            ((x < 12.5) & (x > 7.5)) |
-                            ((x < -5) & (x > -10))
-                    )
-                )
-                wnd_2 = np.where(
-                    ((y < 10) & (y > 8)) &
-                    (
-                            ((x < 11) & (x > 9)) |
-                            ((x < -8) & (x > -10))
-                    )
-                )
+                wnd_5 = np.where(((y < -5) & (y > -10))
+                                 & (((x < 12.5) & (x > 7.5))
+                                    | ((x < -5) & (x > -10))))
+                wnd_2 = np.where(((y < 10) & (y > 8))
+                                 & (((x < 11) & (x > 9))
+                                    | ((x < -8) & (x > -10))))
             else:
                 # the others have two, one in each corner, both halfway out of the 10x10 box.
-                wnd_5 = np.where(
-                    ((y < -5) & (y > -10)) &
-                    (np.abs(x) > 7.5) &
-                    (np.abs(x) < 12.5)
-                )
-                wnd_2 = np.where(
-                    ((y < 10) & (y > 8)) &
-                    (np.abs(x) > 9) &
-                    (np.abs(x) < 11)
-                )
+                wnd_5 = np.where(((y < -5) & (y > -10))
+                                 & (np.abs(x) > 7.5)
+                                 & (np.abs(x) < 12.5))
+                wnd_2 = np.where(((y < 10) & (y > 8))
+                                 & (np.abs(x) > 9)
+                                 & (np.abs(x) < 11))
 
             self.transmission[wnd_5] = np.sqrt(1e-3)
             self.transmission[wnd_2] = np.sqrt(1e-3)
@@ -1426,7 +1406,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
                 )
                 # cut out central region to match the OPD, which is hard coded
                 # to 1024
-                self.amplitude = self.amplitude[256 : 256 + 1024, 256 : 256 + 1024]
+                self.amplitude = self.amplitude[256: 256 + 1024, 256: 256 + 1024]
             elif self.instrument.name == 'MIRI':
                 self.amplitude = fits.getdata(
                     os.path.join(
@@ -2029,7 +2009,7 @@ class NIRCamFieldDependentWeakLens(poppy.OpticalElement):
 
         self.ztable_full = None
 
-        ## REFERENCE:
+        # REFERENCE:
         # NIRCam weak lenses, values from WSS config file, PRDOPSFLT-027
         #                  A         B
         # WLP4_diversity =   8.27309     8.3443         diversity in microns

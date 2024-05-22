@@ -579,7 +579,6 @@ def display_psf_grid(grid, zoom_in=True, figsize=(14, 12), scale_range=1e-4, dif
         if isinstance(t, tuple):
             return (int(t[0]), int(t[1]))
 
-
     def show_grid_helper(grid, data, title='Grid of PSFs', vmax=0, vmin=0, scale='log'):
         npsfs = grid.data.shape[0]
         n = int(np.sqrt(npsfs))

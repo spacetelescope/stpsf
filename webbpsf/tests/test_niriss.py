@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from .. import webbpsf_core
@@ -6,20 +5,24 @@ from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset,
 
 # ------------------    NIRISS Tests    ----------------------------
 
+
 def test_niriss():
     return generic_output_test('NIRISS')
+
 
 def test_niriss_source_offset_00():
     return do_test_source_offset('NIRISS', theta=0.0, monochromatic=3.0e-6)
 
+
 def test_niriss_source_offset_45():
     return do_test_source_offset('NIRISS', theta=45.0, monochromatic=3.0e-6)
 
+
 def test_niriss_set_siaf():
-    return  do_test_set_position_from_siaf(
-                'NIRISS',
-                ['NIS_FP1MIMF', 'NIS_SUB64', 'NIS_SOSSFULL', 'NIS_SOSSTA', 'NIS_AMI1']
-            )
+    return do_test_set_position_from_siaf(
+        'NIRISS',
+        ['NIS_FP1MIMF', 'NIS_SUB64', 'NIS_SOSSFULL', 'NIS_SOSSTA', 'NIS_AMI1']
+    )
 
 
 def test_niriss_auto_pupil():

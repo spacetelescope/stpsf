@@ -14,6 +14,7 @@ _log.addHandler(logging.NullHandler())
 
 # ------------------    MIRI Tests    ----------------------------
 
+
 def test_miri():
     return generic_output_test('MIRI')
 
@@ -27,15 +28,15 @@ def test_miri_source_offset_45():
 
 
 def test_miri_set_siaf():
-    return  do_test_set_position_from_siaf(
-                'MIRI',
-                [
-                    'MIRIM_SUB128',
-                    'MIRIM_FP1MIMF',
-                    'MIRIM_BRIGHTSKY',
-                    'MIRIM_TASLITLESSPRISM',
-                ],
-            )
+    return do_test_set_position_from_siaf(
+        'MIRI',
+        [
+            'MIRIM_SUB128',
+            'MIRIM_FP1MIMF',
+            'MIRIM_BRIGHTSKY',
+            'MIRIM_TASLITLESSPRISM',
+        ],
+    )
 
 
 def do_test_miri_fqpm(
@@ -110,7 +111,7 @@ def test_miri_slit_apertures():
     assert np.isclose(miri._tel_coords()[1].to_value(u.arcsec), ap.V3Ref)
 
     # Test we can switch back from SLIT to regular type apertures without any error
-    miri.set_position_from_aperture_name("MIRIM_SLIT")
+    miri.set_position_from_aperture_name('MIRIM_SLIT')
     miri.set_position_from_aperture_name('MIRIM_FULL')
 
 
@@ -135,6 +136,7 @@ def test_miri_nonsquare_detector():
     miri.detector_position = (1023, 1031)  # recall this is X, Y order
     assert miri.detector_position == (1023, 1031)
 
+
 def test_mode_switch():
     """Test switching between imaging and IFU modes, and switching IFU bands
     Also checks this works to switch aperturenane, and conversely setting aperturename switches mode if needed.
@@ -147,23 +149,22 @@ def test_mode_switch():
     # Explicitly switch mode to IFU
     miri.mode = 'IFU'
     assert 'IFU' in miri.aperturename
-    assert miri.detector =='MIRIFUSHORT'
+    assert miri.detector == 'MIRIFUSHORT'
     assert miri.aperturename.startswith('MIRIFU_CH')
     assert miri._rotation != imager_rotation
     assert miri.pixelscale > imager_pixelscale
     # Explicitly switch back to imaging
     miri.mode = 'imaging'
     assert 'IFU' not in miri.aperturename
-    assert miri.detector =='MIRIM'
+    assert miri.detector == 'MIRIM'
     assert miri.aperturename.startswith('MIRIM_')
     assert miri._rotation == imager_rotation
     assert miri.pixelscale == imager_pixelscale
 
-
-    # Implicitly switch to IFU 
+    # Implicitly switch to IFU
     miri.set_position_from_aperture_name('MIRIFU_CHANNEL3B')
     assert 'IFU' in miri.aperturename
-    assert miri.detector =='MIRIFULONG'
+    assert miri.detector == 'MIRIFULONG'
     assert miri.aperturename == 'MIRIFU_CHANNEL3B'
     assert miri._rotation != imager_rotation
     assert miri.pixelscale > imager_pixelscale
@@ -172,7 +173,7 @@ def test_mode_switch():
     # LRS is an odd case, SLIT aper type but operates like in imaging mode
     miri.set_position_from_aperture_name('MIRIM_SLIT')
     assert 'IFU' not in miri.aperturename
-    assert miri.detector =='MIRIM'
+    assert miri.detector == 'MIRIM'
     assert miri.aperturename.startswith('MIRIM_')
     assert miri._rotation == imager_rotation
     assert miri.pixelscale == imager_pixelscale
@@ -180,7 +181,7 @@ def test_mode_switch():
     # And back to IFU again:
     miri.mode = 'IFU'
     assert 'IFU' in miri.aperturename
-    assert miri.detector =='MIRIFUSHORT'
+    assert miri.detector == 'MIRIFUSHORT'
     assert miri.aperturename.startswith('MIRIFU_CH')
     assert miri._rotation != imager_rotation
     assert miri.pixelscale > imager_pixelscale
@@ -189,30 +190,29 @@ def test_mode_switch():
     miri.band = '4C'
     assert miri.detector == 'MIRIFULONG'
     assert miri.aperturename == 'MIRIFU_CHANNEL4C'
-    assert miri.pixelscale > 3*imager_pixelscale
+    assert miri.pixelscale > 3 * imager_pixelscale
 
     miri.band = '2A'
     assert miri.detector == 'MIRIFUSHORT'
     assert miri.aperturename == 'MIRIFU_CHANNEL2A'
-    assert imager_pixelscale < miri.pixelscale < 2*imager_pixelscale
-
+    assert imager_pixelscale < miri.pixelscale < 2 * imager_pixelscale
 
     # Test also we can switch to LRS, and then back to a regular imaging aperture
     # this tests another edge case for aperture and pixel scale switches
     miri.set_position_from_aperture_name('MIRIM_SLIT')
     assert 'IFU' not in miri.aperturename
-    assert miri.detector =='MIRIM'
+    assert miri.detector == 'MIRIM'
     assert miri.aperturename == 'MIRIM_SLIT'
     assert miri.pixelscale == imager_pixelscale
     miri.set_position_from_aperture_name('MIRIM_FULL')
     assert 'IFU' not in miri.aperturename
-    assert miri.detector =='MIRIM'
+    assert miri.detector == 'MIRIM'
     assert miri.aperturename == 'MIRIM_FULL'
     assert miri.pixelscale == imager_pixelscale
 
 
 def test_IFU_wavelengths():
-    """ Test computing the wqvelength sampling for a sim IFU cube """
+    """Test computing the wqvelength sampling for a sim IFU cube"""
     miri = webbpsf_core.MIRI()
     # check mode swith to IFU
     miri.mode = 'IFU'

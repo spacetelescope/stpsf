@@ -77,6 +77,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
     configuration can be done by editing the :ref:`SpaceTelescopeInstrument.options` dictionary, either by
     passing options to ``__init__`` or by directly editing the dict afterwards.
     """
+
     telescope = 'Generic Space Telescope'
     options = {}  # options dictionary
     """ A dictionary capable of storing other arbitrary options, for extensibility. The following are all optional, and
@@ -170,7 +171,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         self.name = name
 
         self._WebbPSF_basepath, self._data_version = utils.get_webbpsf_data_path(
-            data_version_min=DATA_VERSION_MIN, return_version=True)
+            data_version_min=DATA_VERSION_MIN, return_version=True
+        )
 
         self._datapath = os.path.join(self._WebbPSF_basepath, self.name)
         self._image_mask = None
@@ -300,7 +302,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         if x < 0 or y < 0:
             raise ValueError('Detector pixel coordinates must be nonnegative integers')
         if isinstance(self._detector_npixels, tuple):
-            det_npix_y, det_npix_x = self._detector_npixels  # A tuple has been provided for a non-square detector with different Y and X dimensions
+            # A tuple has been provided for a non-square detector with different Y and X dimensions
+            det_npix_y, det_npix_x = self._detector_npixels
         else:
             det_npix_y = det_npix_x = self._detector_npixels  # same dimensions in both X and Y
 
@@ -386,8 +389,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         _log.info('Creating optical system model:')
 
-        self._extra_keywords = OrderedDict()  # Place to save info we later want to put
-                                              # into the FITS header for each PSF.
+        self._extra_keywords = OrderedDict()  # Place to save info we later want to put into the FITS header for each PSF.
 
         if options is None:
             options = self.options
@@ -396,8 +398,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         _log.debug('Oversample: %d  %d ' % (fft_oversample, detector_oversample))
         optsys = poppy.OpticalSystem(
-            name='{telescope}+{instrument}'.format(telescope=self.telescope, instrument=self.name),
-            oversample=fft_oversample
+            name='{telescope}+{instrument}'.format(telescope=self.telescope, instrument=self.name), oversample=fft_oversample
         )
         # For convenience offsets can be given in cartesian or radial coords
         if 'source_offset_x' in options or 'source_offset_y' in options:
@@ -500,20 +501,20 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         else:
             pass
 
-        optsys.add_detector(self.pixelscale,
-                            fov_pixels=fov_pixels,
-                            oversample=detector_oversample,
-                            name=self.name + " detector")
+        optsys.add_detector(
+            self.pixelscale,
+            fov_pixels=fov_pixels,
+            oversample=detector_oversample,
+            name=self.name + ' detector'
+        )
 
         # ---  invoke semi-analytic coronagraphic propagation
         if trySAM and not ('no_sam' in self.options and self.options['no_sam']):
             # if this flag is set, try switching to SemiAnalyticCoronagraph mode.
             _log.info('Trying to invoke switch to Semi-Analytic Coronagraphy algorithm')
             try:
-                SAM_optsys = poppy.SemiAnalyticCoronagraph(optsys,
-                                                           oversample=fft_oversample,
-                                                           occulter_box=SAM_box_size)
-                _log.info("SAC OK")
+                SAM_optsys = poppy.SemiAnalyticCoronagraph(optsys, oversample=fft_oversample, occulter_box=SAM_box_size)
+                _log.info('SAC OK')
                 return SAM_optsys
             except ValueError as err:
                 _log.warning(
@@ -726,10 +727,11 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         if single_psf_centered is True:
             if isinstance(self._detector_npixels, tuple):
-                det_npix_y, det_npix_x = self._detector_npixels  # A tuple has been provided for a non-square detector with different Y and X dimensions
+                # A tuple has been provided for a non-square detector with different Y and X dimensions
+                det_npix_y, det_npix_x = self._detector_npixels
             else:
                 det_npix_y = det_npix_x = self._detector_npixels  # same dimensions in both X and Y
-            psf_location = ( int(det_npix_x - 1) // 2, int(det_npix_y - 1) // 2)  # center pt
+            psf_location = (int(det_npix_x - 1) // 2, int(det_npix_y - 1) // 2)  # center pt
         else:
             psf_location = self.detector_position[::-1]  # (y,x)
 
@@ -753,7 +755,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         return gridmodel
 
 
-#######  JWInstrument classes  #####
+#  JWInstrument classes  #####
 
 
 @utils.combine_docstrings
@@ -976,14 +978,20 @@ class JWInstrument(SpaceTelescopeInstrument):
                 )
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
-                    _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {detector_apername}'
+                    debug_message = (
+                        f'Pixelscale updated to {self.pixelscale} '
+                        f'based on average X+Y SciScale at SIAF aperture {detector_apername}'
                     )
-            elif ap.AperType == 'COMPOUND' and self.name=='MIRI':
+                    _log.debug(debug_message)
+            elif ap.AperType == 'COMPOUND' and self.name == 'MIRI':
                 # For MIRI, many of the relevant IFU apertures are of COMPOUND type.
                 has_custom_pixelscale = False  # custom scales not supported for MIRI IFU (yet?)
                 # Unlike NIRSpec, there simply do not exist full-detector SIAF apertures for the MIRI IFU detectors
-                _log.info(f'Aperture {value} is of type COMPOUND for MIRI; There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.')
+                info_message = (
+                    f'Aperture {value} is of type COMPOUND for MIRI; '
+                    'There do not exist corresponding SIAF apertures, so we ignore setting detector geometry.'
+                )
+                _log.info(info_message)
 
                 # Now apply changes:
                 self._aperturename = value
@@ -991,24 +999,29 @@ class JWInstrument(SpaceTelescopeInstrument):
                 self._detector_geom_info = DetectorGeometry(self.siaf, self._aperturename)
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(value)
-                    _log.debug( f"Pixelscale updated to {self.pixelscale} based on IFU cubepars for {value}")
+                    _log.debug(f'Pixelscale updated to {self.pixelscale} based on IFU cubepars for {value}')
 
             else:
                 if self.detector not in value:
-                    raise ValueError(
+                    error_message = (
                         f'Aperture name {value} does not match currently selected detector {self.detector}. '
                         f'Change detector attribute first, then set desired aperture.'
                     )
+                    raise ValueError(error_message)
 
                 # First, check some info from current settings, wich we will use below as part of auto pixelscale code
                 # The point is to check if the pixel scale is set to a custom or default value,
                 # and if it's custom then don't override that.
-                # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
-                # and also check first that it's not a SLIT type aperture, for which the usual _get_pixelscale_from_apername won't work.
-                # and also check neither current nor requested aperture are of type SLIT since that doesn't have a pixelscale to get.
+                # Note:
+                #     check self._aperturename first to account for the edge case when
+                #     this is called from __init__ before _aperturename is set
+                #     and also check first that it's not a SLIT type aperture,
+                #     for which the usual _get_pixelscale_from_apername won't work.
+                #     and also check neither current nor requested aperture are of type
+                #     SLIT since that doesn't have a pixelscale to get.
                 has_custom_pixelscale = (
                     self._aperturename
-                    and  (self.siaf[self._aperturename].AperType != 'SLIT')
+                    and (self.siaf[self._aperturename].AperType != 'SLIT')
                     and (self.pixelscale != self._get_pixelscale_from_apername(self._aperturename))
                     and ap.AperType != 'SLIT'
                 )
@@ -1025,7 +1038,8 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                        f'Pixelscale updated to {self.pixelscale}',
+                        f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
 
     def _tel_coords(self):
@@ -1039,11 +1053,14 @@ class JWInstrument(SpaceTelescopeInstrument):
         if self._detector_geom_info.aperture.AperType == 'SLIT':
             # These apertures don't map directly to particular detector position in the usual way
             # Return coords for center of the aperture reference location
-            return np.asarray((self._detector_geom_info.aperture.V2Ref,
-                               self._detector_geom_info.aperture.V3Ref)) / 60 * units.arcmin
+            return (
+                np.asarray((self._detector_geom_info.aperture.V2Ref, self._detector_geom_info.aperture.V3Ref))
+                / 60
+                * units.arcmin
+            )
         elif self._detector_geom_info.aperture.AperType == 'COMPOUND':
             # handle MIRI MRS apertures, which don't have V2Ref,V3Ref defined, but this works:
-            return np.asarray(self.siaf[self.aperturename].reference_point('tel') ) / 60 * units.arcmin
+            return np.asarray(self.siaf[self.aperturename].reference_point('tel')) / 60 * units.arcmin
         else:
             return self._detector_geom_info.pix2angle(self.detector_position[0], self.detector_position[1])
 
@@ -1084,7 +1101,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
             self.aperturename = aperture_name
 
-            if (self.name == 'NIRSpec' or self.name=='MIRI') and ap.AperType == 'SLIT':
+            if (self.name == 'NIRSpec' or self.name == 'MIRI') and ap.AperType == 'SLIT':
                 # NIRSpec slit apertures need some separate handling, since they don't map directly to detector pixels
                 # In this case the detector position is not uniquely defined, but we ensure to get reasonable values by
                 # using one of the full-detector NIRspec apertures
@@ -1255,7 +1272,9 @@ class JWInstrument(SpaceTelescopeInstrument):
                         # therefore omit apply_distortion if a SLIT aperture is selected.
                         psf_siaf = result
                     psf_siaf_rot = detectors.apply_miri_scattering(psf_siaf)  # apply scattering effect
-                    psf_distorted = detectors.apply_detector_charge_diffusion(psf_siaf_rot,options)  # apply detector charge transfer model
+                    psf_distorted = detectors.apply_detector_charge_diffusion(
+                        psf_siaf_rot, options
+                    )  # apply detector charge transfer model
                 else:
                     # there is not yet any distortion calibration for the IFU, and
                     # we don't want to apply charge diffusion directly here
@@ -1442,7 +1461,9 @@ class JWInstrument(SpaceTelescopeInstrument):
         elif local_options['jitter'].lower() == 'pcs=coarse_like_itm':
             # JWST coarse point, assumptions in ITM
             # Acton says:
-            #  it is actually 0.4 for a boresight error, 0.4 smear, and 0.2 jitter. Boresight error is a random term for image placement, smear is mostly a linear uniform blur, and jitter is gaussian.
+            #  it is actually 0.4 for a boresight error, 0.4 smear, and 0.2 jitter.
+            #  Boresight error is a random term for image placement,
+            #  smear is mostly a linear uniform blur, and jitter is gaussian.
 
             # First we do the fast jitter part
             local_options['jitter_sigma'] = 0.2
@@ -1598,7 +1619,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         filename : str
             Name of OPD file to load
         output_path : str
-            Downloaded OPD are saved in this location. This option is convinient for STScI users using /grp/jwst/ote/webbpsf-data/.
+            Downloaded OPD are saved in this location.
+            This option is convinient for STScI users using /grp/jwst/ote/webbpsf-data/.
             Default is $WEBBPSF_PATH/MAST_JWST_WSS_OPDs
         backout_si_wfe : bool
             Subtract model for science instrument WFE at the sensing field point? Generally this should be true
@@ -1833,7 +1855,6 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         """
 
-
         nwavelengths = len(wavelengths)
 
         # Set up cube and initialize structure based on PSF at a representative wavelength
@@ -1842,9 +1863,13 @@ class JWInstrument(SpaceTelescopeInstrument):
         MIN_REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
         if ref_wave < MIN_REF_WAVE:
             ref_wave = MIN_REF_WAVE
-            _log.info(f"Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns; minimum set to avoid phase wrap of segment C3 surface.")
+            log_message = (
+                f'Performing initial propagation at minimum wavelength {MIN_REF_WAVE*1e6:.2f} microns; '
+                'minimum set to avoid phase wrap of segment C3 surface.'
+            )
+            _log.info(log_message)
         else:
-            _log.info(f"Performing initial propagation at average wavelength {ref_wave*1e6:.2f} microns.")
+            _log.info(f'Performing initial propagation at average wavelength {ref_wave*1e6:.2f} microns.')
 
         psf, waves = self.calc_psf(*args, monochromatic=ref_wave, return_intermediates=True, **kwargs)
         from copy import deepcopy
@@ -1865,7 +1890,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         cubefast[ext].data[0] = psf[ext].data
         cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
 
-        ### Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
+        # Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
             import time
 
@@ -1898,8 +1923,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
-        ### OPTIONAL
-        ### Also do the slower traditional way for comparison / debugging tests
+        # OPTIONAL
+        # Also do the slower traditional way for comparison / debugging tests
 
         if compare_methods:
             psf2, waves2 = quickosys.calc_psf(wavelengths[0], return_intermediates=True)
@@ -1933,21 +1958,20 @@ class JWInstrument(SpaceTelescopeInstrument):
             return cube, cubefast, waves, waves2  # return extra stuff for compariosns
 
         if outfile is not None:
-            cubefast[0].header["FILENAME"] = (os.path.basename(outfile), "Name of this file")
+            cubefast[0].header['FILENAME'] = (os.path.basename(outfile), 'Name of this file')
             cubefast.writeto(outfile, overwrite=True)
-            _log.info("Saved result to " + outfile)
+            _log.info('Saved result to ' + outfile)
 
         return cubefast
 
-class JWInstrument_with_IFU(JWInstrument, ABC):
-    """ Subclass which adds some additional infrastructure for IFU sims"""
 
+class JWInstrument_with_IFU(JWInstrument, ABC):
+    """Subclass which adds some additional infrastructure for IFU sims"""
 
     def __init__(self, *args, **kwargs):
-        super().__init__( *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # dict of modes and default aperture names
-        self._modes_list = {'imaging': None,
-                            'IFU': None}
+        self._modes_list = {'imaging': None, 'IFU': None}
         self._mode = 'imaging'
 
         self._IFU_bands_cubepars = {}  # placeholder, subclass should implement
@@ -1956,7 +1980,6 @@ class JWInstrument_with_IFU(JWInstrument, ABC):
     def mode(self):
         """Currently selected instrument major mode, imaging or IFU"""
         return self._mode
-
 
     @mode.setter
     def mode(self, value):
@@ -1972,10 +1995,9 @@ class JWInstrument_with_IFU(JWInstrument, ABC):
         pass
 
     def get_IFU_wavelengths(self, nlambda=None):
-        """Return an array of wavelengths spanning the currently selected IFU sub-band
-        """
+        """Return an array of wavelengths spanning the currently selected IFU sub-band"""
         if self.mode != 'IFU':
-            raise RuntimeError("This method only applies in IFU mode")
+            raise RuntimeError('This method only applies in IFU mode')
         spaxelsize, wavestep, minwave, maxwave = self._IFU_bands_cubepars[self.band]
         if nlambda:
             # Return the specified number of wavelengths, across that band
@@ -1987,7 +2009,7 @@ class JWInstrument_with_IFU(JWInstrument, ABC):
 
 
 class MIRI(JWInstrument_with_IFU):
-    """ A class modeling the optics of MIRI, the Mid-InfraRed Instrument.
+    """A class modeling the optics of MIRI, the Mid-InfraRed Instrument.
 
     Relevant attributes include `filter`, `image_mask`, and `pupil_mask`.
 
@@ -2013,10 +2035,13 @@ class MIRI(JWInstrument_with_IFU):
         # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
         # Modes and default SIAF apertures for each
-        self._modes_list = {'imaging': 'MIRIM_FULL',
-                            'IFU': 'MIRIFU_CHANNEL1A'}
+        self._modes_list = {
+            'imaging': 'MIRIM_FULL',
+            'IFU': 'MIRIFU_CHANNEL1A'
+        }
 
-        # Coordinate system note: The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
+        # Coordinate system note:
+        # The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
         # and is thus flipped in Y relative to the V frame entrance pupil. Therefore flip sign of pupil_shift_y
         self.options['pupil_shift_x'] = -0.0068  # In flight measurement. See Wright, Sabatke, Telfer 2022, Proc SPIE
         self.options['pupil_shift_y'] = -0.0110  # Sign intentionally flipped relative to that paper!! See note above.
@@ -2041,45 +2066,48 @@ class MIRI(JWInstrument_with_IFU):
         }
         # The above tuples give the pixel resolution (first the 'alpha' direction, perpendicular to the slice,
         # then the 'beta' direction, along the slice).
-        # The pixels are not square.  See https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument/miri-observing-modes/miri-medium-resolution-spectroscopy
+        # The pixels are not square. See:
+        # https://jwst-docs.stsci.edu/jwst-mid-infrared-instrument/miri-observing-modes/miri-medium-resolution-spectroscopy
 
         # Mappings between alternate names used for MRS subbands
-        self._MRS_dichroic_to_subband = {"SHORT": "A", "MEDIUM": "B", "LONG": "C"}
-        self._MRS_subband_to_dichroic = {"A": "SHORT", "B": "MEDIUM", "C": "LONG"}
+        self._MRS_dichroic_to_subband = {'SHORT': 'A', 'MEDIUM': 'B', 'LONG': 'C'}
+        self._MRS_subband_to_dichroic = {'A': 'SHORT', 'B': 'MEDIUM', 'C': 'LONG'}
 
         self._band = None
-#        self._MRS_bands = {"1A": [4.887326748103221, 5.753418963216559],   # Values provided by Polychronis Patapis
-#                           "1B": [5.644625711181792, 6.644794583147869],   # To-do: obtain from CRDS pipeline refs
-#                           "1C": [6.513777066360325, 7.669147994055998],
-#                           "2A": [7.494966046398437, 8.782517027772244],
-#                           "2B": [8.651469658142522, 10.168811217793243],
-#                           "2C": [9.995281242621394, 11.73039280033565],
-#                           "3A": [11.529088518317131, 13.491500288051483],
-#                           "3B": [13.272122736770127, 15.550153182343314],
-#                           "3C": [15.389530615108631, 18.04357852656418],
-#                           "4A": [17.686540162850203, 20.973301482912323],
-#                           "4B": [20.671069749545193, 24.476094964546686],
-#                           "4C": [24.19608171436692, 28.64871057821349]}
+        #        self._MRS_bands = {"1A": [4.887326748103221, 5.753418963216559],   # Values provided by Polychronis Patapis
+        #                           "1B": [5.644625711181792, 6.644794583147869],   # To-do: obtain from CRDS pipeline refs
+        #                           "1C": [6.513777066360325, 7.669147994055998],
+        #                           "2A": [7.494966046398437, 8.782517027772244],
+        #                           "2B": [8.651469658142522, 10.168811217793243],
+        #                           "2C": [9.995281242621394, 11.73039280033565],
+        #                           "3A": [11.529088518317131, 13.491500288051483],
+        #                           "3B": [13.272122736770127, 15.550153182343314],
+        #                           "3C": [15.389530615108631, 18.04357852656418],
+        #                           "4A": [17.686540162850203, 20.973301482912323],
+        #                           "4B": [20.671069749545193, 24.476094964546686],
+        #                           "4C": [24.19608171436692, 28.64871057821349]}
         self._IFU_bands_cubepars = {  # pipeline data cube parameters
-                # Taken from ifucubepars_table in CRDS file 'jwst_miri_cubepar_0014.fits', current as of 2023 December
-                # Each tuple gives pipeline spaxelsize, spectralstep, wave_min, wave_max
-                '1A': (0.13, 0.0008, 4.90, 5.74),
-                '1B': (0.13, 0.0008, 5.66, 6.63),
-                '1C': (0.13, 0.0008, 6.53, 7.65),
-                '2A': (0.17, 0.0013, 7.51, 8.77),
-                '2B': (0.17, 0.0013, 8.67, 10.13),
-                '2C': (0.17, 0.0013, 10.01, 11.70),
-                '3A': (0.20, 0.0025, 11.55, 13.47),
-                '3B': (0.20, 0.0025, 13.34, 15.57),
-                '3C': (0.20, 0.0025, 15.41, 17.98),
-                '4A': (0.35, 0.0060, 17.70, 20.95),
-                '4B': (0.35, 0.0060, 20.69, 24.48),
-                '4C': (0.35, 0.0060, 24.40, 28.70),
+            # Taken from ifucubepars_table in CRDS file 'jwst_miri_cubepar_0014.fits', current as of 2023 December
+            # Each tuple gives pipeline spaxelsize, spectralstep, wave_min, wave_max
+            '1A': (0.13, 0.0008, 4.90, 5.74),
+            '1B': (0.13, 0.0008, 5.66, 6.63),
+            '1C': (0.13, 0.0008, 6.53, 7.65),
+            '2A': (0.17, 0.0013, 7.51, 8.77),
+            '2B': (0.17, 0.0013, 8.67, 10.13),
+            '2C': (0.17, 0.0013, 10.01, 11.70),
+            '3A': (0.20, 0.0025, 11.55, 13.47),
+            '3B': (0.20, 0.0025, 13.34, 15.57),
+            '3C': (0.20, 0.0025, 15.41, 17.98),
+            '4A': (0.35, 0.0060, 17.70, 20.95),
+            '4B': (0.35, 0.0060, 20.69, 24.48),
+            '4C': (0.35, 0.0060, 24.40, 28.70),
         }
 
-        self._detectors = {'MIRIM': 'MIRIM_FULL',  # Mapping from user-facing detector names to SIAF entries.
-                           'MIRIFUSHORT': 'MIRIFU_CHANNEL1A',   # only applicable in IFU mode
-                           'MIRIFULONG': 'MIRIFU_CHANNEL3A'}    # ditto
+        self._detectors = {
+            'MIRIM': 'MIRIM_FULL',  # Mapping from user-facing detector names to SIAF entries.
+            'MIRIFUSHORT': 'MIRIFU_CHANNEL1A',  # only applicable in IFU mode
+            'MIRIFULONG': 'MIRIFU_CHANNEL3A',
+        }  # ditto
         self.detector = 'MIRIM'
         self._detector_npixels = (1032, 1024)  # MIRI detector is not square
         self.detector_position = (512, 512)
@@ -2203,7 +2231,8 @@ class MIRI(JWInstrument_with_IFU):
             )
             if self.options.get('lrs_use_mft', True):
                 # Force the LRS slit to be rasterized onto a fine spatial sampling with gray subpixels
-                # let's do a 3 arcsec box, sampled to 0.02 arcsec, with gray subpixels; note poppy does not support non-square wavefront here
+                # let's do a 3 arcsec box, sampled to 0.02 arcsec, with gray subpixels;
+                # note poppy does not support non-square wavefront here
                 lrs_pixscale = 0.02  # implicitly u.arcsec/u.pixel
                 sampling = poppy.Wavefront(npix=int(5.5 / lrs_pixscale), pixelscale=lrs_pixscale)
                 lrs_slit = poppy.fixed_sampling_optic(lrs_slit, sampling, oversample=8)
@@ -2345,10 +2374,10 @@ class MIRI(JWInstrument_with_IFU):
         if 'MIRIFU' in apername:
             if apername.startswith('MIRIFU_CHANNEL'):
                 band = apername[-2:]
-                spaxelsize, _, _, _= self._IFU_bands_cubepars[band]
+                spaxelsize, _, _, _ = self._IFU_bands_cubepars[band]
                 return spaxelsize
             else:
-                raise RuntimeError(f"Not sure how to determine pixelscale for {apername}")
+                raise RuntimeError(f'Not sure how to determine pixelscale for {apername}')
         else:
             return super()._get_pixelscale_from_apername(apername)
 
@@ -2382,12 +2411,11 @@ class MIRI(JWInstrument_with_IFU):
             avg_V3IdlYangle = np.rad2deg((np.arctan2(dy, -dx) + np.arctan2(dy2, -dx2)) / 2)
             return avg_V3IdlYangle
         else:
-            raise ValueError(f"Unexpected/invalid apername for MIRI: {apername}")
-
+            raise ValueError(f'Unexpected/invalid apername for MIRI: {apername}')
 
     @JWInstrument_with_IFU.aperturename.setter
     def aperturename(self, value):
-        """Set aperturename, also update the rotation for MIRIM vs. IFU channel """
+        """Set aperturename, also update the rotation for MIRIM vs. IFU channel"""
         # apply the provided aperture name
         # Note, the syntax for calling a parent class property setter is... painful:
         super(MIRI, type(self)).aperturename.fset(self, value)
@@ -2402,7 +2430,6 @@ class MIRI(JWInstrument_with_IFU):
             if self.band != value[-2:]:
                 self.band = value[-2:]
             self._detector = 'MIRIFULONG' if self.band[0] in ['3', '4'] else 'MIRIFUSHORT'
-
 
     @property
     def band(self):
@@ -2421,27 +2448,27 @@ class MIRI(JWInstrument_with_IFU):
 
         if value in self._IFU_bands_cubepars.keys():
             self._band = value
-            #self._slice_width = self._IFU_pixelscale[f"Ch{self._band[0]}"][0]
+            # self._slice_width = self._IFU_pixelscale[f"Ch{self._band[0]}"][0]
             self.aperturename = 'MIRIFU_CHANNEL' + value
             # setting aperturename will also auto update self._rotation
-            #self._rotation = self.MRS_rotation[self._band]
+            # self._rotation = self.MRS_rotation[self._band]
             # update filter, image_mask and detector
-            #self._filter = "D"+ self.subband_to_dichroic[self._band[1]]
-            #self._image_mask = "MIRI-IFU_" + self._band[0]
-            #self._update_detector()
-        #if not (self.MRSbands[self.band][0] <= self._wavelength <= self.MRSbands[self.band][1]):
+            # self._filter = "D"+ self.subband_to_dichroic[self._band[1]]
+            # self._image_mask = "MIRI-IFU_" + self._band[0]
+            # self._update_detector()
+        # if not (self.MRSbands[self.band][0] <= self._wavelength <= self.MRSbands[self.band][1]):
         #    self._wavelength = np.mean(self.MRSbands[self.band])
         else:
-            raise ValueError(f"Not a valid MRS band: {value}")
+            raise ValueError(f'Not a valid MRS band: {value}')
 
     def _calc_psf_format_output(self, result, options):
-        """ Format output HDUList. In particular, add some extra metadata if in IFU mode"""
+        """Format output HDUList. In particular, add some extra metadata if in IFU mode"""
         super()._calc_psf_format_output(result, options)
-        if self.mode =='IFU':
+        if self.mode == 'IFU':
             n_exts = len(result)
             for ext in np.arange(n_exts):
-                result[ext].header['MODE'] = ("IFU", 'This is a MIRI MRS IFU mode simulation')
-                result[ext].header['FILTER'] = ('MIRIFU_CHANNEL'+self.band, 'MIRI IFU sub-band simulated')
+                result[ext].header['MODE'] = ('IFU', 'This is a MIRI MRS IFU mode simulation')
+                result[ext].header['FILTER'] = ('MIRIFU_CHANNEL' + self.band, 'MIRI IFU sub-band simulated')
                 result[ext].header['BAND'] = (self.band, 'MIRI IFU sub-band simulated')
 
 
@@ -2598,7 +2625,8 @@ class NIRCam(JWInstrument):
                 else:
                     apname = 'NRCA2_FULL_WEDGE_RND' if self.module == 'A' else 'NRCB1_MASK210R'
                     _log.debug(
-                        f'Inferred {apname} from coronagraph Lyot mask selected, and channel={self.channel}, module={self.module}'
+                        f'Inferred {apname} from coronagraph Lyot mask selected,',
+                        f'and channel={self.channel}, module={self.module}'
                     )
         else:
             apname = self._detectors[self._detector]
@@ -2641,9 +2669,11 @@ class NIRCam(JWInstrument):
             if newval is not None:
                 # Set alternative aperture name as bandaid to continue
                 value = newval
-                _log.warning(
-                    'Possibly running an old version of pysiaf missing some NIRCam apertures. Continuing with old aperture names.'
+                warning_message = (
+                    'Possibly running an old version of pysiaf missing some NIRCam apertures. '
+                    'Continuing with old aperture names.'
                 )
+                _log.warning(warning_message)
             else:
                 return
 
@@ -2652,7 +2682,8 @@ class NIRCam(JWInstrument):
             # First, check some info from current settings, wich we will use below as part of auto pixelscale code
             # The point is to check if the pixel scale is set to a custom or default value,
             # and if it's custom then don't override that.
-            # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
+            # Note, check self._aperturename first to account for the edge case when
+            # this is called from __init__ before _aperturename is set
             has_custom_pixelscale = self._aperturename and (
                 self.pixelscale != self._get_pixelscale_from_apername(self._aperturename)
             )
@@ -2675,9 +2706,11 @@ class NIRCam(JWInstrument):
 
             if not has_custom_pixelscale:
                 self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
-                _log.debug(
-                    f'Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                debug_message = (
+                    f'Pixelscale updated to {self.pixelscale} '
+                    f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                 )
+                _log.debug(debug_message)
 
     @property
     def module(self):
@@ -2702,7 +2735,7 @@ class NIRCam(JWInstrument):
         """Set detector, including reloading the relevant info from SIAF"""
         if value.upper().endswith('LONG'):
             # treat NRCALONG and NRCBLONG as synonyms to NRCA5 and NRCB5
-            value = value[:-4]+ '5'
+            value = value[:-4] + '5'
         if value.upper() not in self.detector_list:
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
         # set the channel based on the requested detector
@@ -2916,7 +2949,7 @@ class NIRCam(JWInstrument):
             (self.pupil_mask is not None)
             and ('LENS' not in self.pupil_mask.upper())
             and ('WL' not in self.pupil_mask.upper())
-            and ('DHS'  not in self.pupil_mask.upper())
+            and ('DHS' not in self.pupil_mask.upper())
         ):
             # no occulter selected but coronagraphic mode anyway. E.g. off-axis PSF
             # but don't add this image plane for weak lens or DHS calculations
@@ -3025,8 +3058,15 @@ class NIRCam(JWInstrument):
         elif self.pupil_mask is None and self.image_mask is not None:
             optsys.add_pupil(poppy.ScalarTransmission(name='No Lyot Mask Selected!'), index=3)
         elif self.pupil_mask.startswith('DHS'):
-            optsys.add_pupil(transmission=self._datapath + f"/optics/NIRCam_{self.pupil_mask}_npix1024.fits.gz", name=self.pupil_mask,
-                             flip_y=True, shift_x=shift_x, shift_y=shift_y, rotation=rotation, index=3)
+            optsys.add_pupil(
+                transmission=self._datapath + f'/optics/NIRCam_{self.pupil_mask}_npix1024.fits.gz',
+                name=self.pupil_mask,
+                flip_y=True,
+                shift_x=shift_x,
+                shift_y=shift_y,
+                rotation=rotation,
+                index=3,
+            )
             optsys.planes[3].wavefront_display_hint = 'intensity'
 
         else:
@@ -3091,11 +3131,13 @@ class NIRSpec(JWInstrument_with_IFU):
         self.pixelscale = 0.10435  # Average over both detectors.  SIAF PRDOPSSOC-059, 2022 Dec
         # Microshutters are 0.2x0.46 but we ignore that here.
         self._rotation = 138.5  # Average for both detectors in SIAF PRDOPSSOC-059
-                                # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
+        # This is rotation counterclockwise; when summed with V3PA it will yield the Y axis PA on sky
 
         # Modes and default SIAF apertures for each
-        self._modes_list = {'imaging': 'NRS1_FULL',
-                            'IFU': 'NRS_FULL_IFU'}
+        self._modes_list = {
+            'imaging': 'NRS1_FULL',
+            'IFU': 'NRS_FULL_IFU'
+        }
 
         self._IFU_pixelscale = 0.1043  # same.
         self.monochromatic = 3.0
@@ -3122,7 +3164,7 @@ class NIRSpec(JWInstrument_with_IFU):
 
         self.disperser_list = ['PRISM', 'G140M', 'G140H', 'G235M', 'G235H', 'G394M', 'G395H']
         self._disperser = None
-        self._IFU_bands_cubepars  = {
+        self._IFU_bands_cubepars = {
             'PRISM/CLEAR': (0.10, 0.0050, 0.60, 5.30),
             'G140M/F070LP': (0.10, 0.0006, 0.70, 1.27),
             'G140M/F100LP': (0.10, 0.0006, 0.97, 1.89),
@@ -3192,10 +3234,11 @@ class NIRSpec(JWInstrument_with_IFU):
         if self.include_si_wfe:
             optsys.add_pupil(optic=self._si_wfe_class(self, where='spectrograph'))
 
-        if self.mode == 'IFU' and self.options.get('ifualign_rotation',True):
-            optsys.add_rotation(90, hide=True)  # Rotate by 90 degrees clockwise to match the IFUalign output convention, with slices horizontal.
+        if self.mode == 'IFU' and self.options.get('ifualign_rotation', True):
+            optsys.add_rotation(
+                90, hide=True
+            )  # Rotate by 90 degrees clockwise to match the IFUalign output convention, with slices horizontal.
             optsys.planes[-1].wavefront_display_hint = 'intensity'
-
 
         return (optsys, trySAM, SAM_box_size)
 
@@ -3204,7 +3247,6 @@ class NIRSpec(JWInstrument_with_IFU):
         super(NIRSpec, self)._get_fits_header(hdulist, options)
         hdulist[0].header['GRATING'] = ('None', 'NIRSpec grating element name')
         hdulist[0].header['APERTURE'] = (str(self.image_mask), 'NIRSpec slit aperture name')
-
 
     @JWInstrument.aperturename.setter
     def aperturename(self, value):
@@ -3222,7 +3264,8 @@ class NIRSpec(JWInstrument_with_IFU):
         except KeyError:
             raise ValueError(f'Aperture name {value} not a valid SIAF aperture name for {self.name}')
 
-        # NIRSpec apertures can either be per detector (i.e. "NRS1_FULL") or for the focal plane but not per detector (i.e. "NRS_FULL_IFU")
+        # NIRSpec apertures can either be per detector (i.e. "NRS1_FULL")
+        # or for the focal plane but not per detector (i.e. "NRS_FULL_IFU")
 
         if value[0:4] in ['NRS1', 'NRS2']:
             # this is a regular per-detector aperture, so just call the regular code in the superclass
@@ -3230,15 +3273,18 @@ class NIRSpec(JWInstrument_with_IFU):
         else:
             # apertures that start with NRS define V2,V3 position, but not pixel coordinates and pixelscale. So we
             # still have to use a full-detector aperturename for that.
-            detector_apername = self.detector + "_FULL"
+            detector_apername = self.detector + '_FULL'
 
             # Only update if new value is different
             if self._aperturename != value:
                 # First, check some info from current settings, which we will use below as part of auto pixelscale code
                 # The point is to check if the pixel scale is set to a custom or default value,
                 # and if it's custom then don't override that.
-                # Note, check self._aperturename first to account for the edge case when this is called from __init__ before _aperturename is set
-                has_custom_pixelscale = self._aperturename and (self.pixelscale != self._get_pixelscale_from_apername(detector_apername))
+                # Note, check self._aperturename first to account for the edge case when this is
+                # called from __init__ before _aperturename is set
+                has_custom_pixelscale = self._aperturename and (
+                    self.pixelscale != self._get_pixelscale_from_apername(detector_apername)
+                )
 
                 # Now apply changes:
                 self._aperturename = value
@@ -3247,11 +3293,15 @@ class NIRSpec(JWInstrument_with_IFU):
 
                 # Update DetectorGeometry class
                 self._detector_geom_info = DetectorGeometry(self.siaf, self._aperturename)
-                _log.info(f"{self.name} SIAF aperture name updated to {self._aperturename}")
+                _log.info(f'{self.name} SIAF aperture name updated to {self._aperturename}')
 
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(detector_apername)
-                    _log.debug(f"Pixelscale updated to {self.pixelscale} based on average X+Y SciScale at SIAF aperture {self._aperturename}")
+                    debug_message = (
+                        f'Pixelscale updated to {self.pixelscale} '
+                        f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
+                    )
+                    _log.debug(debug_message)
 
                 if 'IFU' in self.aperturename:
                     self._mode = 'IFU'
@@ -3259,14 +3309,17 @@ class NIRSpec(JWInstrument_with_IFU):
                         self.disperser = 'PRISM'  # Set some default spectral mode
                         self.filter = 'CLEAR'
                     if self.image_mask not in ['IFU', None]:
-                        _log.info("The currently-selected image mask (slit) is not compatible with IFU mode. Setting image_mask=None")
+                        info_message = (
+                            'The currently-selected image mask (slit) is not compatible with IFU mode. '
+                            'Setting image_mask=None'
+                        )
+                        _log.info(info_message)
                         self.image_mask = None
                 else:
-                    self._mode = 'imaging' # More to implement here later!
-
+                    self._mode = 'imaging'  # More to implement here later!
 
     def _tel_coords(self):
-        """ Convert from science frame coordinates to telescope frame coordinates using
+        """Convert from science frame coordinates to telescope frame coordinates using
         SIAF transformations. Returns (V2, V3) tuple, in arcminutes.
 
         Note that the astropy.units framework is used to return the result as a
@@ -3275,11 +3328,14 @@ class NIRSpec(JWInstrument_with_IFU):
         Some extra steps for NIRSpec to handle the more complicated/flexible mapping between detector and sky coordinates
         """
 
-        if self.aperturename.startswith("NRS_"):
+        if self.aperturename.startswith('NRS_'):
             # These apertures don't map directly to particular detector position in the usual way
             # Return coords for center of the aperture reference location
-            return np.asarray((self._detector_geom_info.aperture.V2Ref,
-                               self._detector_geom_info.aperture.V3Ref)) / 60 * units.arcmin
+            return (
+                np.asarray((self._detector_geom_info.aperture.V2Ref, self._detector_geom_info.aperture.V3Ref))
+                / 60
+                * units.arcmin
+            )
         else:
             return super()._tel_coords()
 
@@ -3296,7 +3352,7 @@ class NIRSpec(JWInstrument_with_IFU):
         Only applies for IFU mode sims, currently; used to help set the
         wavelength range to simulate
         """
-        if self.mode =='IFU':
+        if self.mode == 'IFU':
             return self._disperser
         else:
             return None
@@ -3309,25 +3365,24 @@ class NIRSpec(JWInstrument_with_IFU):
             raise RuntimeError(f'Not a valid NIRSpec disperser name: {value}')
 
     def _calc_psf_format_output(self, result, options):
-        """ Format output HDUList. In particular, add some extra metadata if in IFU mode"""
+        """Format output HDUList. In particular, add some extra metadata if in IFU mode"""
         super()._calc_psf_format_output(result, options)
         if self.mode == 'IFU':
             n_exts = len(result)
             for ext in np.arange(n_exts):
-                result[ext].header['MODE'] = ("IFU", 'This is a NIRSpec IFU mode simulation')
+                result[ext].header['MODE'] = ('IFU', 'This is a NIRSpec IFU mode simulation')
                 result[ext].header['GRATING'] = (self.disperser, 'Name of the grating (or prism) element simulated.')
-
 
     @property
     def band(self):
         if self.mode != 'IFU':
             return None
 
-        return self.disperser + "/" + self.filter
+        return self.disperser + '/' + self.filter
 
     @band.setter
     def band(self, value):
-        raise RuntimeError("This is a read-only property. Set grating and/or filter attributes instead.")
+        raise RuntimeError('This is a read-only property. Set grating and/or filter attributes instead.')
 
 
 class NIRISS(JWInstrument):

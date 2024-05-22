@@ -391,9 +391,13 @@ def test_apply_field_dependence_model():
     # The value used in the following test is derived from this model itself, so it's a bit circular;
     # but at least this test should suffice to detect any unintended significant change in the
     # outputs of this model
+    assert_message = (
+        "Field-dependent OTE WFE at selected field point (NIRISS center) "
+        "didn't match expected value (test case: explicit call, assume_si_focus=False)"
+    )
     assert np.isclose(
         rms3, 36.0e-9, atol=1e-9
-    ), "Field-dependent OTE WFE at selected field point (NIRISS center) didn't match expected value (test case: explicit call, assume_si_focus=False)"
+    ), assert_message
 
     # Now test as usd in a webbpsf calculation, implicitly, and with the defocus backout ON
     # The WFE here is slightly less, due to the focus optimization
@@ -406,9 +410,13 @@ def test_apply_field_dependence_model():
     ote.update_opd()
     opd_nis_cen_v2 = ote.opd
     rms4 = rms(opd_nis_cen_v2, mask)
+    assert_message = (
+        "Field-dependent OTE WFE at selected field point (NIRISS center) "
+        "didn't match expected value(test case: implicit call, assume_si_focus=True)"
+    )
     assert np.isclose(
         rms4, 28.0e-9, atol=1e-9
-    ), "Field-dependent OTE WFE at selected field point (NIRISS center) didn't match expected value(test case: implicit call, assume_si_focus=True."
+    ), assert_message
 
 
 def test_get_zernike_coeffs_from_smif():
