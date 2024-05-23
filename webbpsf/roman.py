@@ -829,32 +829,29 @@ class WFI(RomanInstrument):
         containing the detector names, field point positions and Zernike
         values. The file should contain the following column
         names/values (comments in parentheses should not be included):
-            - sca (Detector number)
-            - wavelength (µm)
-            - field_point (field point number/ID for SCA and wavelength,
-            starts with 1)
-            - local_x (mm, local detector coords)
-            - local_y (mm, local detector coords)
-            - global_x (mm, global instrument coords)
-            - global_y (mm, global instrument coords)
-            - axis_local_angle_x (XAN)
-            - axis_local_angle_y (YAN)
-            - wfe_rms_waves (nm)
-            - wfe_pv_waves (waves)
-            - Z1 (Zernike phase NOLL coefficients)
-            - Z2 (Zernike phase NOLL coefficients)
-            - Z3 (Zernike phase NOLL coefficients)
-            - Z4 (Zernike phase NOLL coefficients)
-              .
-              .
-              .
+        - sca (Detector number)
+        - wavelength (µm)
+        - field_point (field point number/ID for SCA and wavelength, starts with 1)
+        - local_x (mm, local detector coords)
+        - local_y (mm, local detector coords)
+        - global_x (mm, global instrument coords)
+        - global_y (mm, global instrument coords)
+        - axis_local_angle_x (XAN)
+        - axis_local_angle_y (YAN)
+        - wfe_rms_waves (nm)
+        - wfe_pv_waves (waves)
+        - Z1 (Zernike phase NOLL coefficients)
+        - Z2 (Zernike phase NOLL coefficients)
+        - Z3 (Zernike phase NOLL coefficients)
+        - Z4 (Zernike phase NOLL coefficients)
+        - ...
 
         Please refer to the default aberration files for examples. If
         you have the WebbPSF data installed and defined, you can get the
         path to that file by running the following:
-            >>> from webbpsf import roman
-            >>> wfi = roman.WFI()
-            >>> print(wfi._aberration_files['imaging'])
+        >>> from webbpsf import roman
+        >>> wfi = roman.WFI()
+        >>> print(wfi._aberration_files['imaging'])
 
         Warning: You should not edit the default files!
         """

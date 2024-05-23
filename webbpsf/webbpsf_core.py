@@ -705,7 +705,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
             User also has the option to save the grid as a fits.HDUlist object.
 
         Use
-        ----
+        ---
         nir = webbpsf.NIRCam()
         nir.filter = "F090W"
         list_of_grids = nir.psf_grid(all_detectors=True, num_psfs=4)
@@ -763,7 +763,7 @@ class JWInstrument(SpaceTelescopeInstrument):
     """Superclass for all JWST instruments
 
     Notable attributes
-    -------------------
+    ------------------
 
     telescope : name of telescope
     pupilopd : filename or FITS file object
@@ -1317,7 +1317,7 @@ class JWInstrument(SpaceTelescopeInstrument):
              new size of the 2D square array (newdim x newdim)
 
         Returns
-        ---------
+        -------
         newopd: new array interpolated to (newdim x newdim)
 
         """
@@ -1393,7 +1393,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         superclass version of this function, in poppy.Instrument.
 
         Parameters
-        -----------
+        ----------
         result : fits.HDUList
             HDU list containing a point spread function
         local_options : dict, optional
@@ -1604,29 +1604,32 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         This includes:
             - If necessary, downloading that OPD from MAST. Downloaded files are cached in $WEBBPSF_PATH/MAST_JWST_WSS_OPDs
-            - calling `import_wss_opd` to load the OPD from the FITS file and
-               perform some necessary format conversions
+            - calling `import_wss_opd` to load the OPD from the FITS file and perform some necessary format conversions
             - Subtract off the instrument WFE for the field point used in wavefront sensing, to get an
-               OTE-only wavefront. WebbPSF will separately add back in the SI WFE for the appropriate
-              field point, as usual.
+                OTE-only wavefront. WebbPSF will separately add back in the SI WFE for the appropriate
+                field point, as usual.
             - Subtract off the modeled field dependence term in the OTE WFE for the sensing field point, to get
-               an estimate of the OTE wavefront nominally at the master chief ray location (between the NIRCams).
-               WebbPSF will automatically add back on top of this the OTE field dependent WFE for the appropriate
-               field point. as usual.
+                an estimate of the OTE wavefront nominally at the master chief ray location (between the NIRCams).
+                WebbPSF will automatically add back on top of this the OTE field dependent WFE for the appropriate
+                field point. as usual.
 
         Parameters
         ----------
         filename : str
             Name of OPD file to load
+
         output_path : str
             Downloaded OPD are saved in this location.
             This option is convinient for STScI users using /grp/jwst/ote/webbpsf-data/.
             Default is $WEBBPSF_PATH/MAST_JWST_WSS_OPDs
+
         backout_si_wfe : bool
             Subtract model for science instrument WFE at the sensing field point? Generally this should be true
             which is the default.
+
         plot : bool
             Generate informative plots showing WFE, including the backout steps. Only works if backout_si_wfe is True.
+
         save_ote_wfe : bool
             Save OTE-only WFE model? This is not needed for calculations in WebbPSF, but can be used to export
             OTE WFE models for use with other software. The file will be saved in the WEBBPSF_DATA_PATH directory
@@ -1817,10 +1820,12 @@ class JWInstrument(SpaceTelescopeInstrument):
         for a substantial gain in speed at minimal reduction in accuracy for some use cases.
 
         ASSUMPTIONS:
-         1) Assumes the wavefront error (OPD) and amplitude are independent of wavelength, such
+
+        1) Assumes the wavefront error (OPD) and amplitude are independent of wavelength, such
             that we can do the expensive propagation from sky through the optics to the
             exit pupil of NIRSpec *only once*, save that, and reuse the same exit pupil wavefront
             many times changing only the wavelength for just the last DFT step to the detector.
+
         2) Assumes we do not need the binned-to-detector-resolution nor distorted versions;
             we just want the oversampled PSF datacube at many wavelengths as fast as possible.
             (If the binned output is also desired, it can be computed post facto.
@@ -1837,10 +1842,11 @@ class JWInstrument(SpaceTelescopeInstrument):
         of webbpsf for that mode, IF we also neglect the image plane stop around the IFU FOV.
 
         Parameters
-        -----------
+        ----------
         wavelengths : iterable of floats
             List or ndarray or tuple of floating point wavelengths in meters, such as
             you would supply in a call to calc_psf via the "monochromatic" option
+
         compare_methods : bool
             If true, compute the PSF **BOTH WAYS**, and return both for comparisons.
             This is of course much slower. Default is False. This is retained for
@@ -1848,7 +1854,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
 
         Returns
-        --------
+        -------
         a PSF datacube, normally (with compare_methods=False)
 
         A list of two PSF datacubes and two exit wavefront objects, if compare_methods is True
@@ -3636,7 +3642,7 @@ def calc_or_load_PSF(filename, inst, overwrite=False, **kwargs):
     iterations.
 
     Parameters
-    ------------
+    ----------
     filename : str
         Filename possibly including path
     inst : JWInstrument
@@ -3706,7 +3712,7 @@ class DetectorGeometry(object):
         """Check if specified pixel coords are actually on the detector
 
         Parameters
-        -----------
+        ----------
         x, y : floats
             coordinates in pixels
         """
@@ -3726,12 +3732,12 @@ class DetectorGeometry(object):
         See the pysiaf code for all the full details, or Lallo & Cox Tech Reports
 
         Parameters
-        ------------
+        ----------
         xpix, ypix : floats
             X and Y pixel coordinates, 0 <= xpix, ypix < detector_size
 
         Returns
-        --------
+        -------
         V2, V3 : floats
             V2 and V3 coordinates, in arcMINUTES
             Note that the astropy.units framework is used to return the result as a
@@ -3756,7 +3762,7 @@ def segname(val):
     "B3-11" for any of the above inputs, and similarly for any of the other segments.
 
     Parameters
-    ------------
+    ----------
     val : string or int
         Something that can conceivably be the name or ID of a JWST PMSA.
     """

@@ -24,7 +24,7 @@ Releasing new data packages
  #. Update the URL in ``installation.rst`` under :ref:`data_install`
 
 Details for using `master_data_release.sh`:
--------------------------------------
+-------------------------------------------
 
 Invoke ``dev_utils/master_data_release.sh`` one of the following ways to make a gzipped tarred archive of the WebbPSF data suitable for distribution.
 
@@ -43,7 +43,7 @@ Releasing new versions
 ======================
 
 If you are making a release for `poppy` at the same time as a release in WebbPSF, do that first.
-Update the dependency requirement to the new version of poppy, in ``webbpsf/pyproject.toml`.
+Update the dependency requirement to the new version of poppy, in ``webbpsf/pyproject.toml``.
 
 When you are ready, proceed with the WebbPSF release as follows:
 

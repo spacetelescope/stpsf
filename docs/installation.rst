@@ -73,7 +73,7 @@ Files containing such information as the JWST pupil shape, instrument throughput
 2. Untar ``webbpsf-data-LATEST.tar.gz`` into a directory of your choosing.
 3. Set the environment variable ``WEBBPSF_PATH`` to point to that directory. e.g. ::
 
-   export WEBBPSF_PATH=$HOME/data/webbpsf-data
+    export WEBBPSF_PATH=$HOME/data/webbpsf-data
 
 for bash. (You will probably want to add this to your ``.bashrc``.)
 

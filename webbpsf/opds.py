@@ -229,7 +229,7 @@ class OPD(poppy.FITSOpticalElement):
         """Return the OPD as a fits.HDUList object
 
         Parameters
-        -----------
+        ----------
         include_pupil : bool
             Include the pupil mask as a FITS extension?
         """
@@ -268,7 +268,7 @@ class OPD(poppy.FITSOpticalElement):
         """Draw on screen the perturbed OPD
 
         Parameters
-        -----------
+        ----------
         ax : matplotlib.Axes
             axes instance to display into.
         labelsegs : bool
@@ -552,7 +552,7 @@ class OPD(poppy.FITSOpticalElement):
         """Compute an estimated Strehl given a wavelength in meters
 
         Parameters
-        -----------
+        ----------
         wavelength : float
             in meters
         verbose : bool
@@ -878,7 +878,7 @@ class OTE_Linear_Model_Elliott(OPD):
         """Tilt/rotate a segment some angle around X, Y, or Z.
 
         Parameters
-        -----------
+        ----------
         segment : str
             Segment name, e.g. 'A1'
         tiltX, tiltY, tiltZ : floats
@@ -933,7 +933,7 @@ class OTE_Linear_Model_Elliott(OPD):
         """Move a segment some distance in X, Y, and Z.
 
         Parameters
-        -----------
+        ----------
         segment : str
             Segment name, e.g. 'A1'
         distX, distY, distZ : floats
@@ -1493,7 +1493,7 @@ class OTE_Linear_Model_WSS(OPD):
         dx, dy = field angles, in radians, from the OTE control point (nominally, NRCA3_FULL).
 
         Returns:
-        ----------
+        --------
         Hexike coefficients, in microns, for the first nine (9) coefficients, with PTT explicitly set to zero.
 
         """
@@ -1841,7 +1841,7 @@ class OTE_Linear_Model_WSS(OPD):
         which are distinct for each segment.
 
         Parameters
-        -----------
+        ----------
         segment : str
             Segment name, e.g. 'A1'.
         xtilt, ytilt, clocking : floats
@@ -1975,7 +1975,7 @@ class OTE_Linear_Model_WSS(OPD):
         which are distinct for each segment.
 
         Parameters
-        -----------
+        ----------
         segment : str
             Segment name, e.g. 'A1'. Use 'SM' for the secondary mirror.
         xtilt, ytilt, clocking : floats
@@ -2124,7 +2124,7 @@ class OTE_Linear_Model_WSS(OPD):
         PMSAs in terms of its local coordinate system, which this function handles behind the scenes.
 
         Parameters
-        -----------
+        ----------
         segment : str
             Segment name, e.g. 'A1'. Use 'SM' for the secondary mirror.
         xtilt, ytilt, clocking : floats
@@ -2757,7 +2757,7 @@ def enable_adjustable_ote(instr):
         an instance of one of the WebbPSF instrument classes.
 
     Returns
-    --------
+    -------
     a modified copy of that instrument set up to use the LOM, and
     the associated instance of the LOM.
 
@@ -2796,7 +2796,7 @@ def setup_image_array(
     Apply tilts to put the segments in an image array configuration.
 
     Parameters
-    -----------
+    ----------
     ote : OTE_Linear_Model_WSS instance
         The telescope model to be adjusted. This will be modified by this function.
     radius : float
@@ -3318,7 +3318,7 @@ def get_coarse_blur_parameters(
     """Extract coarse blur center offset and convolution kernel from the Coarse Point sim time series
 
     Parameters
-    -----------
+    ----------
 
     pcsmodel : astropy.Table
         High resolution time series data from JWST ACS sims
