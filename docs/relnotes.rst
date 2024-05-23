@@ -33,9 +33,73 @@ Version 1.3.0
 
 This release comes with new features and improvements including but not limited to:
 
-X. Improved support for NIRSpec and MIRI IFU PSF calculations, including addition of a ``mode`` attribute for toggling between imaging mode and IFU mode simulations; an option for much faster (but slightly simplified) IFU datacube PSF calculations. Spectral bandpass information added for the IFU bands for both NIRSpec and MIRI. For NIRSpec, IFU mode PSF outputs are rotated by an additional 90 degrees to match the convention used in pipeline-output s3d datacubes made using the IFUAlign orientation. This extra rotation can be optionally disabled if so desired; see the NIRSpec class docstring. 
-X. Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
+1. Improved support for NIRSpec and MIRI IFU PSF calculations, including addition of a ``mode`` attribute for toggling between imaging mode and IFU mode simulations; an option for much faster (but slightly simplified) IFU datacube PSF calculations. Spectral bandpass information added for the IFU bands for both NIRSpec and MIRI. For NIRSpec, IFU mode PSF outputs are rotated by an additional 90 degrees to match the convention used in pipeline-output s3d datacubes made using the IFUAlign orientation. This extra rotation can be optionally disabled if so desired; see the NIRSpec class docstring.
+2. Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
 
+**What's Changed**
+* installation doc update by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/742
+* add missing jquery extension to fix docs search by @braingram in https://github.com/spacetelescope/webbpsf/pull/740
+* setup_sim_to_match_file fix setting aperture name for SW/LW parallel coronagraphy  by @mperrin in https://github.com/spacetelescope/webbpsf/pull/752
+* Trending: add option to plot OTE-only WFE in wfe_histogram_plot by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/750
+* 729_EE_label_fix, fixed the Encircled Energy Y axis label from being … by @bchen2 in https://github.com/spacetelescope/webbpsf/pull/731
+* #727_RMS_Label fixed the issue that rms_label is not initialized. by @bchen2 in https://github.com/spacetelescope/webbpsf/pull/730
+* numpy 2.0 fixes by @braingram in https://github.com/spacetelescope/webbpsf/pull/743
+* use PyPI upload workflow from OpenAstronomy by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/749
+* Astroquery version by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/758
+* import GriddedPSFModel from photutils.psf by @braingram in https://github.com/spacetelescope/webbpsf/pull/755
+* Install astropy dev from wheel by @pllim in https://github.com/spacetelescope/webbpsf/pull/757
+* update NRC coron dispersion coeffs by @JarronL in https://github.com/spacetelescope/webbpsf/pull/766
+* Update trending plot to subtract piston before displaying proposed correction by @mperrin in https://github.com/spacetelescope/webbpsf/pull/756
+* add aperture name support for NIRSpec slit and IFU apertures; also, 100x faster data cube calculations. by @mperrin in https://github.com/spacetelescope/webbpsf/pull/767
+* Support MIRI LRS slit in aperturename and setup_sim_to_match_file functions by @mperrin in https://github.com/spacetelescope/webbpsf/pull/781
+* Coronagraph calcs: add 'coron_include_pre_lyot_plane' option for extra output plane by @mperrin in https://github.com/spacetelescope/webbpsf/pull/778
+* Add `nrc_ta_image_comparison` function to trending tools by @mperrin in https://github.com/spacetelescope/webbpsf/pull/789
+* add test for calc_datacube_fast, and fix some imports by @mperrin in https://github.com/spacetelescope/webbpsf/pull/786
+* fix some display issues in monthly_trending_plot by @mperrin in https://github.com/spacetelescope/webbpsf/pull/784
+* replace NaN with nan for numpy 2.0 prep by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/791
+* Support the slightly non-square dimensions of the MIRI detector (1024, 1032) pixels in size. Fixes #676 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/803
+* filter custom opbtable for month by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/802
+* consistently allow astropy.time.Time or string inputs to all trending functions by @mperrin in https://github.com/spacetelescope/webbpsf/pull/804
+* Fix obscure error in FITS writing by @eteq in https://github.com/spacetelescope/webbpsf/pull/807
+* update actions version by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/800
+* fix broken link in docs/intro.rst by @bryce-wedig in https://github.com/spacetelescope/webbpsf/pull/815
+* Allow setup_sim_to_match_data to select choice of WFS before or after by @mperrin in https://github.com/spacetelescope/webbpsf/pull/819
+* [SCSB-145] require Python 3.10 by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/817
+* minor: improve X axis tick marks on trending timeseries plot by @mperrin in https://github.com/spacetelescope/webbpsf/pull/820
+* combining issues 726 and 736 by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull/768
+* add show_wfs_during_program function by @mperrin in https://github.com/spacetelescope/webbpsf/pull/798
+* add delta_wfe_around_time function by @mperrin in https://github.com/spacetelescope/webbpsf/pull/826
+* Performance enhancement: avoid repeated slow loads of the SIAF by @mperrin in https://github.com/spacetelescope/webbpsf/pull/825
+* NRC TA plot enhancements by @mperrin in https://github.com/spacetelescope/webbpsf/pull/794
+* add functions to download WFSC WL image data by @mperrin in https://github.com/spacetelescope/webbpsf/pull/827
+* improve MIRI LRS model details by @mperrin in https://github.com/spacetelescope/webbpsf/pull/787
+* #839 Visit Id naming smarts in get_visit_nrc_ta_image by @kulpster85 in https://github.com/spacetelescope/webbpsf/pull/840
+* #835 - Improvements to trending.plot_wfs_obs_delta & wfe_histogram_pl… by @kulpster85 in https://github.com/spacetelescope/webbpsf/pull/836
+* Ruff changes by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/844
+* ruff "safe" auto-fix and format imports only by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/846
+* avoid linear interpolation between WFE values by @mperrin in https://github.com/spacetelescope/webbpsf/pull/834
+* Update for WFI to use pysiaf instead of soc_roman_tools by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/848
+* Infrastructure improvements for improved IFU sims by @mperrin in https://github.com/spacetelescope/webbpsf/pull/770
+* Allow specifying NIRCam LW detectors equivalently like 'NRCA5' or 'NRCALONG' by @mperrin in https://github.com/spacetelescope/webbpsf/pull/849
+* Improved model for MIRI cruciform artifact, part 1 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/837
+* Manual lint by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/847
+* Implement support for NIRCam DHS sub apertures by @mperrin in https://github.com/spacetelescope/webbpsf/pull/845
+* minor bug fix to IFU mode after #770 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/851
+* bug fix an edge case for switching MIRI apertures by @mperrin in https://github.com/spacetelescope/webbpsf/pull/843
+* Couple small fixes to LRS support by @mperrin in https://github.com/spacetelescope/webbpsf/pull/850
+* removing obsolete files by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/852
+* Documentation additions for 1.3 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/828
+* update min version for RTD and _init_ by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/858
+* add test function for the NIRCam DHS support. by @mperrin in https://github.com/spacetelescope/webbpsf/pull/857
+* Additional Pep8speaks updates by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/856
+
+**New Contributors**
+* @braingram made their first contribution in https://github.com/spacetelescope/webbpsf/pull/740
+* @bchen2 made their first contribution in https://github.com/spacetelescope/webbpsf/pull/731
+* @eteq made their first contribution in https://github.com/spacetelescope/webbpsf/pull/807
+* @bryce-wedig made their first contribution in https://github.com/spacetelescope/webbpsf/pull/815
+
+**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.2.1...v1.3.0.rc1
 
 
 Version 1.2.1
