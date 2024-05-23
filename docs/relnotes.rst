@@ -29,7 +29,7 @@ Version History and Change Log
 
 Version 1.3.0
 
-*Date TBD*
+*2024 May*
 
 This release comes with new features and improvements including but not limited to:
 
