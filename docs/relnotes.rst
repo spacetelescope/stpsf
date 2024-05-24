@@ -130,6 +130,8 @@ We are pleased to announce the release of the latest version of WebbPSF version 
 
 **What's Changed**
 
+* Add interpixel capacitance effects (IPC) for both distortion extension in the simulated PSF and adding some more per-instrument specializations in setup_sim_to_match_fileby @obi-wan76 in #768
+
 * Fixed trending histogram binning so that bars add up to 1.0 by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/634
 
 * Add phase retrieval crosscheck plot and wfs obs delta plot by @mperrin in https://github.com/spacetelescope/webbpsf/pull/650
