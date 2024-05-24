@@ -31,12 +31,20 @@ Version 1.3.0
 
 *2024 May*
 
-This release comes with new features and improvements including but not limited to:
+This release comes with new features and improvements for JWST PSF models, including but not limited to:
 
-1. Improved support for NIRSpec and MIRI IFU PSF calculations, including addition of a ``mode`` attribute for toggling between imaging mode and IFU mode simulations; an option for much faster (but slightly simplified) IFU datacube PSF calculations. Spectral bandpass information added for the IFU bands for both NIRSpec and MIRI. For NIRSpec, IFU mode PSF outputs are rotated by an additional 90 degrees to match the convention used in pipeline-output s3d datacubes made using the IFUAlign orientation. This extra rotation can be optionally disabled if so desired; see the NIRSpec class docstring.
-2. Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths.
+1. Improved support for NIRSpec and MIRI IFU PSF calculations, including addition of a ``mode`` attribute for toggling between imaging mode and IFU mode simulations; an option for much faster (but slightly simplified) IFU datacube PSF calculations. Spectral bandpass information was added for the IFU bands for both NIRSpec and MIRI. For NIRSpec, IFU mode PSF outputs are rotated by an additional 90 degrees to match the convention used in pipeline-output s3d datacubes made using the IFUAlign orientation. This extra rotation can be optionally disabled if so desired; see the NIRSpec class docstring.
+2. Improved PSF models for MIRI imager, in particular including an empirical model for the field-dependent shifts of the cruciform artifact seen at short wavelengths, and improved fidelity for modeling MIRI LRS slit PSFs.
+3. For all JWST instruments, simulation of interpixel capacitance effects is now included for oversampled outputs as well as for the detector-sampled outputs.
+4. Various improvements to the `setup_sim_to_match_data` function to automatically configure PSF simulations correctly for a more complete set of JWST observing modes.
+5. Additional trending functions for assessing JWST wavefront error stability over time around specified science observations, and improvements to existing trending plots.
+
+Please note, the minimum supported version of Python is increaed to Python 3.10, consistent with the minimumfor astropy.
 
 **What's Changed**
+
+* Add interpixel capacitance effects (IPC) for both distortion extension in the simulated PSF and adding some more per-instrument specializations in setup_sim_to_match_file by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull#768
+
 * setup_sim_to_match_file fix setting aperture name for SW/LW parallel coronagraphy  by @mperrin in https://github.com/spacetelescope/webbpsf/pull/752
 
 * Trending: add option to plot OTE-only WFE in wfe_histogram_plot by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/750
@@ -129,8 +137,6 @@ We are pleased to announce the release of the latest version of WebbPSF version 
 4. Various improvements for OTE trending.
 
 **What's Changed**
-
-* Add interpixel capacitance effects (IPC) for both distortion extension in the simulated PSF and adding some more per-instrument specializations in setup_sim_to_match_fileby @obi-wan76 in #768
 
 * Fixed trending histogram binning so that bars add up to 1.0 by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/634
 
