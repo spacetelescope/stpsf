@@ -47,21 +47,21 @@ Update the dependency requirement to the new version of poppy, in ``webbpsf/pypr
 
 When you are ready, proceed with the WebbPSF release as follows:
 
-#. Get the `develop` branch into the state that you want, including all PRs merged, updated release notes. This includes all tests passing both locally and on GitHub Actions.
-#. Tag the commit with `v<version>`, being sure to sign the tag with the `-s` option.
-   * ``git tag -s v<version> -m "Release v<version>"``
+ #. Get the `develop` branch into the state that you want, including all PRs merged, updated release notes. This includes all tests passing both locally and on GitHub Actions.
+ #. Tag the commit with `v<version>`, being sure to sign the tag with the `-s` option.
+     * ``git tag -s v<version> -m "Release v<version>"``
 
-#. Push tag to github, on `develop`
-#. On github, make a PR from `develop` to `stable` (this can be done ahead of time and left open, until all individual PRs are merged into `develop`.).
-#. After verifying that PR is complete and tests pass, merge it. (Once merged, both the `stable` and `develop` branches should match).
-#. Release on Github:
+ #. Push tag to github, on `develop`
+ #. On github, make a PR from `develop` to `stable` (this can be done ahead of time and left open, until all individual PRs are merged into `develop`.).
+ #. After verifying that PR is complete and tests pass, merge it. (Once merged, both the `stable` and `develop` branches should match).
+ #. Release on Github:
 
-   #. On Github, click on "[N] Releases".
-   #. Select "Draft a new release".
-   #. Specify the version number, title, and brief description of the release.
-   #. Press "Publish Release".
+     #. On Github, click on "[N] Releases".
+     #. Select "Draft a new release".
+     #. Specify the version number, title, and brief description of the release.
+     #. Press "Publish Release".
 
-#. Release to PyPI. This should now happen automatically on GitHub Actions. This will be triggered by a GitHub Actions build of a tagged commit on the `stable` branch, so it will happen automatically on the prior step for the PR into `stable`.
+ #. Release to PyPI. This should now happen automatically on GitHub Actions. This will be triggered by a GitHub Actions build of a tagged commit on the `stable` branch, so it will happen automatically on the prior step for the PR into `stable`.
 
 .. note::
 
