@@ -70,6 +70,7 @@ sys.path.insert(0, os.path.abspath("exts/"))
 extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.autodoc",
+    "sphinx.ext.graphviz",
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.inheritance_diagram",
@@ -80,11 +81,12 @@ extensions = [
     "sphinx_issues",
     "nbsphinx",
     "numpydoc",
-    "astroquery",
 ]
 
 numpydoc_show_class_members = False
 
+autosummary_generate = True
+graphviz_dot = "dot"
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 

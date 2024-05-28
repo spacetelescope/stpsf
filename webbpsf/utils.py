@@ -117,7 +117,7 @@ def setup_logging(level='INFO', filename=None):
     own documentation.
 
     Parameters
-    -------------
+    ----------
     level : str
         Name of log output to show. Defaults to 'INFO', set to 'DEBUG'
         for more extensive messages, or to 'WARN' or 'ERROR' for fewer.
@@ -126,7 +126,7 @@ def setup_logging(level='INFO', filename=None):
         just be displayed on screen. (Default: None)
 
     Examples
-    -----------
+    --------
 
     >>> webbpsf.setup_logging(filename='webbpsflog.txt')
 
@@ -488,7 +488,7 @@ def measure_strehl(HDUlist_or_filename=None, ext=0, slice=0, center=None, displa
         use caching for perfect images? greatly speeds up multiple calcs w/ same config
 
     Returns
-    ---------
+    -------
     strehl : float
         Strehl ratio as a floating point number between 0.0 - 1.0
 
@@ -580,7 +580,7 @@ def rescale_interpolate_opd(array, newdim):
          new size of the 2D square array (newdim x newdim)
 
     Returns
-    ---------
+    -------
     newopd: new array interpolated to (newdim x newdim)
 
     """

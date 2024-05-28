@@ -21,9 +21,10 @@ new_directory="$main_directory/webbpsf-data-$VER"
 symlink_directory="/grp/jwst/ote/webbpsf-data"
 
 cp "$PWD/webbpsf-data-$VER.tar.gz" "$main_directory"
-tar -xzf "$PWD/webbpsf-data-$VER.tar.gz" -C "$main_directory"
-mv "$main_directory/webbpsf-data" "$new_directory"
-ln -s "$new_directory" "$symlink_directory"
+mkdir "$new_directory"
+tar -xzf "$PWD/webbpsf-data-$VER.tar.gz" -C "$new_directory"
+rm "$symlink_directory"
+ln -s "$new_directory/webbpsf-data" "$symlink_directory"
 
 ./make-minimal-datafiles.py  ${PWD}/webbpsf-data-${VER}.tar.gz $VER
 
