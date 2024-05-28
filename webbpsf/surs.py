@@ -3,6 +3,7 @@ Mirror Move related classes originally from jwxml/mirrors.py
 """
 
 import logging
+
 _log = logging.getLogger('webbpsf')
 
 try:
@@ -35,6 +36,7 @@ class SegmentUpdate(object):
     Allowable units: "id", "meters", "none", "radians", "sag", "steps"
     Pose moves will only ever have meters/radians as units
     """
+
     def __init__(self, xmlnode=None):
         self.units = dict()
         self.moves = dict()
@@ -61,53 +63,59 @@ class SegmentUpdate(object):
             self.stage_type = None
 
     def __str__(self):
-        return ("Update %d, move %s, %s, %s: " % (self.id, self.segment, 'absolute' if self.absolute else 'relative', self.coord)) + \
-               str(self.moves)
+        return (
+            'Update %d, move %s, %s, %s: ' % (self.id, self.segment, 'absolute' if self.absolute else 'relative', self.coord)
+        ) + str(self.moves)
 
     def shortstr(self):
-        outstr = ("Update %d: %s, %s, %s {" % (self.id, self.segment, 'absolute' if self.absolute else 'relative',
-                                               self.coord))
+        outstr = 'Update %d: %s, %s, %s {' % (self.id, self.segment, 'absolute' if self.absolute else 'relative', self.coord)
 
-        outstr += ", ".join([coordname+"=%.3g" % self.moves[coordname] for coordname in
-                             ['PISTON', 'X_TRANS', 'Y_TRANS', 'CLOCK', 'X_TILT', 'Y_TILT']])
-        outstr += "}"
+        outstr += ', '.join(
+            [
+                coordname + '=%.3g' % self.moves[coordname]
+                for coordname in ['PISTON', 'X_TRANS', 'Y_TRANS', 'CLOCK', 'X_TILT', 'Y_TILT']
+            ]
+        )
+        outstr += '}'
         return outstr
 
     @property
     def xmltext(self):
-        """ The XML text representation of a given move """
-        text = '        <UPDATE id="{0.id}" type="{0.type}" seg_id="{0.segment}" absolute="{absolute}" ' \
-               'coord="{0.coord}" stage_type="{0.stage_type}">\n'.format(self, absolute=str(self.absolute).lower())
+        """The XML text representation of a given move"""
+        text = (
+            '        <UPDATE id="{0.id}" type="{0.type}" seg_id="{0.segment}" absolute="{absolute}" '
+            'coord="{0.coord}" stage_type="{0.stage_type}">\n'.format(self, absolute=str(self.absolute).lower())
+        )
         for key in ['X_TRANS', 'Y_TRANS', 'PISTON', 'X_TILT', 'Y_TILT', 'CLOCK']:
             if key in self.moves:
-                text += '            <{key}  units="{unit}">{val:E}</{key}>\n'.format(key=key, unit=self.units[key],
-                                                                                      val=self.moves[key])
+                text += '            <{key}  units="{unit}">{val:E}</{key}>\n'.format(
+                    key=key, unit=self.units[key], val=self.moves[key]
+                )
         text += '        </UPDATE>\n'
         return text
 
     def to_global(self):
-        """ Return moves cast to global coordinates """
+        """Return moves cast to global coordinates"""
         if self.coord == 'global':
             return self.moves
         else:
-            raise NotImplemented("Error")
+            raise NotImplementedError('Error')
 
     def to_local(self):
-        """ Return moves cast to local coordinates """
+        """Return moves cast to local coordinates"""
         if self.coord == 'local':
             return self.moves
         else:
-            raise NotImplemented("Error")
+            raise NotImplementedError('Error')
             # TO implement based on Ball's 'pmglobal_to_seg' in ./wfsc_core_algs/was_core_pmglobal_to_seg.pro
             # or the code in ./segment_control/mcs_hexapod_obj__define.pro
 
 
 class SUR(object):
-    """ Class for parsing/manipulating Segment Update Request files
-    """
-    def __init__(self, filename=None):
-        """ Read a SUR from disk """
+    """Class for parsing/manipulating Segment Update Request files"""
 
+    def __init__(self, filename=None):
+        """Read a SUR from disk"""
 
         self.filename = filename
         self.groups = []
@@ -141,36 +149,38 @@ class SUR(object):
             self.groups.append([])
 
     def __str__(self):
-        outstr = "SUR %s\n" % self.filename
+        outstr = 'SUR %s\n' % self.filename
         for igrp, grp in enumerate(self.groups):
-            outstr += "\tGroup %d\n" % (igrp+1)
+            outstr += '\tGroup %d\n' % (igrp + 1)
             for update in grp:
-                outstr += "\t\t"+str(update)+"\n"
+                outstr += '\t\t' + str(update) + '\n'
         return outstr
 
     @property
     def ngroups(self):
         return len(self.groups)
+
     @property
     def nmoves(self):
         return sum([len(g) for g in self.groups])
 
     def describe(self):
-        return f"SUR with {self.ngroups} groups and {self.nmoves} moves"
+        return f'SUR with {self.ngroups} groups and {self.nmoves} moves'
 
     @property
     def xmltext(self):
-        """ The XML text representation of a given move """
+        """The XML text representation of a given move"""
         text = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                <SEGMENT_UPDATE_REQUEST creator="?" date="{date}" time="{time}" version="0.0.1" operational="false" 
+                <SEGMENT_UPDATE_REQUEST creator="?" date="{date}" time="{time}" version="0.0.1" operational="false"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../setup_files/
                 schema/segment_update_request.xsd">
                 <CONFIGURATION_NAME>{self.configuration_name}</CONFIGURATION_NAME>
-                <CORRECTION_ID>{self.correction_id}</CORRECTION_ID>\n""".format(self=self,
-                                                                                date='YYYY-MM-DD', time='HH:MM:SS')
+                <CORRECTION_ID>{self.correction_id}</CORRECTION_ID>\n""".format(
+            self=self, date='YYYY-MM-DD', time='HH:MM:SS'
+        )
         # FIXME add date and time keywords for real
         for igrp, grp in enumerate(self.groups):
-            text += '    <GROUP id="{id}">\n'.format(id=igrp+1)
+            text += '    <GROUP id="{id}">\n'.format(id=igrp + 1)
             for update in grp:
                 text += update.xmltext
             text += '    </GROUP>\n'

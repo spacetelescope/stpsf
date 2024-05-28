@@ -15,6 +15,7 @@ try:
 except ImportError:
     version = ''
 
+
 def pytest_configure():
     PYTEST_HEADER_MODULES.pop('Pandas', None)
     PYTEST_HEADER_MODULES.pop('h5py', None)

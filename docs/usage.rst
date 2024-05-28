@@ -55,6 +55,35 @@ one can create an instance of MIRI and configure it for coronagraphic observatio
    :align: center
    :alt: Sample PSF image
 
+Understanding output data products
+==================================
+
+PSF outputs are returned as FITS HDULists with multiple extensions. In most cases, there will be four extensions,
+for instance like this:
+
+.. code :
+
+    No.    Name      Ver    Type      Cards   Dimensions   Format            # Comment
+      0  OVERSAMP      1 PrimaryHDU     104   (236, 236)   float64           # Ideal PSF, oversampled
+      1  DET_SAMP      1 ImageHDU       106   (59, 59)   float64             # Ideal PSF, detector-sampled
+      2  OVERDIST      1 ImageHDU       153   (236, 236)   float64           # With distortions, oversampled
+      3  DET_DIST      1 ImageHDU       159   (59, 59)   float64             # With distortions, detector-sampled
+
+
+
+The first two extensions give the "ideal" diffractive PSF (i.e. "photons only"). The first extension is oversampled, and
+the second extension is binned down to the detector sampling pixel scale. Then, models of additional physical effects,
+such as geometric distortion and detector charge transfer effects,
+are added to these to produce the latter two extensions.
+
+**In general, the last ("DET_DIST") FITS extension of the output PSF FITS file are the output data product that most
+represents the PSF as actually observed on a detector.** Conversely, the first ("OVERSAMP") FITS extension represents
+best the nominal theoretical PSF as formed by JWST or Roman's optical systems, determined by the electrical field
+incident on the front surface of the detector.
+
+
+Customizing PSF Calculations
+=============================
 
 Input Source Spectra
 --------------------
@@ -88,7 +117,6 @@ To calculate a monochromatic PSF, just use the ``monochromatic`` parameter. Wave
    >>> psf = miri.calc_psf(monochromatic=9.876e-6)
 
 
-
 Adjusting source position, centering, and output format
 -------------------------------------------------------
 
@@ -117,15 +145,6 @@ Note that instead of offsetting the source we could offset the coronagraph mask 
 
 
 If these options are set, the offset is applied relative to the central coordinates as defined by the output array size and parity (described just below).
-
-
-Simulating telescope jitter
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Space-based observatories don't have to contend with the seeing limit, but imprecisions in telescope pointing can have the effect of smearing out the PSF. To simulate this with WebbPSF, the option names are ``jitter`` and ``jitter_sigma``.
-
->>> instrument.options['jitter'] = 'gaussian'   # jitter model name or None
->>> instrument.options['jitter_sigma'] = 0.009  # in arcsec per axis, default 0.007
 
 Array sizes, star positions, and centering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,10 +181,11 @@ you may also just set the desired number of pixels explicitly in the call to cal
     with a total number of data pixels that is even, but that correctly represents
     the PSF located at the center of an odd number of detector pixels.
 
+
 Output format options for sampling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As just explained, WebbPSF can easily calculate PSFs on a finer grid than the detector's native pixel scale. You can select whether the output data should include this oversampled image, a copy that has instead been rebinned down to match the detector scale, or optionally both. This is done using the ``options['output_mode']`` parameter.
+As explained above, WebbPSF by default calculates PSFs on a finer grid than the detector's native pixel scale, and also bins down to detector sampling. You can select whether the output data should include this oversampled image, a copy that has instead been rebinned down to match the detector scale, or optionally both. This is done using the ``options['output_mode']`` parameter.
 
    >>> nircam.options['output_mode'] = 'oversampled'
    >>> psf = nircam.calc_psf()       # the 'psf' variable will be an oversampled PSF, formatted as a FITS HDUlist
@@ -177,9 +197,43 @@ As just explained, WebbPSF can easily calculate PSFs on a finer grid than the de
    >>> psf3 = nircam.calc_psf()      # 'psf3' will have the oversampled image as primary HDU, and
    >>>                              # the detector-sampled image as the first image extension HDU.
 
-.. warning::
-    The default behavior is `both`. Note that at some point in the future, this default is likely to change to detector sampling.
-    To future-proof your code, set `options['output_mode']` explicitly.
+The default behavior is `both`.
+
+
+Specifying Positions: Detector Position vs. Aperture Name vs. Source Offset
+------------------------------------------------------------------------------
+
+There are a few related ways of specifying PSF position within an instrument. First, you may simply
+specify a detector position, and a detector (for instruments with more than one)::
+
+    >>> nrc = webbpsf.NIRCam()
+    >>> nrc.detector = 'NRCA3'
+    >>> nrc.detector_position = (500, 1700)  # note this is X, Y order
+
+Conceptually you should think of this as specifying *which detector pixel is in the center of the subarray that
+is computed for the PSF*. This information is also used to look up reference info about field-dependent aberrations
+across the field of view.
+
+Secondly, you can specify one of the many named instrument apertures (i.e. subarrays), as defined in the
+`science instrument aperture file <https://pysiaf.readthedocs.io/en/latest/>`_. By selecting a named
+aperture, webbpsf will be configured to calculate a PSF at the center of that subarray, selecting
+the appropriate detector and position. Note that when the selected aperture is not a full frame, the
+X and Y position values for ``detector_position`` represent pixel position *within that subarray*.::
+
+    >>> nrc.aperturename = 'NRCB1_SUB400P'
+    >>> print(nrc.detector, nrc.detector_position)
+    NRCB1 (234, 198)
+
+Conceptually, the detector position and aperturename options are equivalent ways of specifying a location within
+the field of view of one of the science instruments. By default, if not set explicitly, the aperture name defaults to
+full-frame aperture for the selected detector. Because this is defining the location of a subarray, the detector position
+attribute is always considered as an **integer**; if you try to set it to fractional pixels, the fractional part is ignored.
+
+Thirdly, you can specify an offset position for the PSF source within that subarray. This can be done with the
+``options['source_offset_*']`` parameters, as noted above. These parameters allow to control the
+position of the PSF *relative to the center of the subarray (defined by the detector position and/or aperturename)*.
+In particular, this can be used to specify subpixel offsets.
+
 
 Pixel scales, sampling, and oversampling
 ----------------------------------------
@@ -286,60 +340,9 @@ chosen logging settings between invocations, so if you close and then restart py
 See :py:func:`webbpsf.setup_logging` for more details.
 
 
-Advanced Usage: Output file format, OPDs, and more
-==================================================
-
-This section serves as a catch-all for some more esoteric customizations and applications. See also the :ref:`more_examples` page.
-
-Writing out only downsampled images
------------------------------------
-
-Perhaps you may want to calculate the PSF using oversampling, but to save disk space you only want to write out the PSF downsampled to detector resolution.
-
-   >>> result =  inst.calc_psf(args, ...)
-   >>> result['DET_SAMP'].writeto(outputfilename)
-
-Or if you really care about writing it as a primary HDU rather than an extension, replace the 2nd line with
-
-   >>> pyfits.PrimaryHDU(data=result['DET_SAMP'].data, header=result['DET_SAMP'].header).writeto(outputfilename)
-
-Writing out intermediate images
--------------------------------
-
-Your calculation may involve intermediate pupil and image planes (in fact, it most likely does). WebbPSF / POPPY allow you to inspect the intermediate pupil and image planes visually with the display keyword argument to :py:meth:`~webbpsf.JWInstrument.calc_psf`. Sometimes, however, you may want to save these arrays to FITS files for analysis. This is done with the ``save_intermediates`` keyword argument to :py:meth:`~webbpsf.JWInstrument.calc_psf`.
-
-The intermediate wavefront planes will be written out to FITS files in the current directory, named in the format ``wavefront_plane_%03d.fits``. You can additionally specify what representation of the wavefront you want saved with the ``save_intermediates_what`` argument to :py:meth:`~webbpsf.JWInstrument.calc_psf`. This can be ``all``, ``parts``, ``amplitude``, ``phase`` or ``complex``, as defined as in :py:meth:`poppy.Wavefront.asFITS`. The default is to write ``all`` (intensity, amplitude, and phase as three 2D slices of a data cube).
-
-If you pass ``return_intermediates=True`` as well, the return value of calc_psf is then ``psf, intermediate_wavefronts_list`` rather than the usual ``psf``.
-
-.. warning::
-
-   The ``save_intermediates`` keyword argument does not work when using parallelized computation, and WebbPSF will fail with an exception if you attempt to pass ``save_intermediates=True`` when running in parallel. The ``return_intermediates`` option has this same restriction.
-
-Providing your own OPDs or pupils from some other source
---------------------------------------------------------
-
-It is straight forward to configure an Instrument object to use a pupil OPD file of your own devising, by setting the ``pupilopd`` attribute of the Instrument object:
-
-        >>> niriss = webbpsf.NIRISS()
-        >>> niriss.pupilopd = "/path/to/your/OPD_file.fits"
-
-If you have a pupil that is an array in memory but not saved on disk, you can pass it in as a fits.HDUList object :
-
-        >>> myOPD = some_function_that_returns_properly_formatted_HDUList(various, function, args...)
-        >>> niriss.pupilopd = myOPD
-
-Likewise, you can set the pupil transmission file in a similar manner by setting the ``pupil`` attribute:
-
-        >>> niriss.pupil = "/path/to/your/OPD_file.fits"
-
-
-Please see the documentation for :py:class:`poppy.FITSOpticalElement` for information on the required formatting of the FITS file.
-In particular, you will need to set the `PUPLSCAL` keyword, and OPD values must be given in units of meters.
-
 
 Calculating Data Cubes
-----------------------
+======================
 
 Sometimes it is convenient to calculate many PSFs at different wavelengths with the same instrument
 config. You can do this just by iterating over calls to ``calc_psf``, but there's also a function to
@@ -379,59 +382,33 @@ F290LP:
    :alt: Sample PSF cube image
 
 
+A similar function `calc_datacube_fast` provides over an order-of-magnitude speedup, at a cost of slightly less accurate
+PSF calculations. Specifically, the accelerated function makes an assumption that the exit pupil wavefront is independent
+of wavelength; this is a reasonable assumption for most cases (but does not for coronagraphic or slit spectroscopic PSFs).
+
+As of version 1.3, WebbPSF adds direct support for the NIRSpec IFU and MIRI MRS IFU modes. This can be invoked by setting
+the ``mode`` attribute to  ``'IFU'``, and then setting the ``band`` attribute for MIRI or the ``disperser`` and ``filter``
+attributes for NIRSpec. (Note that PSF optical models
+are not yet tuned to fully reflect the on-orbit performance of these IFU modes; this is work in progress.)
+
+.. code-block:: Python
+
+    # Example datacube calc for NIRSpec
+    nrs = webbpsf.NIRSpec()
+    nrs.mode = 'IFU'
+    nrs.disperser = 'PRISM'
+    nrs.filter = 'CLEAR'
+    waves = nrs.get_IFU_wavelengths()
+    cube = nrs.calc_datacube_fast(waves)
+
+    # Example datacube calc for MIRI
+    miri = webbpsf.MIRI()
+    miri.mode = 'IFU'
+    miri.band= '2A'
+    waves = miri.get_IFU_wavelengths()
+    cube = miri.calc_datacube_fast(waves)
 
 
-Subclassing a JWInstrument to add additional functionality
-----------------------------------------------------------
-
-Perhaps you want to modify the OPD used for a given instrument, for instance to
-add a defocus. You can do this by subclassing one of the existing instrument
-classes to override the :py:meth:`JWInstrument._addAdditionalOptics` function. An :py:class:`OpticalSystem <poppy.OpticalSystem>` is
-basically a list so it's straightforward to just add another optic there. In
-this example it's a lens for defocus but you could just as easily add another
-:py:class:`FITSOpticalElement <poppy.FITSOpticalElement>` instead to read in a disk file.
-
-
-Note, we do this as an example here to show how to modify an instrument class by
-subclassing it, which can let you add arbitrary new functionality.
-There's an easier way to add defocus specifically; see below.
-
-
-    >>> class FGS_with_defocus(webbpsf.FGS):
-    >>>     def __init__(self, *args, **kwargs):
-    >>>         webbpsf.FGS.__init__(self, *args, **kwargs)
-    >>>         # modify the following as needed to get your desired defocus
-    >>>         self.defocus_waves = 0
-    >>>         self.defocus_lambda = 4e-6
-    >>>     def _addAdditionalOptics(self, optsys, *args, **kwargs):
-    >>>         optsys = webbpsf.FGS._addAdditionalOptics(self, optsys, *args, **kwargs)
-    >>>         lens = poppy.ThinLens(
-    >>>             name='FGS Defocus',
-    >>>             nwaves=self.defocus_waves,
-    >>>             reference_wavelength=self.defocus_lambda
-    >>>         )
-    >>>         lens.planetype = poppy.PUPIL  # tell propagation algorithm which this is
-    >>>         optsys.planes.insert(1, lens)
-    >>>         return optsys
-    >>>
-    >>> fgs2 = FGS_with_defocus()
-    >>> # apply 4 waves of defocus at the wavelength
-    >>> # defined by FGS_with_defocus.defocus_lambda
-    >>> fgs2.defocus_waves = 4
-    >>> psf = fgs2.calc_psf()
-    >>> webbpsf.display_psf(psf)
-
-
-Defocusing an instrument
---------------------------------
-
-The instrument options dictionary also lets you specify an optional defocus
-amount.  You can specify both the wavelength at which it should be applied, and
-the number of waves of defocus (at that wavelength, specified as waves
-peak-to-valley over the circumscribing circular pupil of JWST).
-
-
-   >>> nircam.options['defocus_waves'] = 3.2
-   >>> nircam.options['defocus_wavelength'] = 2.0e-6
-
-
+Note, when IFU mode is selected, the output PSF orientations are set to match the PSFs as seen in pipeline outputs that use the
+``coord_sys="ifualign"`` option in the Cube Build pipeline step. In particular this includes a 90 degree rotation applied to
+NIRSpec IFU PSFs.

@@ -19,7 +19,7 @@ WebbPSF is a Python package that computes simulated point spread functions (PSFs
 
 
 **Contributors:**
-WebbPSF has been developed by Marshall Perrin, Marcio Meléndez, Shannon Osborne, Robel Geda, Brad Sappington, Charles-Philippe Lajoie, Joseph Long, Justin Otor, Jarron Leisenring, Neil Zimmerman, Keira Brooks, and Anand Sivaramakrishnan, with contributions from Alden Jurling, Lauren Chambers, Ewan Douglas, and `others <https://github.com/spacetelescope/webbpsf/graphs/contributors>`_. 
+WebbPSF has been developed by Marshall Perrin, Marcio Meléndez, Shannon Osborne, Robel Geda, Brad Sappington, Charles-Philippe Lajoie, Joseph Long, Justin Otor, Jarron Leisenring, Neil Zimmerman, Keira Brooks, and Anand Sivaramakrishnan, with contributions from Alden Jurling, Lauren Chambers, Ewan Douglas, and `others <https://github.com/spacetelescope/webbpsf/graphs/contributors>`_.
 
 Getting Started with WebbPSF
 ----------------------------
@@ -43,39 +43,47 @@ Contents
 
 .. toctree::
    :maxdepth: 1
+   :caption: Getting Started
 
    intro.rst
    installation.rst
    relnotes.rst
    usage.rst
+   psf_grids.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Modeling JWST PSFs
+
    jwst.rst
+   more_examples.rst
    jwst_measured_opds.ipynb
    jwst_detector_effects.ipynb
    jwst_matching_psfs_to_data.ipynb
    jwst_optical_budgets.ipynb
+   jwst_psf_subtraction.ipynb
    jwst_wavefront_deltas.ipynb
-   roman.rst
-   psf_grids.rst
-   more_examples.rst
-   poppy.rst
-
-Advanced Usage
-^^^^^^^^^^^^^^
+   less_common_usage.rst
 
 .. toctree::
    :maxdepth: 1
+   :caption: Modeling Roman PSFs
+
+   roman.rst
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Package Documentation
 
    api_reference.rst
    help.rst
-   performance.rst
    sampling.rst
    fft_optimization.rst
-
-Appendices and Reference
-^^^^^^^^^^^^^^^^^^^^^^^^
+   poppy.rst
 
 .. toctree::
    :maxdepth: 1
+   :caption: Developer Reference
 
    available_opds.rst
    field_dependence/multifield_documentation.ipynb
@@ -89,7 +97,7 @@ Appendices and Reference
 
     * Perrin et al. 2014, `"Updated point spread function simulations for JWST with WebbPSF" <http://adsabs.harvard.edu/abs/2014SPIE.9143E..3XP>`_,  Proc. SPIE. 9143,
     * Perrin et al. 2012, `"Simulating point spread functions for the James Webb Space Telescope with WebbPSF", <http://adsabs.harvard.edu/abs/2012SPIE.8442E..3DP>`_ Proc SPIE 8842, and
-    * Perrin 2011, :download:`Improved PSF Simulations for JWST: Methods, Algorithms, and Validation <Improved_PSFs_for_Webb.pdf>`, JWST Technical report JWST-STScI-002469.
+    * Perrin 2011, `Improved PSF Simulations for JWST: Methods, Algorithms, and Validation <Improved_PSFs_for_Webb.pdf>`_, JWST Technical report JWST-STScI-002469.
 
     In particular, the 2012 SPIE paper gives a broad overview, the 2014 SPIE paper presents comparisons to instrument cryotest data, and the Technical Report document describes in more detail the relevant optical physics, explains design decisions and motivation for WebbPSF's architecture, and presents extensive validation tests demonstrating consistency between WebbPSF and other PSF simulation packages used throughout the JWST project.
 

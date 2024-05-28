@@ -24,13 +24,14 @@ WebbPSF: Simulated Point Spread Functions for the James Webb and Nancy Grace Rom
 WebbPSF produces simulated PSFs for the James Webb Space Telescope, NASA's
 flagship infrared space telescope. WebbPSF can simulate images for any of the
 four science instruments plus the fine guidance sensor, including both direct
-imaging and coronagraphic modes.
+imaging, coronagraphic, and spectroscopic modes.
 
 WebbPSF also supports simulating PSFs for the upcoming Nancy Grace Roman Space Telescope (formerly WFIRST),
 including its Wide Field Instrument and a preliminary version of the Coronagraph Instrument.
 
-Developed by Marshall Perrin, Joseph Long, Neil Zimmerman, Robel Geda, Shannon
-Osborne, Marcio Melendez Hernandez, Lauren Chambers, Keira Brooks, Charles-Phillipe Lajoie, Jarron Leisenring, Alden Jurling, and collaborators, 2010-2020.
+Developed by Marshall Perrin, Joseph Long, Shannon Osborne, Robel Geda, Bradley Sappington, Marcio Meléndez, 
+Charles-Phillipe Lajoie, Jarron Leisenring, Neil Zimmerman, Keira Brooks, 
+Justin Otor, Trey Kulp, Lauren Chambers, Alden Jurling, and collaborators, 2010-2024.
 
 Documentation can be found online at https://webbpsf.readthedocs.io
 

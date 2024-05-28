@@ -69,11 +69,11 @@ Installing the Required Data Files
 
 Files containing such information as the JWST pupil shape, instrument throughputs, and aperture positions are distributed separately from WebbPSF. To run WebbPSF, you must download these files and tell WebbPSF where to find them using the ``WEBBPSF_PATH`` environment variable.
 
-1. Download the following file:  `webbpsf-data-1.2.1.tar.gz <https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz>`_  [approx. 70 MB]
-2. Untar ``webbpsf-data-1.2.1.tar.gz`` into a directory of your choosing.
+1. Download the following file:  `webbpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz>`_  [approx. 70 MB]
+2. Untar ``webbpsf-data-LATEST.tar.gz`` into a directory of your choosing.
 3. Set the environment variable ``WEBBPSF_PATH`` to point to that directory. e.g. ::
 
-   export WEBBPSF_PATH=$HOME/data/webbpsf-data
+    export WEBBPSF_PATH=$HOME/data/webbpsf-data
 
 for bash. (You will probably want to add this to your ``.bashrc``.)
 
@@ -86,7 +86,9 @@ You should now be able to successfully ``import webbpsf`` in a Python session.
 
 .. Note::
 
-   **For STScI Users Only:** Please note, we are no longer providing users at STScI a location with the required data files on the Central Storage network. Therefore, to run WebbPSF, you must download these files and tell WebbPSF where to find them using the WEBBPSF_PATH environment variable.
+   **For STScI Users Only:** Users at STScI may access the required data files from the Central Storage network. Set the following environment variables in your ``bash`` shell. (You will probably want to add this to your ``.bashrc``.) ::
+      export WEBBPSF_PATH="/grp/jwst/ote/webbpsf-data"
+      export PYSYN_CDBS="/grp/hst/cdbs"
 
 Software Requirements
 ---------------------
@@ -94,7 +96,7 @@ Software Requirements
 
 See `the requirements.txt specification file <https://github.com/spacetelescope/webbpsf/blob/develop/requirements.txt>`_ for the required package dependencies.
 
-**Required Python version**: WebbPSF 1.1 and above require Python 3.9 or higher.
+**Required Python version**: WebbPSF 1.1 and above require Python 3.10 or higher.
 
 The major dependencies are the standard `NumPy, SciPy <http://www.scipy.org/scipylib/download.html>`_, `matplotlib <http://matplotlib.org>`_ stack, and `Astropy <http://astropy.org>`_.
 

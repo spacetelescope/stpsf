@@ -2,7 +2,7 @@
 .. _more_examples:
 
 =============================
-More Examples
+More Examples for JWST
 =============================
 
 

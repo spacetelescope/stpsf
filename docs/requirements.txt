@@ -6,4 +6,6 @@ astropy-helpers
 astropy
 sphinx-astropy
 sphinx_issues
--e git+https://github.com/mperrin/poppy.git#egg=poppy
+graphviz
+nbsphinx
+-e git+https://github.com/spacetelescope/poppy.git#egg=poppy

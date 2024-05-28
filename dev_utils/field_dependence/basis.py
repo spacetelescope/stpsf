@@ -18,22 +18,21 @@ import math
 
 # Disable Pint's old fallback behavior (must come before importing Pint)
 import os
+import copy
 
-os.environ['PINT_ARRAY_PROTOCOL_FALLBACK'] = "0"
+os.environ['PINT_ARRAY_PROTOCOL_FALLBACK'] = '0'
 
-import pint
+import pint  # noqa
 
 units = pint.UnitRegistry()
 Q_ = units.Quantity
 
 # Silence NEP 18 warning
-import warnings
+import warnings  # noqa
 
 with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
+    warnings.simplefilter('ignore')
     Q_([])
-
-import copy
 
 
 def embed(n, m):
@@ -41,7 +40,7 @@ def embed(n, m):
     # conversely insert an array of length m into an array of length n.
     # Idea:  there should be a way to make a class extending standard array class to handle this automatically.
     if n < m:
-        raise ValueError("Argument n is less than argument m")
+        raise ValueError('Argument n is less than argument m')
     emvec = np.fix(n / 2) + range(-np.fix(m / 2).astype('int64'), np.fix((m - 1) / 2).astype('int64') + 1)
     return emvec.astype('int')
 
@@ -51,17 +50,16 @@ class BaseBasis:
 
     # def __init__(self, pts_x, pts_y):
     def __init__(self, *args, **kwargs):
-
         """Base class constructor that sets attributes that every basis set will need and creates
-       a 2D grid of points on which the basis set will be represented.  It is assumes that the
-       basis set is scaled so that the array will generally run from -1 to 1 in x and y.  In
-       cases where the number of points is odd, the arrays will be centered around 0 and run from
-       -1 to 1 exactly.  In cases where the number of points is even, the arrays will be centered
-       around (pts_x/2, pts_y/2) and the first array indices (i.e. [0]) will have values one step
-       less than -1.
-       Arguments:
-           pts_x:  number of points representing basis in x dimension
-           pts_y:  number of points representing basis in y dimension"""
+        a 2D grid of points on which the basis set will be represented.  It is assumes that the
+        basis set is scaled so that the array will generally run from -1 to 1 in x and y.  In
+        cases where the number of points is odd, the arrays will be centered around 0 and run from
+        -1 to 1 exactly.  In cases where the number of points is even, the arrays will be centered
+        around (pts_x/2, pts_y/2) and the first array indices (i.e. [0]) will have values one step
+        less than -1.
+        Arguments:
+            pts_x:  number of points representing basis in x dimension
+            pts_y:  number of points representing basis in y dimension"""
         self._pts_x = args[0]
         self._pts_y = args[1]
 
@@ -81,7 +79,8 @@ class BaseBasis:
         self._ynorm = self._ynorm * self._step_y
 
         self._extent = np.array(
-            [min_x * self._step_x, (max_x - 1) * self._step_x, min_y * self._step_y, (max_y - 1) * self._step_y])
+            [min_x * self._step_x, (max_x - 1) * self._step_x, min_y * self._step_y, (max_y - 1) * self._step_y]
+        )
 
         # Create placeholder array that represents where data is defined (i.e. what will generally
         # be used to represent an aperture or the like.
@@ -137,7 +136,6 @@ class PolynomialBasis(BaseBasis):
     """Class that implements polynomial basis sets"""
 
     def __init__(self, *args, **kwargs):
-
         self._order = args[0]
         BaseBasis.__init__(self, args[1], args[2])
         # Set up dummy polynomial array and number of polynomials
@@ -186,7 +184,8 @@ class PolynomialBasis(BaseBasis):
             return self._polynomials
         elif self._normalization == 'unit_pv':
             raise NotImplementedError(
-                'Unit PV normalization is not implemented.  Previous implementation broke orthogonality')
+                'Unit PV normalization is not implemented.  Previous implementation broke orthogonality'
+            )
             # TODO:  FIX THIS!!!  An offset like this to force things to run from -1 to 1 will break orthogonality, and
             #  must not be done.  Think about what to do instead.  Check Noll paper.  Possible just make PV truly unity
             #  and don't care about what the absolute max and min values are.  Also implement property decorator and
@@ -216,14 +215,15 @@ class PolynomialBasis(BaseBasis):
     def numpolys(self, new_numpolys):
         polynomials_copy = self._polynomials
         self._polynomials = np.zeros((new_numpolys, self._pts_x, self._pts_y))
-        self._polynomials[0:self._numpolys, :, :] = polynomials_copy
+        self._polynomials[0: self._numpolys, :, :] = polynomials_copy  # noqa
         self._numpolys = new_numpolys
 
     def project(self, in_data):
         coeffs = np.zeros(self.numpolys)
         for polynomial, index in zip(self._polynomials, range(0, self.numpolys)):
-            coeff = np.einsum('i,i', polynomial[self.data_defined], in_data[self.data_defined]) / \
-                    np.einsum('i,i->', polynomial[self.data_defined], polynomial[self.data_defined])
+            coeff = np.einsum('i,i', polynomial[self.data_defined], in_data[self.data_defined]) / np.einsum(
+                'i,i->', polynomial[self.data_defined], polynomial[self.data_defined]
+            )
             coeffs[index] = coeff
 
         return coeffs
@@ -276,8 +276,9 @@ class PolynomialBasis(BaseBasis):
             fig, ax = plt.subplots(max_order + 1, max_order + 1)
             for polynomial, index in zip(self.polynomials[plot_terms, :, :], plot_terms):
                 col = index - int(self._term_order[index] * (self._term_order[index] + 1) / 2)
-                im = ax[self._term_order[index], col].imshow(polynomial * np.transpose(self.data_defined), extent=self._extent,
-                                                             vmin=min_val, vmax=max_val)
+                im = ax[self._term_order[index], col].imshow(
+                    polynomial * np.transpose(self.data_defined), extent=self._extent, vmin=min_val, vmax=max_val
+                )
                 ax[self._term_order[index], col].axis('off')
                 plotted[self._term_order[index], col] = True
 
@@ -337,7 +338,7 @@ class ZernikeBasis(PolynomialBasis):
                 p = 1
                 j_sumlim = m
                 if (n % 2) == 0:
-                    q = ((n - 2 * m) // 2 - 1)  # n even
+                    q = (n - 2 * m) // 2 - 1  # n even
                 else:
                     q = (n - 2 * m - 1) // 2  # n odd
             else:  # Cos function
@@ -355,15 +356,18 @@ class ZernikeBasis(PolynomialBasis):
             for i_index in range(0, q + 1):
                 for j_index in range(0, j_sumlim + 1):
                     for k_index in range(0, j_sumlim - j_index + 1):
-                        self._polynomials[r_index, :, :] = self._polynomials[r_index, :, :] \
-                                                           + (-1) ** (i_index + j_index) \
-                                                           * sp.comb(abs(2 * m - n), 2 * i_index + p) \
-                                                           * sp.comb(j_sumlim - j_index, k_index) \
-                                                           * (sp.gamma(n - j_index + 1)
-                                                              / (sp.gamma(j_index + 1) * sp.gamma(m - j_index + 1)
-                                                                 * sp.gamma(n - m - j_index + 1))) \
-                                                           * x_powers[n - 2 * (i_index + j_index + k_index) - p, :, :] \
-                                                           * y_powers[2 * (i_index + k_index) + p, :, :]
+                        self._polynomials[r_index, :, :] = (
+                            self._polynomials[r_index, :, :]
+                            + (-1) ** (i_index + j_index)
+                            * sp.comb(abs(2 * m - n), 2 * i_index + p)
+                            * sp.comb(j_sumlim - j_index, k_index)
+                            * (
+                                sp.gamma(n - j_index + 1)
+                                / (sp.gamma(j_index + 1) * sp.gamma(m - j_index + 1) * sp.gamma(n - m - j_index + 1))
+                            )
+                            * x_powers[n - 2 * (i_index + j_index + k_index) - p, :, :]
+                            * y_powers[2 * (i_index + k_index) + p, :, :]
+                        )
 
                         # Calculate the multiplicative factor to normalize the Zernike for unit RMS error
                         # useful for calculating RMS wavefront error.
@@ -380,7 +384,6 @@ class ZernikeBasis(PolynomialBasis):
                             self._radial_terms[r_index] = True
 
     def __init__(self, *args, **kwargs):
-
         input_norm = kwargs.pop('normalization', 'natural')
         if input_norm not in {'natural', 'unit_pv', 'unit_rms'}:
             raise ValueError('Selected normalization not supported')
@@ -409,14 +412,14 @@ class ZernikeBasis(PolynomialBasis):
     def term_order(self):
         return self._term_order
 
+
 class NollZernikeBasis(ZernikeBasis):
     """Class that calculates the Noll ordering/normalization of the Zernikes"""
 
     def __calc_noll_zerns__(self):
-
         j_index = 0
 
-        r = np.sqrt(self._xnorm ** 2 + self._ynorm ** 2)
+        r = np.sqrt(self._xnorm**2 + self._ynorm**2)
         theta = np.arctan2(self._ynorm, self._xnorm)
 
         cos_sin = False
@@ -425,12 +428,13 @@ class NollZernikeBasis(ZernikeBasis):
             for m in range((n % 2), (n + 1), 2):
                 r_n_m = np.zeros_like(r)
                 for s in range(0, int((n - m) / 2) + 1):
-                    r_n_m = r_n_m + (-1) ** s * math.factorial(n - s) * r ** (n - 2 * s) /   \
-                        (math.factorial(s) * math.factorial((n + m) / 2 -s) * math.factorial((n - m) / 2 -s))
+                    r_n_m = r_n_m + (-1) ** s * math.factorial(n - s) * r ** (n - 2 * s) / (
+                        math.factorial(s) * math.factorial((n + m) / 2 - s) * math.factorial((n - m) / 2 - s)
+                    )
                 if (m == 0) and (n % 2 == 0):
                     self._polynomials[j_index, :, :] = np.sqrt(n + 1) * r_n_m
                     j_index += 1
-                    cos_sin = not(cos_sin)
+                    cos_sin = not (cos_sin)
                 else:
                     if cos_sin:
                         self._polynomials[j_index, :, :] = np.sqrt(n + 1) * r_n_m * np.sqrt(2) * np.cos(m * theta)
@@ -444,7 +448,6 @@ class NollZernikeBasis(ZernikeBasis):
                         j_index += 1
 
     def __init__(self, *args, **kwargs):
-
         input_norm = kwargs.pop('normalization', 'unit_rms')
         if input_norm != 'unit_rms':
             raise ValueError('Selected normalization not supported. Noll form only supports unit_rms')
@@ -476,7 +479,8 @@ class NollZernikeBasis(ZernikeBasis):
     #                 next_order_start = (self._term_order[index] + 1) * (self._term_order[index] + 2) / 2
     #                 radial_term_index = order_start + self._term_order[index] / 2
     #                 if index < radial_term_index:
-    #                     self._polynomial_map[index] = next_order_start - (index - order_start) * 2 - (self._term_order[index] - 1) / 2
+    #                     self._polynomial_map[index] =
+    #                         next_order_start - (index - order_start) * 2 - (self._term_order[index] - 1) / 2
     #                 elif index > radial_term_index:
     #                     self._polynomial_map[index] =
     #
@@ -484,7 +488,6 @@ class NollZernikeBasis(ZernikeBasis):
 
 
 class FringeZernikesBasisBase(ZernikeBasis):
-
     def __init__(self, *args, **kwargs):
         ZernikeBasis.__init__(self, *args, **kwargs)
 
@@ -508,8 +511,7 @@ class FringeZernikesBasisBase(ZernikeBasis):
             for polynomial, index in zip(self._polynomials[plot_terms, :, :], plot_terms):
                 row = np.floor(index / cols).astype(int)
                 col = np.mod(index, cols).astype(int)
-                im = ax[row, col].imshow(polynomial * self.data_defined, extent=self._extent, vmin=min_val,
-                                         vmax=max_val)
+                im = ax[row, col].imshow(polynomial * self.data_defined, extent=self._extent, vmin=min_val, vmax=max_val)
                 ax[row, col].axis('off')
                 plotted[row, col] = True
 
@@ -522,10 +524,9 @@ class FringeZernikesBasisBase(ZernikeBasis):
 
 class FringeZernikeBasis(FringeZernikesBasisBase):
     """Class that implements tabulated Fringe Zernikes, as returned by many optical design programs such as Zemax or
-        or CodeV."""
+    or CodeV."""
 
     def __init__(self, *args, **kwargs):
-
         # Set the order needed to get all of the fringe Zernikes
         numpolys = args[0]
         arglist = list(args)
@@ -537,6 +538,7 @@ class FringeZernikeBasis(FringeZernikesBasisBase):
         self._numpolys = numpolys
         self._polynomial_map = [0, 2, 1, 4, 5, 3, 8, 7, 12, 9, 6, 13, 11, 18, 17, 24, 14, 10, 19, 16, 25,
                                 23, 32, 31, 40, 20, 15, 26, 22, 33, 30, 41, 39, 50, 49, 60, 84]
+
         self._polynomials = self._polynomials[self._polynomial_map[0:numpolys], :, :]
         self._term_order = self._term_order[self._polynomial_map[0:numpolys]]
         self._rms_factors = self._rms_factors[self._polynomial_map[0:numpolys]]
@@ -550,17 +552,23 @@ class FringeZernikeBasis(FringeZernikesBasisBase):
 
 class FringeZernikeBasisHardcoded(FringeZernikesBasisBase):
     """Class that implements tabulated Fringe Zernikes, as returned by many optical design programs such as Zemax or
-        or CodeV."""
+    or CodeV."""
 
     def __calc_fringe_zerns__(self):
-        self._polynomials = np.zeros((self._numpolys, self._pts_x, self._pts_y,))
+        self._polynomials = np.zeros(
+            (
+                self._numpolys,
+                self._pts_x,
+                self._pts_y,
+            )
+        )
 
         if self._numpolys > 37:
             raise ValueError('More Zernikes requested than defined in Fringe set')
 
         # Precalculate needed orders of the radial coordinate rho
         # TODO:  Put in some way to determine on the max order really needed to avoid unneeded computing here.
-        rho_max_order = 12 # Maximum polynomial order required to calculate all the needed Fringe Zernike terms.
+        rho_max_order = 12  # Maximum polynomial order required to calculate all the needed Fringe Zernike terms.
         rho = np.ones((rho_max_order + 1, self._pts_x, self._pts_y))
         rho[1, :, :] = self._r
         for index in range(2, rho_max_order + 1):
@@ -583,7 +591,7 @@ class FringeZernikeBasisHardcoded(FringeZernikesBasisBase):
             self._term_order[1] = 1
             self._polynomials[2, :, :] = self._ynorm
             self._term_order[2] = 1
-            self._polynomials[3, :, :] = 2. * rho[2, :, :] - 1
+            self._polynomials[3, :, :] = 2.0 * rho[2, :, :] - 1
             self._radial_terms[3] = True
             self._term_order[3] = 2
             self._polynomials[4, :, :] = rho[2, :, :] * np.cos(2 * theta)
@@ -624,14 +632,15 @@ class FringeZernikeBasisHardcoded(FringeZernikesBasisBase):
             self._term_order[20] = 6
             self._polynomials[21, :, :] = (15 * rho[6, :, :] - 20 * rho[4, :, :] + 6 * rho[2, :, :]) * np.sin(2 * theta)
             self._term_order[21] = 6
-            self._polynomials[22, :, :] = (35 * rho[7, :, :] - 60 * rho[5, :, :] + 30 * rho[3, :, :] -
-                                           4 * rho[1, :, :]) * np.cos(theta)
+            self._polynomials[22, :, :] = (
+                35 * rho[7, :, :] - 60 * rho[5, :, :] + 30 * rho[3, :, :] - 4 * rho[1, :, :]
+            ) * np.cos(theta)
             self._term_order[22] = 7
-            self._polynomials[23, :, :] = (35 * rho[7, :, :] - 60 * rho[5, :, :] + 30 * rho[3, :, :] -
-                                           4 * rho[1, :, :]) * np.sin(theta)
+            self._polynomials[23, :, :] = (
+                35 * rho[7, :, :] - 60 * rho[5, :, :] + 30 * rho[3, :, :] - 4 * rho[1, :, :]
+            ) * np.sin(theta)
             self._term_order[23] = 7
-            self._polynomials[24, :, :] = (70 * rho[8, :, :] - 140 * rho[6, :, :] + 90 * rho[4, :, :] -
-                                           20 * rho[2, :, :] + 1)
+            self._polynomials[24, :, :] = 70 * rho[8, :, :] - 140 * rho[6, :, :] + 90 * rho[4, :, :] - 20 * rho[2, :, :] + 1
             self._term_order[24] = 8
             self._radial_terms[24] = True
             self._polynomials[25, :, :] = rho[5, :, :] * np.cos(5 * theta)
@@ -642,37 +651,46 @@ class FringeZernikeBasisHardcoded(FringeZernikesBasisBase):
             self._term_order[27] = 6
             self._polynomials[28, :, :] = (6 * rho[6, :, :] - 5 * rho[4, :, :]) * np.sin(4 * theta)
             self._term_order[28] = 6
-            self._polynomials[29, :, :] = (21 * rho[7, :, :] - 30 * rho[5, :, :] +
-                                           10 * rho[3, :, :]) * np.cos(3 * theta)
+            self._polynomials[29, :, :] = (21 * rho[7, :, :] - 30 * rho[5, :, :] + 10 * rho[3, :, :]) * np.cos(3 * theta)
             self._term_order[29] = 7
-            self._polynomials[30, :, :] = (21 * rho[7, :, :] - 30 * rho[5, :, :] +
-                                           10 * rho[3, :, :]) * np.sin(3 * theta)
+            self._polynomials[30, :, :] = (21 * rho[7, :, :] - 30 * rho[5, :, :] + 10 * rho[3, :, :]) * np.sin(3 * theta)
             self._term_order[30] = 7
-            self._polynomials[31, :, :] = (56 * rho[8, :, :] - 105 * rho[6, :, :] + 60 * rho[4, :, :] -
-                                           10 * rho[2, :, :]) * np.cos(2 * theta)
+            self._polynomials[31, :, :] = (
+                56 * rho[8, :, :] - 105 * rho[6, :, :] + 60 * rho[4, :, :] - 10 * rho[2, :, :]
+            ) * np.cos(2 * theta)
             self._term_order[31] = 8
-            self._polynomials[32, :, :] = (56 * rho[8, :, :] - 105 * rho[6, :, :] + 60 * rho[4, :, :] -
-                                           10 * rho[2, :, :]) * np.sin(2 * theta)
+            self._polynomials[32, :, :] = (
+                56 * rho[8, :, :] - 105 * rho[6, :, :] + 60 * rho[4, :, :] - 10 * rho[2, :, :]
+            ) * np.sin(2 * theta)
             self._term_order[32] = 8
-            self._polynomials[33, :, :] = (126 * rho[9, :, :] - 280 * rho[7, :, :] + 210 * rho[5, :, :] -
-                                           60 * rho[3, :, :] + 5 * rho[1, :, :]) * np.cos(theta)
+            self._polynomials[33, :, :] = (
+                126 * rho[9, :, :] - 280 * rho[7, :, :] + 210 * rho[5, :, :] - 60 * rho[3, :, :] + 5 * rho[1, :, :]
+            ) * np.cos(theta)
             self._term_order[33] = 9
-            self._polynomials[34, :, :] = (126 * rho[9, :, :] - 280 * rho[7, :, :] + 210 * rho[5, :, :] -
-                                           60 * rho[3, :, :] + 5 * rho[1, :, :]) * np.sin(theta)
+            self._polynomials[34, :, :] = (
+                126 * rho[9, :, :] - 280 * rho[7, :, :] + 210 * rho[5, :, :] - 60 * rho[3, :, :] + 5 * rho[1, :, :]
+            ) * np.sin(theta)
             self._term_order[34] = 9
-            self._polynomials[35, :, :] = (252 * rho[10, :, :] - 630 * rho[8, :, :] + 560 * rho[6, :, :] -
-                                           210 * rho[4, :, :] + 30 * rho[2, :, :] - 1)
+            self._polynomials[35, :, :] = (
+                252 * rho[10, :, :] - 630 * rho[8, :, :] + 560 * rho[6, :, :] - 210 * rho[4, :, :] + 30 * rho[2, :, :] - 1
+            )
             self._radial_terms[35] = True
             self._term_order[35] = 10
-            self._polynomials[36, :, :] = (924 * rho[12, :, :] - 2772 * rho[10, :, :] + 3150 * rho[8, :, :] -
-                                           1680 * rho[6, :, :] + 420 * rho[4, :, :] - 42 * rho[2, :, :] + 1)
+            self._polynomials[36, :, :] = (
+                924 * rho[12, :, :]
+                - 2772 * rho[10, :, :]
+                + 3150 * rho[8, :, :]
+                - 1680 * rho[6, :, :]
+                + 420 * rho[4, :, :]
+                - 42 * rho[2, :, :]
+                + 1
+            )
             self._term_order[36] = 12
             self._radial_terms[36] = True
         except IndexError:
             pass
 
     def __init__(self, *args, **kwargs):
-
         FringeZernikesBasisBase.__init__(self, *args, **kwargs)
 
         self._numpolys = args[0]
@@ -692,7 +710,6 @@ class Legendre2DBasis(PolynomialBasis):
     """Class that implements two-dimensional Legendre polynomial Basis"""
 
     def __calc_legendres__(self):
-
         # Calculate the 1D Legendre polynomials of all the orders we're interested in
         poly_x1d = np.zeros((self._order + 1, self._pts_x))
         poly_y1d = np.zeros((self._order + 1, self._pts_y))
@@ -721,7 +738,6 @@ class Legendre2DBasis(PolynomialBasis):
                 count += 1
 
     def __init__(self, *args, **kwargs):
-
         input_norm = kwargs.pop('normalization', 'natural')
         if input_norm not in {'natural', 'unit_pv', 'unit_rms'}:
             raise ValueError('Selected normalization not supported')
@@ -735,18 +751,20 @@ class Legendre2DBasis(PolynomialBasis):
         # Figure out the factors needed to give these unit RMS
         self._rms_factors = np.zeros(self._numpolys)
         for index1 in range(0, self._numpolys):
-            self._rms_factors[index1] = np.sqrt(np.mean(np.power(self._polynomials[index1][np.transpose(self._data_defined)], 2)))
+            self._rms_factors[index1] = np.sqrt(
+                np.mean(np.power(self._polynomials[index1][np.transpose(self._data_defined)], 2))
+            )
             # plt.figure()
             # plt.imshow(self._polynomials[index1])
             # plt.show()
 
+
 class GramSchmidtBasis(PolynomialBasis):
     """Class that implements a Gram-Schmidt orthonormalized version of the the polynomials given in the second argument.
-        Output polynomial should be exactly orthogonal over the boolean array defining the points in the array where the
-        data is defined."""
+    Output polynomial should be exactly orthogonal over the boolean array defining the points in the array where the
+    data is defined."""
 
     def __init__(self, *args, **kwargs):
-
         new_data_defined = args[0]
         nonorth_polynomials = args[1]
 
@@ -754,8 +772,14 @@ class GramSchmidtBasis(PolynomialBasis):
         if input_norm not in {'natural', 'unit_pv', 'unit_rms'}:
             raise ValueError('Selected normalization not supported')
 
-        PolynomialBasis.__init__(self, nonorth_polynomials.order, nonorth_polynomials.pts_x, nonorth_polynomials.pts_y,
-                                 normalization=input_norm, **kwargs)
+        PolynomialBasis.__init__(
+            self,
+            nonorth_polynomials.order,
+            nonorth_polynomials.pts_x,
+            nonorth_polynomials.pts_y,
+            normalization=input_norm,
+            **kwargs,
+        )
 
         self.numpolys = nonorth_polynomials.numpolys
         self._term_order = nonorth_polynomials._term_order
@@ -771,18 +795,18 @@ class GramSchmidtBasis(PolynomialBasis):
         # Loop through all of the polynomials that need to be orthogonalized, keeping track of an index
         # for accessing other polynomials as well
         self._d = np.zeros((nonorth_polynomials.numpolys, self.numpolys))
-        for init_polynomial, index1 in zip(nonorth_polynomials.polynomials[1:, :, :],
-                                           range(1, nonorth_polynomials.numpolys)):
+        for init_polynomial, index1 in zip(
+            nonorth_polynomials.polynomials[1:, :, :], range(1, nonorth_polynomials.numpolys)
+        ):
             # Start out new polynomial by setting it to the current old polynomial's value
             self._polynomials[index1, :, :] = np.copy(init_polynomial)
             # Loop over all defined polynomials up to current order, using their contributions to orthogonalize
             # current order
-            for intermed_polynomial, index2 in zip(self._polynomials[0:index1, :, :],
-                                                   range(0, index1)):
+            for intermed_polynomial, index2 in zip(self._polynomials[0:index1, :, :], range(0, index1)):
                 # Calculate the projection of lower order polynomials on current one
-                cur_d = -np.einsum('i, i', init_polynomial[new_data_defined], intermed_polynomial[new_data_defined]) \
-                        / np.einsum('i, i', intermed_polynomial[new_data_defined],
-                                    intermed_polynomial[new_data_defined])
+                cur_d = -np.einsum(
+                    'i, i', init_polynomial[new_data_defined], intermed_polynomial[new_data_defined]
+                ) / np.einsum('i, i', intermed_polynomial[new_data_defined], intermed_polynomial[new_data_defined])
                 # Subtract the lower order polynomial's contribution to current one
                 self._polynomials[index1, :, :] += cur_d * intermed_polynomial
                 # Store the coefficients from this projection for use in fitting code.
@@ -869,10 +893,9 @@ class Wavefront:
 
 class PolynomialWavefront(Wavefront):
     """Class that represents a wavefront represented by a set of coefficients and an instance of the class containing
-        the polynomial set used, a descendent of the PolynomialBasis class"""
+    the polynomial set used, a descendent of the PolynomialBasis class"""
 
     def __init__(self, *args, **kwargs):
-
         Wavefront.__init__(self, *args[2:], **kwargs)
         self._coeffs = args[0]  # List of wavefront coefficients, has units of length or phase.
         # self._data_diameter = args[2] #The physical width of the wavefront represented by this array
@@ -992,11 +1015,14 @@ class PointByPointWavefront(Wavefront):
                 data_new[em_vec, :] = self._data
                 self._data = data_new
         elif scaling == 'scale':
-            print("not implemented")
+            print('not implemented')
         self._pts_x = new_pts_x
 
     @pts_y.setter
-    def pts_y(self, new_pts_y, ):
+    def pts_y(
+        self,
+        new_pts_y,
+    ):
         self._pts_y = new_pts_y
 
     @pts.setter
@@ -1159,10 +1185,8 @@ if __name__ == '__main__':
     # units.define('waves = [] =  wave = wv')
     wavelength = 632.8 * units.nm
     c = pint.Context('optics')
-    c.add_transformation('meter', 'radian',
-                         lambda units, x: x * 2 * np.pi / wavelength)
-    c.add_transformation('radian', 'meter',
-                         lambda units, x: x * wavelength / (2 * np.pi))
+    c.add_transformation('meter', 'radian', lambda units, x: x * 2 * np.pi / wavelength)
+    c.add_transformation('radian', 'meter', lambda units, x: x * wavelength / (2 * np.pi))
     units.add_context(c)
     units.enable_contexts('optics')
 
@@ -1172,15 +1196,13 @@ if __name__ == '__main__':
 
     units.disable_contexts()
     units.remove_context('optics')
-    del (c)
+    del c
     c = pint.Context('optics')
     # c.remove_transformation('meter', 'radian')
     # c.remove_transformation('radian', 'meter')
     wavelength = 500 * units.nm
-    c.add_transformation('meter', 'radian',
-                         lambda units, x: x * 2 * np.pi / wavelength)
-    c.add_transformation('radian', 'meter',
-                         lambda units, x: x * wavelength / (2 * np.pi))
+    c.add_transformation('meter', 'radian', lambda units, x: x * 2 * np.pi / wavelength)
+    c.add_transformation('radian', 'meter', lambda units, x: x * wavelength / (2 * np.pi))
     units.add_context(c)
     units.enable_contexts('optics')
     # print(myval.to(units.nm))

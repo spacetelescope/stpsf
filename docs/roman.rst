@@ -176,6 +176,7 @@ Here we briefly summarize the key points, but see that for more detail.
 
 The RomanCoronagraph class has attributes for  ``filter``, etc., like other instrument classes, but since these masks are designed to be
 used in specific combinations, a ``mode`` attribute exists that allows easy specification of all those attributes at once. For example, setting ::
+   
     >>> cor = roman.RomanCoronagraph()
     >>> cor.mode = "CHARSPC_F770"
 
