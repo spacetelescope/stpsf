@@ -201,7 +201,8 @@ def wavefront_time_series_plot(
             # Limit events that happened after start_date:
             if d >= start_date and d <= end_date:
                 plt.axvline(d.plot_date, color=color, ls=':', alpha=0.5)
-                ax.text(d.plot_date + 0.25, ymax * 0.95, event, color=color, rotation=90, verticalalignment='top', alpha=0.7, clip_on=True)
+                ax.text(d.plot_date + 0.25, ymax * 0.95, event, color=color, rotation=90, verticalalignment='top',
+                        alpha=0.7, clip_on=True)
 
     # Connect measurements on the same visit
     for row, rms in zip(opdtable[where_post], rms_nm[where_post]):
@@ -336,7 +337,8 @@ def wfe_histogram_plot(
     interp_rmses = interp_fn(mjdrange)
 
     if max_wfe is not None:
-        interp_rmses = np.clip(interp_rmses, min_wfe/1e3, max_wfe/1e3)  # note this is in microns, so have to rescale max_wfe
+        interp_rmses = np.clip(interp_rmses, min_wfe / 1e3, max_wfe / 1e3)
+        # note the interp_wfe array is in microns, so have to rescale min and max_wfe values before clipping
 
     # Plot
     hspace = 0.3
@@ -345,7 +347,8 @@ def wfe_histogram_plot(
 
     ms = 14  # markersize
 
-    sensing_markers,  = axes[0].plot_date(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-', label='Sensing visit')
+    sensing_markers, = axes[0].plot_date(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-',
+                                         label='Sensing visit')
     axes[0].xaxis.set_major_locator(matplotlib.dates.DayLocator(bymonthday=[1]))
     axes[0].xaxis.set_minor_locator(matplotlib.dates.DayLocator(interval=1))
     axes[0].tick_params('x', length=10, rotation=30)
@@ -363,7 +366,7 @@ def wfe_histogram_plot(
     elif mark_corrections == 'triangles':
         yval = (np.asarray(rmses) * 1e3).max() * 1.01
         if max_wfe:
-            yval = min(yval, max_wfe*0.98)
+            yval = min(yval, max_wfe * 0.98)
         axes[0].scatter(
             dates[where_post].plot_date,
             np.ones(np.sum(where_post)) * yval,
@@ -379,14 +382,15 @@ def wfe_histogram_plot(
         for i, idate in enumerate(where_post):
             if idate:
                 axes[0].annotate('', xy=(dates[i].plot_date, rms_nm[i]),
-                                 xytext=(dates[i-1].plot_date, rms_nm[i-1] if (max_wfe is None or rms_nm[i-1] < max_wfe) else max_wfe),
+                                 xytext=(dates[i - 1].plot_date, rms_nm[i - 1] if
+                                         (max_wfe is None or rms_nm[i-1] < max_wfe) else max_wfe),
                                  color='limegreen', arrowprops=dict(arrowstyle='-|>', color='limegreen', linewidth=2,
                                                                     mutation_scale=20),
-                                 xycoords='data',
+                                 xycoords='data'
                 )
         arrow_placeholder = matplotlib.lines.Line2D([], [], color='limegreen', marker='v', ls='none',
                                                     markersize=10, label='Corrections')
-        axes[0].legend(handles = [sensing_markers, arrow_placeholder])
+        axes[0].legend(handles=[sensing_markers, arrow_placeholder])
 
     if pid:
         axes[0].set_ylim(0.975 * axes[0].get_ylim()[0], 1.025 * axes[0].get_ylim()[1])
