@@ -239,6 +239,8 @@ def wfe_histogram_plot(
     download_opds=True,
     mark_corrections='lines',
     ote_only=False,
+    min_wfe=60,
+    max_wfe=None
 ):
     """Plot histogram and cumulative histogram of WFE over some time range.
 
@@ -254,6 +256,13 @@ def wfe_histogram_plot(
         toggle downloading of OPDs from MAST
     pid : int, optional
         Program ID for which dates of observations are to be overplotted
+    min_wfe, max_wfe : float or None
+        if provided, minimum and maximum WFE values to limit plot display at, in nanometers RMS. These will set the
+        Y axis range for the top time series plot, and the X axis range for the histogram plot. Note, any histogram
+        values outside of this range are clipped such that they will appear as an 'extra pile up' of data at the
+        extreme values. I.e. any fraction of time above max_wfe will show up in the histogram as if extra time right
+        at the max_wfe value. This is intentional such that the fraction of time shown in the histogram always sums
+        to 100%.
 
     Returns
     -------
@@ -326,6 +335,9 @@ def wfe_histogram_plot(
     mjdrange = np.linspace(np.min(mjds), np.max(mjds), 2048)
     interp_rmses = interp_fn(mjdrange)
 
+    if max_wfe is not None:
+        interp_rmses = np.clip(interp_rmses, min_wfe/1e3, max_wfe/1e3)  # note this is in microns, so have to rescale max_wfe
+
     # Plot
     hspace = 0.3
     nrows = 2
@@ -333,7 +345,7 @@ def wfe_histogram_plot(
 
     ms = 14  # markersize
 
-    axes[0].plot_date(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-', label='Sensing visit')
+    sensing_markers,  = axes[0].plot_date(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-', label='Sensing visit')
     axes[0].xaxis.set_major_locator(matplotlib.dates.DayLocator(bymonthday=[1]))
     axes[0].xaxis.set_minor_locator(matplotlib.dates.DayLocator(interval=1))
     axes[0].tick_params('x', length=10, rotation=30)
@@ -347,8 +359,11 @@ def wfe_histogram_plot(
                 if icorr == 0:
                     plot.set_label('Corrections')
                     icorr += 1
+        axes[0].legend()
     elif mark_corrections == 'triangles':
         yval = (np.asarray(rmses) * 1e3).max() * 1.01
+        if max_wfe:
+            yval = min(yval, max_wfe*0.98)
         axes[0].scatter(
             dates[where_post].plot_date,
             np.ones(np.sum(where_post)) * yval,
@@ -357,34 +372,26 @@ def wfe_histogram_plot(
             color='limegreen',
             label='Corrections',
         )
+        axes[0].legend()
     elif mark_corrections == 'arrows':
         rms_nm = np.asarray(rmses) * 1e3
 
-        sub_height = fig.get_figheight() / (nrows + hspace)
-        plot_size_points = np.asarray([fig.get_figwidth(), sub_height]) * fig.dpi
-        plot_size_data = [np.diff(axes[0].get_xlim())[0], np.diff(axes[0].get_ylim())[0]]
-
-        yoffset = (1.2 * ms) * plot_size_data[1] / plot_size_points[1]
-        axes[0].scatter(
-            dates[where_post].plot_date,
-            rms_nm[where_post] + yoffset,
-            marker='v',
-            s=100,
-            color='limegreen',
-            label='Corrections',
-            zorder=99,
-        )
-
-        yoffsets = [0.6 * ms * plot_size_data[0] / plot_size_points[0], 0.6 * ms * plot_size_data[1] / plot_size_points[1]]
-
         for i, idate in enumerate(where_post):
             if idate:
-                xtmp = dates[i - 1: i + 1]
-                ytmp = [rms_nm[i - 1] - yoffsets[1], rms_nm[i] + yoffsets[1]]
-                axes[0].plot(xtmp.plot_date, ytmp, color='limegreen', lw=2, ls='-')
+                axes[0].annotate('', xy=(dates[i].plot_date, rms_nm[i]),
+                                 xytext=(dates[i-1].plot_date, rms_nm[i-1] if (max_wfe is None or rms_nm[i-1] < max_wfe) else max_wfe),
+                                 color='limegreen', arrowprops=dict(arrowstyle='-|>', color='limegreen', linewidth=2,
+                                                                    mutation_scale=20),
+                                 xycoords='data',
+                )
+        arrow_placeholder = matplotlib.lines.Line2D([], [], color='limegreen', marker='v', ls='none',
+                                                    markersize=10, label='Corrections')
+        axes[0].legend(handles = [sensing_markers, arrow_placeholder])
 
     if pid:
         axes[0].set_ylim(0.975 * axes[0].get_ylim()[0], 1.025 * axes[0].get_ylim()[1])
+    if max_wfe:
+        axes[0].set_ylim(min_wfe, max_wfe)
 
     fig_title = 'OTE' if ote_only else 'Observatory'
     ylabel = 'OTE-only' if ote_only else 'OTE+NIRCam'
@@ -422,12 +429,13 @@ def wfe_histogram_plot(
     ax_right.set_ylabel('Cumulative fraction of time\nwith this WFE or better', color='C1', fontweight='bold')
     ax_right.minorticks_on()
 
-    xmin = 60
-    xmax = interp_rmses.max() * 1e3 - 0.1
+    xmin = min_wfe
+    xmax = interp_rmses.max() * 1e3
     ymax = hist_values[0].max()
     axes[1].set_xticks(np.arange(xmin, xmax, 1), minor=True)
 
     ax_right.set_xlim(xmin, xmax)
+    axes[1].set_xlim(xmin, xmax)
     ax_right.set_ylim(0, 1)
 
     if thresh:
@@ -455,7 +463,6 @@ def wfe_histogram_plot(
                 label = None
             axes[0].scatter(obs_date.plot_date, y_star, marker='*', s=200, color='darkgrey', label=label)
 
-    axes[0].legend()
 
 
 # Wavefront Drifts Plot #####
