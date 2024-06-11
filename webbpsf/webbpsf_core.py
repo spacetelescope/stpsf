@@ -1813,7 +1813,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
-    def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None, *args, **kwargs):
+    def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None,
+                           add_distortion=True, *args, **kwargs):
         """Calculate a spectral datacube of PSFs: Simplified, much MUCH faster version.
 
         This is adapted from poppy.Instrument.calc_datacube, optimized and simplified
@@ -1846,6 +1847,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         wavelengths : iterable of floats
             List or ndarray or tuple of floating point wavelengths in meters, such as
             you would supply in a call to calc_psf via the "monochromatic" option
+        add_distortion : bool
+            Same as for regular calc_psf.
 
         compare_methods : bool
             If true, compute the PSF **BOTH WAYS**, and return both for comparisons.
