@@ -1813,6 +1813,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
+    @poppy.utils.quantity_input(wavelengths=units.meter)
     def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None,
                            add_distortion=True, *args, **kwargs):
         """Calculate a spectral datacube of PSFs: Simplified, much MUCH faster version.
@@ -1945,7 +1946,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in range(len(psf)):
                 cube[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
                 cube[ext].data[0] = psf[ext].data
-                cube[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
+                cube[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0].to_value(units.meter)
 
             # iterate rest of wavelengths
             print('Running standard way')
@@ -1954,7 +1955,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 psf = self.calc_psf(*args, monochromatic=wl, **kwargs)
                 for ext in range(len(psf)):
                     cube[ext].data[i] = psf[ext].data
-                    cube[ext].header[label_wavelength(nwavelengths, i)] = wl
+                    cube[ext].header[label_wavelength(nwavelengths, i)] = wl.to_value(units.meter)
                     cube[ext].header.add_history('--- Cube Plane {} ---'.format(i))
                     for h in psf[ext].header['HISTORY']:
                         cube[ext].header.add_history(h)
