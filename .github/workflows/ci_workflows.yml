@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   download:
-    uses: spacetelescope/webbpsf/.github/workflows/cache.yml@develop
+    uses: zacharyburnett/webbpsf/.github/workflows/cache.yml@ci/cache
     with:
       minimal: true
   tests:
