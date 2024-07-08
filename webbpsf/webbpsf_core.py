@@ -1869,7 +1869,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         # Set up cube and initialize structure based on PSF at a representative wavelength
         _log.info('Starting fast/simplified multiwavelength data cube calculation.')
         ref_wave = np.mean(wavelengths)
-        MIN_REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
+        MIN_REF_WAVE = 2e-6 * units.meter  # This must not be too short, to avoid phase wrapping for the C3 bump
         if ref_wave < MIN_REF_WAVE:
             ref_wave = MIN_REF_WAVE
             log_message = (
@@ -1897,7 +1897,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         ext = 0
         cubefast[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
         cubefast[ext].data[0] = psf[ext].data
-        cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
+        cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0].to_value(units.meter)
 
         # Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
@@ -1928,7 +1928,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             wl = wavelengths[i]
             psfw = quickosys.calc_psf(wavelength=wl, normalize='None')
             cubefast[0].data[i] = psfw[0].data
-            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i]
+            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i].to_value(units.meter)
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
