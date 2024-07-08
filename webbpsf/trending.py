@@ -125,6 +125,7 @@ def wavefront_time_series_plot(
         4508,
         4509,
     ]  # Cycle 2
+    routine_pids += list(range(6689, 6699))  # Cycle 3
 
     is_routine = np.asarray([int(v[1:6]) in routine_pids for v in opdtable[where_pre]['visitId']])
 
