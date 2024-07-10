@@ -68,7 +68,7 @@ jobs:
         key: ${{ needs.retrieve_cache.outputs.cache_key }}
 
     - name: Set WebbPSF data path
-      run: echo "WEBBPSF_PATH=${{ needs.retrieve_cache.outputs.cache_path }}" >> $GITHUB_ENV
+      run: echo "WEBBPSF_PATH=${{ runner.temp }}/webbpsf-data" >> $GITHUB_ENV
 
     - name: Check conda info
       run: conda info
