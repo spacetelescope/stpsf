@@ -3,12 +3,12 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  download:
-    uses: spacetelescope/webbpsf/.github/workflows/download_data.yml
+  retrieve_cache:
+    uses: spacetelescope/webbpsf/.github/workflows/retrieve_cache.yml@develop
     with:
       minimal: true
   tests:
-    needs: [ download ]
+    needs: [ retrieve_cache ]
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -64,11 +64,11 @@ jobs:
     - name: Get WebbPSF Data
       uses: actions/cache/restore@v4
       with:
-        path: ${{ needs.download.outputs.cache_path }}
-        key: ${{ needs.download.outputs.cache_key }}
+        path: ${{ runner.temp }}/webbpsf-data
+        key: ${{ needs.retrieve_cache.outputs.cache_key }}
 
     - name: Set WebbPSF data path
-      run: echo "WEBBPSF_PATH=${{ needs.download.outputs.cache_path }}" >> $GITHUB_ENV
+      run: echo "WEBBPSF_PATH=${{ needs.retrieve_cache.outputs.cache_path }}" >> $GITHUB_ENV
 
     - name: Check conda info
       run: conda info

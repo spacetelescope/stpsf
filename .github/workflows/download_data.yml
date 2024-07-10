@@ -20,6 +20,8 @@ on:
         type: boolean
         required: false
         default: true
+  schedule:
+    - cron: "0 0 * * 0"
 
 env:
   DATA_URL: https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz
@@ -30,14 +32,14 @@ jobs:
     name: download and cache WebbPSF data
     runs-on: ubuntu-latest
     steps:
-      - run: wget ${{ inputs.minimal && env.MINIMAL_DATA_URL || env.DATA_URL }} -O ${{ runner.temp }}/webbpsf-data.tar.gz
+      - run: wget ${{ github.event_name == 'schedule' && env.MINIMAL_DATA_URL || inputs.minimal && env.MINIMAL_DATA_URL || env.DATA_URL }} -O ${{ runner.temp }}/webbpsf-data.tar.gz
       - run: tar -xzvf ${{ runner.temp }}/webbpsf-data.tar.gz -C ${{ runner.temp }}
       - id: cache_path
         run: echo cache_path=${{ runner.temp }}/webbpsf-data >> $GITHUB_OUTPUT
       - id: version
         run: echo "version=$(cat ${{ steps.cache_path.outputs.cache_path }}/version.txt)" >> $GITHUB_OUTPUT
       - id: cache_key
-        run: echo "cache_key=webbpsf-data-${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+        run: echo "cache_key=webbpsf-data-${{ github.event_name == 'schedule' && 'mini' || inputs.minimal && 'mini' || 'full' }}-${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
       - uses: actions/cache/save@v4
         with:
           path: ${{ runner.temp }}/webbpsf-data
