@@ -22,6 +22,8 @@
 #     with:
 #       minimal: true
 
+name: download and cache data
+
 on:
   workflow_call:
     inputs:

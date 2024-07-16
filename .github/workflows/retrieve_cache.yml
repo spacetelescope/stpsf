@@ -27,6 +27,8 @@
 #          key: ${{ needs.webbpsf_data_cache_key.outputs.cache_key }}
 #       ...
 
+name: retrieve latest data cache key
+
 on:
   workflow_call:
     inputs:
