@@ -27,6 +27,8 @@
 #          key: ${{ needs.webbpsf_data_cache_key.outputs.cache_key }}
 #       ...
 
+name: retrieve latest data cache key
+
 on:
   workflow_call:
     inputs:
@@ -60,7 +62,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - run: echo ${{ steps.latest_cache_key.outputs.cache_key }}
       - id: version
-        run: echo "version=$(${{ steps.latest_cache_key.outputs.cache_key }} | awk -F '-' '{print $4}')" >> $GITHUB_OUTPUT
+        run: echo "version=$(echo ${{ steps.latest_cache_key.outputs.cache_key }} | awk -F '-' '{print $4}')" >> $GITHUB_OUTPUT
     outputs:
       version: ${{ steps.version.outputs.version }}
       cache_path: ${{ runner.temp }}/webbpsf-data
