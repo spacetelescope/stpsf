@@ -1,3 +1,27 @@
+# downloads WebbPSF dataset and caches it to GitHub cache, 
+# making a new cache for a new data version 
+# the cache key is in the form `webbpsf-data-mini-1.3.0`, 
+# `webbpsf-data-full-1.2.6`, etc.
+#
+# To provide your own test workflow with the WebbPSF dataset,
+# you should use this workflow to set up a cache in your repository,
+# and then use `retrieve_cache.yml` to retrieve that cache so you
+# don't have to download the entire dataset every time.
+#
+# to set up a cache of WebbPSF data in your own repository, 
+# create a workflow like the following:
+#
+# # .github/workflows/download_webbpsf.yml
+# name: download and cache WebbPSF data
+# on:
+#   schedule:
+#     - cron: "0 0 * * 0"
+# jobs:
+#   download_webbpsf:
+#     uses: spacetelescope/webbpsf/.github/workflows/download_data.yml@develop
+#     with:
+#       minimal: true
+
 on:
   workflow_call:
     inputs:
