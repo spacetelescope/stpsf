@@ -65,5 +65,5 @@ jobs:
         run: echo "version=$(echo ${{ steps.latest_cache_key.outputs.cache_key }} | awk -F '-' '{print $4}')" >> $GITHUB_OUTPUT
     outputs:
       version: ${{ steps.version.outputs.version }}
-      cache_path: ${{ runner.temp }}/webbpsf-data
+      cache_path: ${{ runner.temp }}/data/
       cache_key: ${{ steps.latest_cache_key.outputs.cache_key }}

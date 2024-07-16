@@ -64,11 +64,11 @@ jobs:
     - name: Get WebbPSF Data
       uses: actions/cache/restore@v4
       with:
-        path: ${{ runner.temp }}/webbpsf-data
+        path: ${{ needs.retrieve_cache.outputs.cache_path }}
         key: ${{ needs.retrieve_cache.outputs.cache_key }}
 
     - name: Set WebbPSF data path
-      run: echo "WEBBPSF_PATH=${{ runner.temp }}/webbpsf-data" >> $GITHUB_ENV
+      run: echo "WEBBPSF_PATH=${{ needs.retrieve_cache.outputs.cache_path }}/webbpsf-data/" >> $GITHUB_ENV
 
     - name: Check conda info
       run: conda info
