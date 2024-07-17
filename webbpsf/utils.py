@@ -206,7 +206,7 @@ def get_webbpsf_data_path(data_version_min=None, return_version=False):
         path = path_from_config
 
     path = Path(path)
-    
+
     # at minimum, the path must be a valid directory
     if not path.is_dir():
         raise IOError(f'WEBBPSF_PATH ({path}) is not a valid directory path!\n{MISSING_WEBBPSF_DATA_MESSAGE}')
