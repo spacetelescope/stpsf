@@ -60,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: wget ${{ (github.event_name == 'schedule' || github.event_name == 'release') && env.MINIMAL_DATA_URL || inputs.minimal && env.MINIMAL_DATA_URL || env.DATA_URL }} -O ${{ runner.temp }}/webbpsf-data.tar.gz
+      - run: mkdir ${{ runner.temp }}/data/
       - run: tar -xzvf ${{ runner.temp }}/webbpsf-data.tar.gz -C ${{ runner.temp }}/data/
       - id: cache_path
         run: echo cache_path=${{ runner.temp }}/data/ >> $GITHUB_OUTPUT
