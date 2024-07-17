@@ -195,6 +195,7 @@ def get_webbpsf_data_path(data_version_min=None, return_version=False):
     package.
     """
     import os
+    from pathlib import Path
 
     path_from_config = conf.WEBBPSF_PATH  # read from astropy configuration
     if path_from_config == 'from_environment_variable':
@@ -204,13 +205,15 @@ def get_webbpsf_data_path(data_version_min=None, return_version=False):
     else:
         path = path_from_config
 
+    path = Path(path)
+    
     # at minimum, the path must be a valid directory
-    if not os.path.isdir(path):
+    if not path.is_dir():
         raise IOError(f'WEBBPSF_PATH ({path}) is not a valid directory path!\n{MISSING_WEBBPSF_DATA_MESSAGE}')
 
     if data_version_min is not None:
         # Check if the data in WEBBPSF_PATH meet the minimum data version
-        version_file_path = os.path.join(path, 'version.txt')
+        version_file_path = path / 'version.txt'
         try:
             with open(version_file_path) as f:
                 version_contents = f.read().strip()
@@ -235,9 +238,9 @@ def get_webbpsf_data_path(data_version_min=None, return_version=False):
             )
 
         if return_version:
-            return path, version_contents
+            return str(path), version_contents
 
-    return path
+    return str(path)
 
 
 DIAGNOSTIC_REPORT = """
