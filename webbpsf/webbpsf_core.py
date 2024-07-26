@@ -1278,7 +1278,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 else:
                     # there is not yet any distortion calibration for the IFU, and
                     # we don't want to apply charge diffusion directly here
-                    psf_distorted = detectors.apply_miri_ifu_broadening(result, options)
+                    psf_distorted = detectors.apply_miri_ifu_broadening(result, options, slice_width=self._ifu_slice_width)
             elif self.name == 'NIRSpec':
                 # Apply distortion effects to NIRSpec psf: Distortion only
                 # (because applying detector effects would only make sense after simulating spectral dispersion)
@@ -2071,10 +2071,11 @@ class MIRI(JWInstrument_with_IFU):
 
         self.monochromatic = 8.0
         self._IFU_pixelscale = {
-            'Ch1': (0.176, 0.196),
-            'Ch2': (0.277, 0.196),
-            'Ch3': (0.387, 0.245),
-            'Ch4': (0.645, 0.273),
+                  # slice width, pixel size.   Values from Argyriou et al. 2023 A&A 675
+            'Ch1': (0.177, 0.196),
+            'Ch2': (0.280, 0.196),
+            'Ch3': (0.390, 0.245),
+            'Ch4': (0.656, 0.273),
         }
         # The above tuples give the pixel resolution (first the 'alpha' direction, perpendicular to the slice,
         # then the 'beta' direction, along the slice).
@@ -2460,7 +2461,7 @@ class MIRI(JWInstrument_with_IFU):
 
         if value in self._IFU_bands_cubepars.keys():
             self._band = value
-            # self._slice_width = self._IFU_pixelscale[f"Ch{self._band[0]}"][0]
+            self._ifu_slice_width = self._IFU_pixelscale[f"Ch{self._band[0]}"][0]
             self.aperturename = 'MIRIFU_CHANNEL' + value
             # setting aperturename will also auto update self._rotation
             # self._rotation = self.MRS_rotation[self._band]

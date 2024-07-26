@@ -4,6 +4,7 @@ import astropy.units as u
 import numpy as np
 import pysiaf
 
+import webbpsf
 from .. import webbpsf_core
 from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
