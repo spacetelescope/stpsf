@@ -1278,19 +1278,20 @@ class JWInstrument(SpaceTelescopeInstrument):
                 else:
                     # there is not yet any distortion calibration for the IFU, and
                     # we don't want to apply charge diffusion directly here
-                    psf_distorted = result
+                    psf_distorted = detectors.apply_miri_ifu_broadening(result, options)
             elif self.name == 'NIRSpec':
                 # Apply distortion effects to NIRSpec psf: Distortion only
                 # (because applying detector effects would only make sense after simulating spectral dispersion)
                 _log.debug('NIRSpec: Adding optical distortion')
-                if 'IFU' not in self.aperturename:
+                if self.mode != 'IFU':
                     psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion model
+                    psf_distorted = detectors.apply_detector_charge_diffusion(
+                        psf_siaf, options
+                    )  # apply detector charge transfer model
+
                 else:
                     # there is not yet any distortion calibration for the IFU.
-                    psf_siaf = result
-                psf_distorted = detectors.apply_detector_charge_diffusion(
-                    psf_siaf, options
-                )  # apply detector charge transfer model
+                    psf_distorted = detectors.apply_nirspec_ifu_broadening(result, options)
 
             # Edit the variable to match if input didn't request distortion
             # (cannot set result = psf_distorted due to return method)

@@ -542,3 +542,65 @@ def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=
     ax.plot(0, 0, marker='+', color='yellow')
 
     matplotlib.pyplot.colorbar(mappable=ax.images[0])
+
+# Functions for applying IFU optics systematics models
+#
+# Note, thes are is not actually a "Detector" effect, but this file is a
+# convenient place to locate that code, because similar to the detector effects
+# it's implemented as a post-processing modification on the output PSF array.
+
+
+def apply_miri_ifu_broadening(hdulist, options):
+    """ Apply a simple empirical model of MIRI IFU broadening to better match observed PSFs
+
+    """
+    # First, check an optional flag to see whether or not to include this effect
+    perform_this_step = options.get('ifu_broadening', True)
+    if not perform_this_step:
+        return hdulist
+
+    ext = 1 # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
+
+    model_type= options.get('ifu_broadening_type', 'gaussian')
+    webbpsf.webbpsf_core._log.info(f'Applying MIRI IFU broadening model: {model_type}')
+
+    hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
+    hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
+
+    if model_type.lower() == 'gaussian':
+        sigma = 0.05  # 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
+        hdulist[ext].header['IFUBSIGM'] = (model_type, "[arcsec] IFU PSF broadening Gaussian sigma")
+        out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
+
+    hdulist[ext].data = out
+
+    return hdulist
+
+
+def apply_nirspec_ifu_broadening(hdulist, options):
+    """ Apply a simple empirical model of NIRSpec IFU broadening to better match observed PSFs
+
+    """
+    # First, check an optional flag to see whether or not to include this effect
+    perform_this_step = options.get('ifu_broadening', True)
+    if not perform_this_step:
+        return hdulist
+
+
+    ext = 1 # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
+
+    model_type= options.get('ifu_broadening_type', 'gaussian')
+    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model: {model_type}')
+
+    hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
+    hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
+
+    if model_type.lower() == 'gaussian':
+        sigma = 0.05  # 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
+        hdulist[ext].header['IFUBSIGM'] = (model_type, "[arcsec] IFU PSF broadening Gaussian sigma")
+        out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
+
+    hdulist[ext].data = out
+
+
+    return hdulist
