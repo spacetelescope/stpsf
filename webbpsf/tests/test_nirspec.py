@@ -96,7 +96,7 @@ def test_IFU_wavelengths():
 def test_nrs_ifu_broadening():
     """ Basic functional test for the code that adjusts PSF outputs to better match empirical IFU PSFs
     """
-    nrs = webbpsf.NIRSpec()
+    nrs = webbpsf_core.NIRSpec()
     nrs.mode = 'IFU'
     psf = nrs.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
 

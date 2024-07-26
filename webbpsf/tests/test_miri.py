@@ -5,6 +5,7 @@ import astropy.units as u
 import numpy as np
 import pysiaf
 
+import webbpsf
 from .. import webbpsf_core
 from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
@@ -230,7 +231,7 @@ def test_miri_ifu_broadening():
     """ Basic functional test for the code that adjusts PSF outputs to better match empirical IFU PSFs
     """
 
-    miri = webbpsf.MIRI()
+    miri = webbpsf_core.MIRI()
     miri.mode = 'IFU'
     psf = miri.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
 
