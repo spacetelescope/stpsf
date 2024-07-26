@@ -224,3 +224,31 @@ def test_IFU_wavelengths():
     # and test we can specify a reduced wavelength sampling:
     for n in (10, 100):
         assert len(miri.get_IFU_wavelengths(n)) == n
+
+def test_miri_ifu_broadening():
+    """ Basic functional test for the code that adjusts PSF outputs to better match empirical IFU PSFs
+    """
+
+    miri = webbpsf.MIRI()
+    miri.mode = 'IFU'
+    psf = miri.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
+
+    fwhm_oversamp = webbpsf.measure_fwhm(psf, ext='OVERSAMP')
+    fwhm_overdist = webbpsf.measure_fwhm(psf, ext='OVERDIST')
+    assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
+    print(fwhm_oversamp, fwhm_overdist)
+
+    fwhm_detsamp = webbpsf.measure_fwhm(psf, ext='DET_SAMP')
+    fwhm_detdist = webbpsf.measure_fwhm(psf, ext='DET_DIST')
+    assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
+
+    # Now test that we can also optionally turn off that effect
+    miri.options['ifu_broadening'] = None
+    psf_nb = miri.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
+
+    fwhm_oversamp = webbpsf.measure_fwhm(psf_nb, ext='OVERSAMP')
+    fwhm_overdist = webbpsf.measure_fwhm(psf_nb, ext='OVERDIST')
+    print(fwhm_oversamp, fwhm_overdist)
+    # The PSF will still be a little broader in this case due to the IPC model, but not by a lot..
+    assert fwhm_oversamp < fwhm_overdist <= 1.1*fwhm_oversamp, "IFU broadening model should be disabled for this test case"
+

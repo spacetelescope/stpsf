@@ -195,15 +195,18 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
 
             out_ipc_0 = convolve(psf_hdulist[extname].data, ipckernel)
             out_ipc = convolve(out_ipc_0, ppckernel)
+            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC and PPC models for {inst}')
         elif inst.upper() == 'NIRISS':
             # the NIRISS code provided by Kevin Volk was developed for a different convolution function
             if oversample != 1:
                 kernel = oversample_ipc_model(kernel, oversample)
             out_ipc = signal.fftconvolve(psf_hdulist[extname].data, kernel, mode='same')
+            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
         else:
             if oversample != 1:
                 kernel = oversample_ipc_model(kernel, oversample)
             out_ipc = convolve(psf_hdulist[extname].data, kernel)
+            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
 
         # apply kernel to DET_DIST
         psf_hdulist[extname].data = out_ipc
@@ -214,7 +217,7 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
         psf_hdulist[extname].header.add_history('Applied detector interpixel capacitance (IPC) model')
 
     else:
-        webbpsf.webbpsf_core._log.info('IPC corrections are not implemented yet for {}'.format(inst))
+        webbpsf.webbpsf_core._log.info('IPC model not implemented yet for {}'.format(inst))
         psf_hdulist[extname].header['IPCINST'] = (inst, 'No IPC correction applied')
 
     return psf_hdulist
@@ -554,21 +557,22 @@ def apply_miri_ifu_broadening(hdulist, options):
     """ Apply a simple empirical model of MIRI IFU broadening to better match observed PSFs
 
     """
-    # First, check an optional flag to see whether or not to include this effect
-    perform_this_step = options.get('ifu_broadening', True)
-    if not perform_this_step:
+    # First, check an optional flag to see whether or not to include this effect.
+    # User can set the option to None to disable this step.
+    model_type = options.get('ifu_broadening', 'gaussian')
+
+    if model_type is None or model_type.lower() == 'none':
         return hdulist
 
     ext = 1 # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
-    model_type= options.get('ifu_broadening_type', 'gaussian')
     webbpsf.webbpsf_core._log.info(f'Applying MIRI IFU broadening model: {model_type}')
 
     hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
     hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
 
     if model_type.lower() == 'gaussian':
-        sigma = 0.05  # 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
+        sigma = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS['MIRI']['sigma']
         hdulist[ext].header['IFUBSIGM'] = (model_type, "[arcsec] IFU PSF broadening Gaussian sigma")
         out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
 
@@ -582,21 +586,20 @@ def apply_nirspec_ifu_broadening(hdulist, options):
 
     """
     # First, check an optional flag to see whether or not to include this effect
-    perform_this_step = options.get('ifu_broadening', True)
-    if not perform_this_step:
+    model_type = options.get('ifu_broadening', 'gaussian')
+    if model_type is None or model_type.lower() == 'none':
         return hdulist
-
 
     ext = 1 # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
-    model_type= options.get('ifu_broadening_type', 'gaussian')
-    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model: {model_type}')
+    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model ({model_type}) to ext {hdulist[ext].header["EXTNAME"]}')
 
     hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
     hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
 
     if model_type.lower() == 'gaussian':
-        sigma = 0.05  # 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
+        sigma = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS['NIRSPEC']['sigma']
+        # currently sigma= 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
         hdulist[ext].header['IFUBSIGM'] = (model_type, "[arcsec] IFU PSF broadening Gaussian sigma")
         out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
 

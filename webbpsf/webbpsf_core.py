@@ -1241,7 +1241,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         # Add distortion if set in calc_psf
         if add_distortion:
-            _log.debug('Adding PSF distortion(s) and detector effects')
+            _log.info('Adding PSF distortion(s) and detector effects')
 
             # Set up new extensions to add distortion to:
             n_exts = len(result)
@@ -1299,6 +1299,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in np.arange(len(psf_distorted)):
                 result[ext] = psf_distorted[ext]
 
+        _log.info('Formatting output FITS extensions including for sampling.')
         # Rewrite result variable based on output_mode; this includes binning down to detector sampling.
         SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
 

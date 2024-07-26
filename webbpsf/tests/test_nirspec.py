@@ -91,3 +91,28 @@ def test_IFU_wavelengths():
     # and test we can specify a reduced wavelength sampling:
     for n in (10, 100):
         assert len(nrs.get_IFU_wavelengths(n)) == n
+
+
+def test_nrs_ifu_broadening():
+    """ Basic functional test for the code that adjusts PSF outputs to better match empirical IFU PSFs
+    """
+    nrs = webbpsf.NIRSpec()
+    nrs.mode = 'IFU'
+    psf = nrs.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
+
+    fwhm_oversamp = webbpsf.measure_fwhm(psf, ext='OVERSAMP')
+    fwhm_overdist = webbpsf.measure_fwhm(psf, ext='OVERDIST')
+    assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
+
+    fwhm_detsamp = webbpsf.measure_fwhm(psf, ext='DET_SAMP')
+    fwhm_detdist = webbpsf.measure_fwhm(psf, ext='DET_DIST')
+    assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
+
+    # Now test that we can also optionally turn off that effect
+    nrs.options['ifu_broadening'] = None
+    psf_nb = nrs.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
+
+    fwhm_oversamp = webbpsf.measure_fwhm(psf_nb, ext='OVERSAMP')
+    fwhm_overdist = webbpsf.measure_fwhm(psf_nb, ext='OVERDIST')
+    assert fwhm_overdist == fwhm_oversamp, "IFU broadening model should be disabled for this test case"
+
