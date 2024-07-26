@@ -72,9 +72,9 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
             inst.pupil_mask = header['PUPIL']
 
     elif inst.name == 'MIRI':
-        if header['EXP_TYPE']=='MIR_MRS':
+        if header['EXP_TYPE'] == 'MIR_MRS':
             ch = header['CHANNEL']
-            band_lookup = {'SHORT':'A', 'MEDIUM': 'B', 'LONG': 'C'}
+            band_lookup = {'SHORT': 'A', 'MEDIUM': 'B', 'LONG': 'C'}
             inst.band = str(ch) + band_lookup[header['BAND']]
 
         elif inst.filter in ['F1065C', 'F1140C', 'F1550C']:

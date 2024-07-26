@@ -406,4 +406,4 @@ MIRI_CRUCIFORM_RADIAL_SCALEFACTOR = 0.005   # Brightness factor for the diffuse 
 INSTRUMENT_IFU_BROADENING_PARAMETERS = {
     'NIRSPEC': {'sigma': 0.05},
     'MIRI': {'sigma': 0.05},
-    }
+}

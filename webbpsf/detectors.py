@@ -564,7 +564,7 @@ def apply_miri_ifu_broadening(hdulist, options):
     if model_type is None or model_type.lower() == 'none':
         return hdulist
 
-    ext = 1 # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
+    ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
     webbpsf.webbpsf_core._log.info(f'Applying MIRI IFU broadening model: {model_type}')
 
@@ -590,9 +590,10 @@ def apply_nirspec_ifu_broadening(hdulist, options):
     if model_type is None or model_type.lower() == 'none':
         return hdulist
 
-    ext = 1 # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
+    ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
-    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model ({model_type}) to ext {hdulist[ext].header["EXTNAME"]}')
+    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model ({model_type}) to '+
+                                   f'ext {hdulist[ext].header["EXTNAME"]}')
 
     hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
     hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
@@ -604,6 +605,5 @@ def apply_nirspec_ifu_broadening(hdulist, options):
         out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
 
     hdulist[ext].data = out
-
 
     return hdulist

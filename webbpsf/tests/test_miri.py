@@ -225,6 +225,7 @@ def test_IFU_wavelengths():
     for n in (10, 100):
         assert len(miri.get_IFU_wavelengths(n)) == n
 
+
 def test_miri_ifu_broadening():
     """ Basic functional test for the code that adjusts PSF outputs to better match empirical IFU PSFs
     """
@@ -236,7 +237,6 @@ def test_miri_ifu_broadening():
     fwhm_oversamp = webbpsf.measure_fwhm(psf, ext='OVERSAMP')
     fwhm_overdist = webbpsf.measure_fwhm(psf, ext='OVERDIST')
     assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
-    print(fwhm_oversamp, fwhm_overdist)
 
     fwhm_detsamp = webbpsf.measure_fwhm(psf, ext='DET_SAMP')
     fwhm_detdist = webbpsf.measure_fwhm(psf, ext='DET_DIST')
@@ -248,7 +248,5 @@ def test_miri_ifu_broadening():
 
     fwhm_oversamp = webbpsf.measure_fwhm(psf_nb, ext='OVERSAMP')
     fwhm_overdist = webbpsf.measure_fwhm(psf_nb, ext='OVERDIST')
-    print(fwhm_oversamp, fwhm_overdist)
     # The PSF will still be a little broader in this case due to the IPC model, but not by a lot..
-    assert fwhm_oversamp < fwhm_overdist <= 1.1*fwhm_oversamp, "IFU broadening model should be disabled for this test case"
-
+    assert fwhm_oversamp < fwhm_overdist <= 1.1 * fwhm_oversamp, "IFU broadening model should be disabled for this test case"
