@@ -8,6 +8,11 @@ message: >-
   metadata from this file.
 type: software
 authors:
+  - given-names: Marcio
+    family-names: Melendez
+    email: melendez@stsci.edu
+    affiliation: Space Telescope Science Institute
+    orcid: 'https://orcid.org/0000-0001-8485-0325'
   - given-names: Bradley
     family-names: Sappington
     email: bsappington@stsci.edu
