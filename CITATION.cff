@@ -1,0 +1,30 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: WebbPSF
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Bradley
+    family-names: Sappington
+    email: bsappington@stsci.edu
+    affiliation: Space Telescope Science Institute
+    orcid: 'https://orcid.org/0009-0008-2911-2555'
+repository-code: 'https://github.com/spacetelescope/webbpsf'
+abstract: >-
+  WebbPSF produces simulated PSFs for the James Webb Space
+  Telescope, NASA's flagship infrared space telescope.
+  WebbPSF can simulate images for any of the four science
+  instruments plus the fine guidance sensor, including both
+  direct imaging, coronagraphic, and spectroscopic modes.
+
+
+  WebbPSF also supports simulating PSFs for the upcoming
+  Nancy Grace Roman Space Telescope (formerly WFIRST),
+  including its Wide Field Instrument and a preliminary
+  version of the Coronagraph Instrument.
+license: BSD-3-Clause
+version: 1.3.1
