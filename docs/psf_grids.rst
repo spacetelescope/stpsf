@@ -2,14 +2,14 @@
 Using PSF Grids
 *****************
 
-WebbPSF includes functionality designed to work with the Photutils package to
+WebbPSF includes functionality designed to work with the `Photutils <https://photutils.readthedocs.io>`_ package to
 enable precise PSF-fitting photometry and astrometry. This makes use of the
-`GriddedPSFModel` class (available in Photutils > 0.6), which implements a
+`GriddedPSFModel <>https://photutils.readthedocs.io/en/stable/api/photutils.psf.GriddedPSFModel.html`_ class, which implements a
 version of the empirical or effective PSF ("ePSF") modeling framework pioneered by Jay
 Anderson, Ivan King, and collaborators. This approach has been highly successful with
-HST and other space observatories, and we expect it will also be productive with JWST. 
+HST and other space observatories, and we expect it will also be productive with JWST.
 In practice we will want to use ePSF models derived from real observations, but for now
-we can make them in simulation. 
+we can make them in simulation.
 
 The first step is to create a grid of fiducial PSFs spanning the
 instrument/detector of choice. This can be done using the :meth:`~webbpsf.JWInstrument.psf_grid` method
@@ -30,7 +30,9 @@ scattered across many megapixels of detector real estate.
 Example PSF grid
 ^^^^^^^^^^^^^^^^
 
-PSF grid calculations are useful for visualizing changes in the PSF across instrument fields of view. Here's one example of that. 
+
+The `psf_grid` method is used to compute a PSF grid. It takes many of the same arguments as does `calc_psf`. In addition, it takes a `num_psfs` argument for the number of PSF to include in the grid. This must be a square integer; for instance `num_psfs=9` will compute a 3x3 grid, and so on.
+Here's one example of that.
 
 .. code-block:: python
 
@@ -38,22 +40,36 @@ PSF grid calculations are useful for visualizing changes in the PSF across instr
     nrc.filter='F212N'
     nrc.detector='NRCA3'
     grid = nrc.psf_grid(num_psfs=36, all_detectors=False)
-    webbpsf.gridded_library.display_psf_grid(grid)
 
+
+The returned object is a `Photutils ePSF model <https://photutils.readthedocs.io/en/stable/epsf.html>` and can be used with the functions in `photutils` for PSF-fitting photometry and astrometry.
+
+Photutils also includes convenient functions for displaying PSF grids.
+PSF grid calculations are useful for visualizing changes in the PSF across instrument fields of view.
+
+.. code-block:: python
+
+    grid.plot_grid()
 
 
 .. figure:: ./fig_psf_grid_nircam.png
    :scale: 85 %
    :align: center
-   :alt: Example grid of NIRCam PSFs: 6x6 grid across NRCA3 
+   :alt: Example grid of NIRCam PSFs: 6x6 grid across NRCA3
 
    An example of grid calculated across the NRCA3 detector in NIRCam. These PSFs are all very similar.
+
+We can adjust the display to highlight the differences, and thus make the field dependence easier to see.
+
+.. code-block:: python
+
+    grid.plot_grid(deltas=True)
 
 
 .. figure:: ./fig_psf_grid_diffs_nircam.png
    :scale: 85 %
    :align: center
-   :alt: Example grid of NIRCam PSF differences: 6x6 grid across NRCA3 
+   :alt: Example grid of NIRCam PSF differences: 6x6 grid across NRCA3
 
-   By subtracting off the average PSF, the subtle differences from point to point become clear. 
+   By subtracting off the average PSF, the subtle differences from point to point become clear.
    The PSF is sharpest in the upper left corner of this detector.
