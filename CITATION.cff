@@ -12,6 +12,10 @@ authors:
     family-names: Lajoie
     affiliation: Space Telescope Science Institute
     orcid: 'https://orcid.org/0009-0003-3993-8338'
+  - given-names: Joseph
+    family-names: Long
+    affiliation: Flatiron Institute
+    orcid: 'https://orcid.org/0000-0003-1905-9443'
   - given-names: Marcio
     family-names: Melendez
     email: melendez@stsci.edu
