@@ -8,6 +8,10 @@ message: >-
   metadata from this file.
 type: software
 authors:
+  - given-names: Charles-Philippe
+    family-names: Lajoie
+    affiliation: Space Telescope Science Institute
+    orcid: 'https://orcid.org/0009-0003-3993-8338'
   - given-names: Marcio
     family-names: Melendez
     email: melendez@stsci.edu
@@ -16,7 +20,11 @@ authors:
   - given-names: "O. Justin"
     family-names: "Otor"
     affiliation: "Otor"
-    orcid: "https://orcid.org/0000-0002-4679-5692"
+    orcid: 'https://orcid.org/0000-0002-4679-5692'
+  - given-names: Marshall
+    family-names: Perrin
+    affiliation: Space Telescope Science Institute
+    orcid: 'https://orcid.org/0000-0002-3191-8151'
   - given-names: Bradley
     family-names: Sappington
     email: bsappington@stsci.edu
