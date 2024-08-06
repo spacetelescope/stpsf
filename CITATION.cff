@@ -8,6 +8,10 @@ message: >-
   metadata from this file.
 type: software
 authors:
+  - given-names: Robel
+    family-names: Geda
+    affiliation: Princeton University
+    orcid: 'https://orcid.org/0000-0003-1509-9966'
   - given-names: Charles-Philippe
     family-names: Lajoie
     affiliation: Space Telescope Science Institute
