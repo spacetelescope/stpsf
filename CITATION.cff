@@ -8,18 +8,10 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - given-names: Robel
-    family-names: Geda
-    affiliation: Princeton University
-    orcid: 'https://orcid.org/0000-0003-1509-9966'
-  - given-names: Charles-Philippe
-    family-names: Lajoie
+  - given-names: Marshall
+    family-names: Perrin
     affiliation: Space Telescope Science Institute
-    orcid: 'https://orcid.org/0009-0003-3993-8338'
-  - given-names: Joseph
-    family-names: Long
-    affiliation: Flatiron Institute
-    orcid: 'https://orcid.org/0000-0003-1905-9443'
+    orcid: 'https://orcid.org/0000-0002-3191-8151'
   - given-names: Marcio
     family-names: Melendez
     email: melendez@stsci.edu
@@ -29,19 +21,27 @@ authors:
     family-names: Osborne
     affiliation: Fred Hutchinson Cancer Center
     orcid: https://orcid.org/0009-0001-8609-1518'
-  - given-names: "O. Justin"
-    family-names: "Otor"
-    affiliation: "Otor"
-    orcid: 'https://orcid.org/0000-0002-4679-5692'
-  - given-names: Marshall
-    family-names: Perrin
-    affiliation: Space Telescope Science Institute
-    orcid: 'https://orcid.org/0000-0002-3191-8151'
+  - given-names: Robel
+    family-names: Geda
+    affiliation: Princeton University
+    orcid: 'https://orcid.org/0000-0003-1509-9966'
   - given-names: Bradley
     family-names: Sappington
     email: bsappington@stsci.edu
     affiliation: Space Telescope Science Institute
     orcid: 'https://orcid.org/0009-0008-2911-2555'
+  - given-names: Charles-Philippe
+    family-names: Lajoie
+    affiliation: Space Telescope Science Institute
+    orcid: 'https://orcid.org/0009-0003-3993-8338'
+  - given-names: Joseph
+    family-names: Long
+    affiliation: Flatiron Institute
+    orcid: 'https://orcid.org/0000-0003-1905-9443'
+  - given-names: "O. Justin"
+    family-names: "Otor"
+    affiliation: "Otor"
+    orcid: 'https://orcid.org/0000-0002-4679-5692'
 repository-code: 'https://github.com/spacetelescope/webbpsf'
 abstract: >-
   WebbPSF produces simulated PSFs for the James Webb Space
