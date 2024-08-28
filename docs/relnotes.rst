@@ -14,11 +14,7 @@ See https://github.com/spacetelescope/webbpsf/issues for currently open issues a
   the pupil entrance aperture in the discrete Fourier transform. If you need
   accurate PSF information at such large radii, please contact Marshall Perrin
   or Marcio Melendez for higher resolution pupil data.
-
-**The following factors are NOT included in these simulations:**
-
 * Coronagraphic masks are assumed to be perfect (i.e. the masks exactly match their design parameters.)
-* Most detector effects, such as intrapixel sensitivity variations or interpixel capacitance. There are currently no plans to include these WebbPSF itself.  Generate a subsampled PSF and use a separate detector model code instead. The one exception is a scattering artifact in the MIRI imager detector substrate.
 
 ------------------
 

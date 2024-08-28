@@ -48,7 +48,7 @@ Contents
    intro.rst
    installation.rst
    relnotes.rst
-   usage.rst
+   usage.ipynb
    psf_grids.rst
 
 .. toctree::
