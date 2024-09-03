@@ -1612,6 +1612,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 an estimate of the OTE wavefront nominally at the master chief ray location (between the NIRCams).
                 WebbPSF will automatically add back on top of this the OTE field dependent WFE for the appropriate
                 field point. as usual.
+            - Scale the OPD to match the same size of the user provide pupil file
 
         Parameters
         ----------
@@ -1638,7 +1639,17 @@ class JWInstrument(SpaceTelescopeInstrument):
             point, not the OTE global at master chief ray, since it is the OTE WFE at the selected field point
             which is most of use for some other tool.
 
+
         """
+        # We use the size of the user supplied name of the JWST pupil in order to create the matching size OPD
+        # The code assume the naming convention for the JWST pupil file: jwst_pupil_RevW_npix<size in pixels>.fits.gz
+        npix_out = int(self.pupil[self.pupil.find('npix') + len('npix'):self.pupil.find('.fits')])
+
+        if verbose and npix_out !=1024:
+            print(
+            f'The size of the JWST pupil is different than nominal (1024px), {self.pupil}. '
+            f'The OPD will be scaled accordingly'
+            )
 
         # If the provided filename doesn't exist on the local disk, try retrieving it from MAST
         # Note, this will automatically use cached versions downloaded previously, if present
@@ -1647,12 +1658,12 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         if verbose:
             print(f'Importing and format-converting OPD from {filename}')
-        opdhdu = webbpsf.mast_wss.import_wss_opd(filename)
+        opdhdu = webbpsf.mast_wss.import_wss_opd(filename, npix_out = npix_out)
 
         # Mask out any pixels in the OPD array which are outside the OTE pupil.
         # This is mostly cosmetic, and helps mask out some edge effects from the extrapolation + interpolation in
         # resizing the OPDs
-        ote_pupil_mask = utils.get_pupil_mask() != 0
+        ote_pupil_mask = utils.get_pupil_mask(npix = npix_out) != 0
         opdhdu[0].data *= ote_pupil_mask
 
         # opdhdu[0].header['RMS_OBS'] = (webbpsf.utils.rms(opdhdu[0].data, mask=ote_pupil_mask)*1e9,
@@ -1683,6 +1694,11 @@ class JWInstrument(SpaceTelescopeInstrument):
             sensing_inst.pupil = (
                 self.pupil
             )  # handle the case if the user has selected a different NPIX other than the default 1024
+            sensing_inst.pupilopd = (
+                opdhdu
+            )  # handle the case if the user has selected a different NPIX other than the default 1024
+
+
             if sensing_inst.name == 'NRC':
                 sensing_inst.filter = 'F212N'
                 # TODO: optionally check for the edge case in which the sensing was done in F187N
@@ -1697,7 +1713,14 @@ class JWInstrument(SpaceTelescopeInstrument):
             else:
                 sensing_fp_si_wfe = sensing_inst.get_wfe('si')
 
+            if npix_out != 1024: # handle the case if the user has selected a different NPIX other than the default 1024
+                # the results from the zoom function preserve the STD between both phase maps and
+                # the total sum between the phase maps is proportional to the zoom value
+                sensing_fp_si_wfe = scipy.ndimage.zoom(sensing_fp_si_wfe, npix_out / 1024)
+
+
             sensing_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
+
 
             sihdu = fits.ImageHDU(sensing_fp_si_wfe)
             sihdu.header['EXTNAME'] = 'SENSING_SI_WFE'
@@ -1731,7 +1754,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             if plot or save_ote_wfe:
                 # Either of these options will need the total OTE WFE.
                 # Under normal circumstances webbpsf will compute this later automatically, but if needed we do it here too
-                selected_fp_ote_wfe = self.get_wfe('ote_field_dep')
+                selected_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
                 total_ote_wfe_at_fp = opdhdu[0].data + (selected_fp_ote_wfe * ote_pupil_mask)
 
             if plot:
