@@ -121,11 +121,11 @@ exclude_patterns = [
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "default"
 
-intersphinx_mapping.update(  # noqa - defined in star import
-    {
-        "poppy": ("http://poppy-optics.readthedocs.io/", None),
-    }
-)
+#intersphinx_mapping.update(  # noqa - defined in star import
+#    {
+#        "poppy": ("http://poppy-optics.readthedocs.io/", None),
+#    }
+#)
 
 
 # -- Options for HTML output -------------------------------------------------

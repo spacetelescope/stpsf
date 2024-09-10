@@ -49,7 +49,7 @@ Contents
    installation.rst
    relnotes.rst
    usage.ipynb
-   psf_grids.rst
+   psf_grids.ipynb
 
 .. toctree::
    :maxdepth: 1

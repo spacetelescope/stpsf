@@ -74,8 +74,23 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
     The instrument constructors do not take any arguments. Instead, create an instrument object and then
     configure the `filter` or other attributes as desired. The most commonly accessed parameters are
     available as object attributes: `filter`, `image_mask`, `pupil_mask`, `pupilopd`. More advanced
-    configuration can be done by editing the :ref:`SpaceTelescopeInstrument.options` dictionary, either by
+    configuration can be done by editing the `options` dictionary attribute, either by
     passing options to ``__init__`` or by directly editing the dict afterwards.
+
+    Attributes
+    ----------
+    telescope : str
+        Name of selected telescope, JWST or Roman.
+    filter : str
+        Bandpass filter name
+    image_mask : str
+        Name of selected image plane mask, e.g. coronagraph mask or spectrograph slit
+    pupil_mask : str
+        Name of selected image plane mask, e.g. coronagraph mask or pupil stop
+    pupilopd : str
+        Filename for telescope pupil wavefront error Optical Path Difference data
+    options : dict
+        Dictionary for specifying additional specialized options, per each subclass and instance.
     """
 
     telescope = 'Generic Space Telescope'
@@ -704,8 +719,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
             configuration is specified (1 per instrument, detector, and filter)
             User also has the option to save the grid as a fits.HDUlist object.
 
-        Use
-        ---
+        Examples
+        --------
         nir = webbpsf.NIRCam()
         nir.filter = "F090W"
         list_of_grids = nir.psf_grid(all_detectors=True, num_psfs=4)
@@ -762,16 +777,16 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 class JWInstrument(SpaceTelescopeInstrument):
     """Superclass for all JWST instruments
 
-    Notable attributes
-    ------------------
-
-    telescope : name of telescope
-    pupilopd : filename or FITS file object
-
-    include_si_wfe : boolean (default: True)
+    Attributes
+    ----------
+    telescope : str
+        name of telescope
+    pupilopd : file-like
+        filename or FITS file object for the pupil Optical Path Difference
+    include_si_wfe : boolean
         Should SI internal WFE be included in models? Requires
         the presence of ``si_zernikes_isim_cv3.fits`` in the
-        ``WEBBPSF_PATH``.
+        ``WEBBPSF_PATH``. Default = True.
     """
 
     telescope = 'JWST'
