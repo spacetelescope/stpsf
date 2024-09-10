@@ -352,7 +352,7 @@ Note, when upgrading to this version you will need to update to the latest data 
 
 **WFIRST Improvements**
 
-- *The WFI optical model has been updated to use optical data from the Cycle 8 design revision.* These include updated Zernike coefficients for field-dependent wavefront error, and masked and unmasked pupil images for each SCA, and updated filter throughputs (consistent with values used in Pandeia 1.4.2). The correct pupil file will automatically be selected for each calculation based on the chosen detector position and filter.   The pupil files are consistent with those provided in the WFI cycle 8 reference information, but have been resampled onto a common pixel scale.  See :ref:`WFIRST instrument model details <wfirst_wfi>` for more.  [:pr:`309` :user:`robelgeda`]
+- *The WFI optical model has been updated to use optical data from the Cycle 8 design revision.* These include updated Zernike coefficients for field-dependent wavefront error, and masked and unmasked pupil images for each SCA, and updated filter throughputs (consistent with values used in Pandeia 1.4.2). The correct pupil file will automatically be selected for each calculation based on the chosen detector position and filter.   The pupil files are consistent with those provided in the WFI cycle 8 reference information, but have been resampled onto a common pixel scale.  See `WFIRST instrument model details <roman.html>`_ for more.  [:pr:`309` :user:`robelgeda`]
 - Note, WFI's filters have been renamed so they all begin with “F”; `see the table here <https://github.com/spacetelescope/webbpsf/pull/309>`_ .
 - *The WFI wavelength range has now been extended to cover the 0.48 - 2.0 µm range.* [:pr:`309` :user:`robelgeda`]
 - *Expanded ``psf_grid`` method’s functionality so it can also be used to make grids of WFIRST PSFs.* Note that focal plane distortion is not yet implemented for WFIRST PSFs and so ``add_distortion`` keyword should not be used for this case. [:pr:`294`, :user:`shanosborne`]
@@ -868,7 +868,7 @@ directory.
   and the developers of the `Astropy affiliated package template <https://github.com/astropy/package-template>`_.
   Thanks in particular to Christine Slocum for integration into the STScI SSB software distribution.
 
-* Improvements to parallelization code. Better :ref:`documentation for parallelization <performance_and_parallelization>`.  PyFFTW3 replaced with pyFFTW for optimized
+* Improvements to parallelization code. Better documentation for parallelization.  PyFFTW3 replaced with pyFFTW for optimized
   FFTs (yes, those are two entirely different packages).
 
 * Alternate GUI using the wxpython widget toolkit in place of the older/less

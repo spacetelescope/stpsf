@@ -24,7 +24,7 @@ WebbPSF has been developed by Marshall Perrin, Marcio Meléndez, Shannon Osborne
 Getting Started with WebbPSF
 ----------------------------
 
-See :ref:`using_api`.
+See `Using WebbPSF <usage.html>`_.
 
 .. admonition:: Quickstart Jupyter Notebook
 
