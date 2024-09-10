@@ -3175,7 +3175,7 @@ class NIRSpec(JWInstrument_with_IFU):
         self.image_mask = 'MSA all open'
         self.pupil_mask = self.pupil_mask_list[-1]
 
-        self.disperser_list = ['PRISM', 'G140M', 'G140H', 'G235M', 'G235H', 'G394M', 'G395H']
+        self.disperser_list = ['PRISM', 'G140M', 'G140H', 'G235M', 'G235H', 'G395M', 'G395H']
         self._disperser = None
         self._IFU_bands_cubepars = {
             'PRISM/CLEAR': (0.10, 0.0050, 0.60, 5.30),

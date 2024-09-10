@@ -87,6 +87,10 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
         if header['APERNAME'] == 'MIRIM_SLIT':
             inst.image_mask = 'LRS slit'
 
+    elif inst.name == 'NIRISS':
+        if header['PUPIL'] == 'NRM': # else could be CLEARP for KPI observations
+            inst.pupil_mask = 'MASK_NRM'
+
     # TODO add other per-instrument keyword checks
 
     if verbose:
