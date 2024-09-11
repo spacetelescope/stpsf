@@ -550,7 +550,7 @@ def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=
 
 # Functions for applying IFU optics systematics models
 #
-# Note, thes are is not actually a "Detector" effect, but this file is a
+# Note, this is not actually a "Detector" effect, but this file is a
 # convenient place to locate that code, because similar to the detector effects
 # it's implemented as a post-processing modification on the output PSF array.
 
@@ -586,7 +586,7 @@ def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
     if model_type.lower() == 'gaussian':
         # Very simple model just as a Gaussian convolution kernel
         sigma = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS['MIRI']['sigma']
-        hdulist[ext].header['IFUBSIGM'] = (model_type, "[arcsec] IFU PSF broadening Gaussian sigma")
+        hdulist[ext].header['IFUBSIGM'] = (sigma, "[arcsec] IFU PSF broadening Gaussian sigma")
         out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
     elif model_type.lower() == 'empirical':
         # Model based on empirical PSF properties, Argryiou et al.
@@ -623,7 +623,7 @@ def apply_nirspec_ifu_broadening(hdulist, options):
     if model_type.lower() == 'gaussian':
         sigma = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS['NIRSPEC']['sigma']
         # currently sigma= 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
-        hdulist[ext].header['IFUBSIGM'] = (model_type, "[arcsec] IFU PSF broadening Gaussian sigma")
+        hdulist[ext].header['IFUBSIGM'] = (sigma, "[arcsec] IFU PSF broadening Gaussian sigma")
         out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
 
     hdulist[ext].data = out
