@@ -83,6 +83,10 @@ extensions = [
     "numpydoc",
 ]
 
+
+if on_rtd:
+    extensions.append('sphinx.ext.mathjax')
+
 numpydoc_show_class_members = False
 
 autosummary_generate = True
@@ -90,10 +94,7 @@ graphviz_dot = "dot"
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
+# The suffix of source filenames.
 source_suffix = ".rst"
 
 # The master toctree document.
@@ -118,26 +119,53 @@ exclude_patterns = [
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+pygments_style = "default"
 
-intersphinx_mapping.update(  # noqa - defined in star import
-    {
-        "poppy": ("http://poppy-optics.readthedocs.io/", None),
-    }
-)
+#intersphinx_mapping.update(  # noqa - defined in star import
+#    {
+#        "poppy": ("http://poppy-optics.readthedocs.io/", None),
+#    }
+#)
 
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "stsci_rtd_theme"
-html_theme_path = [stsci_rtd_theme.get_html_theme_path()]
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+html_theme_options = {
+    "collapse_navigation": True,
+    "sticky_navigation": False,
+    # "nosidebar": "false",
+    # "sidebarbgcolor": "#4db8ff",
+    # "sidebartextcolor": "black",
+    # "sidebarlinkcolor": "black",
+    # "headbgcolor": "white",
+}
+
+html_logo = '_static/stsci_pri_combo_mark_white.png'
+
+# Add any paths that contain custom themes here, relative to this directory.
+#html_theme_path = []
+
+# The name for this set of Sphinx documents.  If None, it defaults to
+# "<project> v<release> documentation".
+# html_title = None
+
+# A shorter title for the navigation bar.  Default is the same as html_title.
+# html_short_title = None
+
+# The name of an image file (relative to this directory) to place at the top
+# of the sidebar.
+
+# The name of an image file (within the static path) to use as favicon of the
+# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
+# html_favicon = None
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
