@@ -7,7 +7,7 @@ wide = 3
 
 fig = plt.figure(figsize=(10, 8))
 gs = fig.add_gridspec(wide, long, hspace=0.2, wspace=-0.15)
-ax = gs.subplots( sharey=True, sharex=True )
+ax = gs.subplots(sharey=True, sharex=True)
 axes = ax.flatten()
 
 wfi = roman.WFI()
@@ -16,10 +16,10 @@ all_filters = [f for f in wfi.filter_list]
 
 for i, ifilter in enumerate(sorted(all_filters)):
     ax = axes[i]
-    
+
     wfi.filter = ifilter
 
-    nlambda = None # use defaults
+    nlambda = None  # use defaults
     if wfi.filter in ['PRISM', 'GRISM0', 'GRISM1']:
         nlambda = 1
 
@@ -36,7 +36,8 @@ for i, ifilter in enumerate(sorted(all_filters)):
     ax.yaxis.label.set_visible(False)
 
 axes[-1].remove()
-#fig.savefig('webbpsf-roman_page_header.png', dpi=100, facecolor='w')
+
+# fig.savefig('webbpsf-roman_page_header.png', dpi=100, facecolor='w')
 
 #### Create compare_wfi_sca09_sca17.png
 wfi2 = roman.WFI()
