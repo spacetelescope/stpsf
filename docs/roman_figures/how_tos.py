@@ -2,36 +2,37 @@ import matplotlib.pyplot as plt
 from webbpsf import display_psf, roman
 
 #### Create webbpsf-roman_page_header.png
+long = 4
+wide = 3
+
+fig = plt.figure(figsize=(12,10))
+gs = fig.add_gridspec(wide, long, hspace=0.25, wspace=0.0)
+ax = gs.subplots( sharey=True, sharex=False )
+axes = ax.flatten()
+
 wfi = roman.WFI()
 
 all_filters = [f for f in wfi.filter_list]
 
-long = 6
-wide = 2
+for i, ifilter in enumerate(sorted(all_filters)):
+    ax = axes[i]
+    
+    wfi.filter = ifilter
 
-fig, axs = plt.subplots(wide, long, figsize=(12, 6), sharey=True)
+    nlambda = None
+    if wfi.filter in ['PRISM', 'GRISM0', 'GRISM1']:
+        nlambda = 1
 
-for i, filter in enumerate(sorted(all_filters)):
-    r = int(np.floor(i / long))
-    c = (i % long if i < long
-         else (i % long) + 1) # remove else for left-justified bottom row
-    ax = axs[r][c]
+    psf = wfi.calc_psf(oversample=4, nlambda=nlambda)
 
-    wfi.filter = filter
-    psf = wfi.calc_psf(oversample=4)
-
-    display_psf(psf, ax=ax, colorbar=False, title=filter)
-    ax.title.set_fontsize(20)
+    display_psf(psf, ax=ax, colorbar=False, title=ifilter)
     ax.tick_params(axis='both', labelsize=10)
     ax.xaxis.label.set_visible(False)
     ax.yaxis.label.set_visible(False)
 
+axes[-1].remove()
 
-axs[-1][0].remove() # change last index to -1 to justify left
-
-fig.tight_layout(w_pad=.1, h_pad=0)
-fig.tight_layout(w_pad=.1, h_pad=0) # calling twice somehow tightens h_pad
-# fig.savefig('webbpsf-roman_page_header.png', dpi=100, facecolor='w')
+#fig.savefig('webbpsf-roman_page_header.png', dpi=100, facecolor='w')
 
 #### Create compare_wfi_sca09_sca17.png
 wfi2 = roman.WFI()
