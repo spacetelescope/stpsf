@@ -18,7 +18,7 @@ Wide Field Instrument (WFI)
 
    Sample PSFs for the filters in the Roman WFI on SCA01. Angular
    scale in arcseconds, log-scaled intensity. Note that the prism and
-   grism PSFs are monochromatic at their default wavelengths.
+   grism PSFs are monochromatic.
 
 The WFI model is based on the `Cycle 9 instrument reference information <https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html>`_ from the Roman team at Goddard Space Flight Center (GSFC). The reported jitter for the Roman observatory is 0.012 arcsec per axis, per `GSFC <https://roman.ipac.caltech.edu/sims/Param_db.html#telescope>`_.
 
