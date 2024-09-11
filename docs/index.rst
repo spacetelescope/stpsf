@@ -60,6 +60,7 @@ Contents
    jwst_measured_opds.ipynb
    jwst_detector_effects.ipynb
    jwst_matching_psfs_to_data.ipynb
+   jwst_large_psf.ipynb
    jwst_optical_budgets.ipynb
    jwst_psf_subtraction.ipynb
    jwst_wavefront_deltas.ipynb
