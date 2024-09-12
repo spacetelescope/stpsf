@@ -3330,6 +3330,9 @@ class NIRSpec(JWInstrument_with_IFU):
                         self.image_mask = None
                 else:
                     self._mode = 'imaging'  # More to implement here later!
+        # Update the rotation angle
+        # This works the same for both regular and IFU modes
+        self._rotation = self._get_aperture_rotation(self.aperturename)
 
     def _tel_coords(self):
         """Convert from science frame coordinates to telescope frame coordinates using
@@ -3358,6 +3361,19 @@ class NIRSpec(JWInstrument_with_IFU):
             return super()._get_pixelscale_from_apername('NRS1_FULL')
         else:
             return super()._get_pixelscale_from_apername(apername)
+
+    def _get_aperture_rotation(self, apername):
+        """Get the rotation angle of a given aperture, using values from SIAF.
+
+        Returns ~ position angle counterclockwise from the V3 axis, in degrees
+        (i.e. SIAF V3IdlYangle)
+
+        For NIRSpec this is simple, since even the SLIT type apertures have
+        V3IdlYAngle values defined.  And we don't have the complexity of
+        COMPOUND type apertures that MIRI has to deal with.
+
+        """
+        return self.siaf[apername].V3IdlYAngle
 
     @property
     def disperser(self):
