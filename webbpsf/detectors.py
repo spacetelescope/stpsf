@@ -8,6 +8,8 @@ import scipy.signal as signal
 from astropy.convolution import convolve
 from astropy.convolution.kernels import CustomKernel
 from astropy.io import fits
+from astropy import units as u
+from astropy.modeling.functional_models import Gaussian1D, GAUSSIAN_SIGMA_TO_FWHM
 
 import webbpsf
 from webbpsf import constants, utils
@@ -195,15 +197,18 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
 
             out_ipc_0 = convolve(psf_hdulist[extname].data, ipckernel)
             out_ipc = convolve(out_ipc_0, ppckernel)
+            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC and PPC models for {inst}')
         elif inst.upper() == 'NIRISS':
             # the NIRISS code provided by Kevin Volk was developed for a different convolution function
             if oversample != 1:
                 kernel = oversample_ipc_model(kernel, oversample)
             out_ipc = signal.fftconvolve(psf_hdulist[extname].data, kernel, mode='same')
+            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
         else:
             if oversample != 1:
                 kernel = oversample_ipc_model(kernel, oversample)
             out_ipc = convolve(psf_hdulist[extname].data, kernel)
+            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
 
         # apply kernel to DET_DIST
         psf_hdulist[extname].data = out_ipc
@@ -214,7 +219,7 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
         psf_hdulist[extname].header.add_history('Applied detector interpixel capacitance (IPC) model')
 
     else:
-        webbpsf.webbpsf_core._log.info('IPC corrections are not implemented yet for {}'.format(inst))
+        webbpsf.webbpsf_core._log.info('IPC model not implemented yet for {}'.format(inst))
         psf_hdulist[extname].header['IPCINST'] = (inst, 'No IPC correction applied')
 
     return psf_hdulist
@@ -542,3 +547,129 @@ def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=
     ax.plot(0, 0, marker='+', color='yellow')
 
     matplotlib.pyplot.colorbar(mappable=ax.images[0])
+
+# Functions for applying IFU optics systematics models
+#
+# Note, this is not actually a "Detector" effect, but this file is a
+# convenient place to locate that code, because similar to the detector effects
+# it's implemented as a post-processing modification on the output PSF array.
+
+
+def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
+    """ Apply a simple empirical model of MIRI IFU broadening to better match observed PSFs
+
+    Parameters
+    -----------
+    hdulist : astropy.io.fits.HDUList
+		PSF calculation output data structure. Will be modified.
+	options : dict
+		Options dict for setting optional behaviors
+    slice_width : float
+		MIRI MRS IFU slice width (across the slice). See MIRI._IFU_pixelscale in webbpsf_core.py
+
+    """
+    # First, check an optional flag to see whether or not to include this effect.
+    # User can set the option to None to disable this step.
+    model_type = options.get('ifu_broadening', 'empirical')
+
+    if model_type is None or model_type.lower() == 'none':
+        return hdulist
+
+    ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
+
+    webbpsf.webbpsf_core._log.info(f'Applying MIRI IFU broadening model: {model_type}')
+    hdulist[ext].header.add_history(f"Added broadening model for IFU PSFs: {model_type}")
+
+    hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
+    hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
+
+    if model_type.lower() == 'gaussian':
+        # Very simple model just as a Gaussian convolution kernel
+        sigma = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS['MIRI']['sigma']
+        hdulist[ext].header['IFUBSIGM'] = (sigma, "[arcsec] IFU PSF broadening Gaussian sigma")
+        out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
+    elif model_type.lower() == 'empirical':
+        # Model based on empirical PSF properties, Argryiou et al.
+        pixelscl = float(hdulist[ext].header['PIXELSCL'])
+        wavelen = float(hdulist[ext].header['WAVELEN'])
+
+        beta_width = slice_width / pixelscl
+        alpha_width = _miri_mrs_analytical_sigma_alpha_broadening(wavelen * 1e6) / pixelscl
+        out = _miri_mrs_empirical_broadening(psf_model=hdulist[ext].data, alpha_width=alpha_width, beta_width=beta_width)
+
+    hdulist[ext].data = out
+
+    return hdulist
+
+
+def apply_nirspec_ifu_broadening(hdulist, options):
+    """ Apply a simple empirical model of NIRSpec IFU broadening to better match observed PSFs
+
+    """
+    # First, check an optional flag to see whether or not to include this effect
+    model_type = options.get('ifu_broadening', 'gaussian')
+    if model_type is None or model_type.lower() == 'none':
+        return hdulist
+
+    ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
+
+    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model ({model_type}) to '+
+                                   f'ext {hdulist[ext].header["EXTNAME"]}')
+
+    hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
+    hdulist[ext].header['IFUBTYPE'] = (model_type, "IFU PSF broadening model type")
+    hdulist[ext].header.add_history(f"Added broadening model for IFU PSFs: {model_type}")
+
+    if model_type.lower() == 'gaussian':
+        sigma = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS['NIRSPEC']['sigma']
+        # currently sigma= 50 mas, half a NIRSpec IFU spaxel. Approximate and loose estimate
+        hdulist[ext].header['IFUBSIGM'] = (sigma, "[arcsec] IFU PSF broadening Gaussian sigma")
+        out = scipy.ndimage.gaussian_filter(hdulist[ext].data, sigma / hdulist[ext].header['PIXELSCL'])
+
+    hdulist[ext].data = out
+
+    return hdulist
+
+
+def _miri_mrs_analytical_sigma_alpha_broadening(wavelength):
+    """
+    Calculate the Gaussian scale of the kernel that broadens the diffraction limited
+    FWHM to the empirically measured FWHM.
+
+    Parameters
+    ----------
+    wavelength : float or ndarray
+		wavelength in MICRONS
+    """
+    empirical_fwhm = 0.033 * wavelength + 0.106  # Law+2023
+    diffraction_fwhm = astropy.coordinates.Angle(1.025*wavelength*1E-6/constants.JWST_CIRCUMSCRIBED_DIAMETER, u.radian).to_value(u.arcsec)
+
+    sigma_emp = empirical_fwhm/GAUSSIAN_SIGMA_TO_FWHM
+    sigma_diffr = diffraction_fwhm/GAUSSIAN_SIGMA_TO_FWHM
+    return np.sqrt(sigma_emp**2 - sigma_diffr**2)  # return kernel width in arcsec
+
+
+def _miri_mrs_empirical_broadening(psf_model, alpha_width, beta_width):
+     """
+     Perform the broadening of a psf model in alpha and beta
+
+     Parameters
+     -----------
+     psf_model : ndarray
+        webbpsf output results, eitehr monochromatic model or datacube
+     alpha_width : float
+        gaussian convolution kernel in pixels, None if no broadening should be performed
+     beta_width : float
+        slice width in pixels
+     """
+     kernel_beta = astropy.convolution.Box1DKernel(beta_width)
+
+    # TODO: extend algorithm to handle the datacube case
+
+     if alpha_width is None:
+         psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model)
+     else:
+         kernel_alpha = astropy.convolution.Gaussian1DKernel(stddev=alpha_width)
+         psf_model_alpha = np.apply_along_axis(lambda m: convolve(m, kernel_alpha), axis=1, arr=psf_model)
+         psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model_alpha)
+     return psf_model_alpha_beta
