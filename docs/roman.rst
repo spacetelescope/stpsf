@@ -16,7 +16,9 @@ Wide Field Instrument (WFI)
    :align: center
    :alt: Sample PSFs for the filters in the Roman WFI.
 
-   Sample PSFs for the filters in the Roman WFI. Angular scale in arcseconds, log-scaled intensity.
+   Sample PSFs for the filters in the Roman WFI on SCA01. Angular
+   scale in arcseconds, log-scaled intensity. Note that the prism and
+   grism PSFs shown here are monochromatic.
 
 The WFI model is based on the `Cycle 9 instrument reference information <https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html>`_ from the Roman team at Goddard Space Flight Center (GSFC). The reported jitter for the Roman observatory is 0.012 arcsec per axis, per `GSFC <https://roman.ipac.caltech.edu/sims/Param_db.html#telescope>`_.
 
@@ -25,7 +27,7 @@ To work with the WFI model, import and instantiate it just like any of the JWST 
     >>> from webbpsf import roman
     >>> wfi = roman.WFI()
 
-Usage of the WFI model class is, for the most part, just like any other WebbPSF instrument model. For help setting attributes like filters, position offsets, and sampling, refer to :ref:`using_api`.
+Usage of the WFI model class is, for the most part, just like any other WebbPSF instrument model. For help setting attributes like filters, position offsets, and sampling, refer to `Using WebbPSF <usage.html>`_.
 
 The WFI model includes a model for field dependent PSF aberrations. With as large a field of view as the WFI is designed to cover, there will be variation in the PSF from one end of the field of view to the other. WebbPSF's WFI model faithfully reproduces the field dependent aberrations calculated from the Goddard Roman team's Cycle 9 WFI design. This provides a toolkit for users to assess the impact of inter-SCA and intra-SCA PSF variations on science cases of interest.
 

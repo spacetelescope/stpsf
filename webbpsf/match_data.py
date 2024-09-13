@@ -31,7 +31,11 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
 
     inst = webbpsf.instrument(header['INSTRUME'])
 
-    if inst.name == 'MIRI' and header['FILTER'] == 'P750L':
+    if inst.name == 'MIRI' and header['EXP_TYPE'] == 'MIR_MRS':
+        print("MIRI MRS exposure detected; configuring for IFU mode")
+        inst.mode = 'IFU'
+        # There is no FILTER keyword for MRS, so don't set filter to anything.
+    elif inst.name == 'MIRI' and header['FILTER'] == 'P750L':
         # webbpsf doesn't model the MIRI LRS prism spectral response
         print('Please note, webbpsf does not currently model the LRS spectral response. Setting filter to F770W instead.')
         inst.filter = 'F770W'
@@ -68,7 +72,12 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
             inst.pupil_mask = header['PUPIL']
 
     elif inst.name == 'MIRI':
-        if inst.filter in ['F1065C', 'F1140C', 'F1550C']:
+        if header['EXP_TYPE'] == 'MIR_MRS':
+            ch = header['CHANNEL']
+            band_lookup = {'SHORT': 'A', 'MEDIUM': 'B', 'LONG': 'C'}
+            inst.band = str(ch) + band_lookup[header['BAND']]
+
+        elif inst.filter in ['F1065C', 'F1140C', 'F1550C']:
             inst.image_mask = 'FQPM' + inst.filter[1:5]
         elif inst.filter == 'F2300C':
             inst.image_mask = 'LYOT2300'
@@ -77,6 +86,10 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
 
         if header['APERNAME'] == 'MIRIM_SLIT':
             inst.image_mask = 'LRS slit'
+
+    elif inst.name == 'NIRISS':
+        if header['PUPIL'] == 'NRM': # else could be CLEARP for KPI observations
+            inst.pupil_mask = 'MASK_NRM'
 
     # TODO add other per-instrument keyword checks
 

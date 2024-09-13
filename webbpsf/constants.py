@@ -401,3 +401,9 @@ INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS = {
 # This is a rough approximation of a detector-position-dependent phenomenon
 MIRI_CRUCIFORM_INNER_RADIUS_PIX = 12
 MIRI_CRUCIFORM_RADIAL_SCALEFACTOR = 0.005   # Brightness factor for the diffuse circular halo
+
+# Parameters for adjusting models of IFU PSFs relative to regular imaging PSFs
+INSTRUMENT_IFU_BROADENING_PARAMETERS = {
+    'NIRSPEC': {'sigma': 0.05},
+    'MIRI': {'sigma': 0.05},
+}

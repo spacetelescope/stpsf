@@ -74,8 +74,23 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
     The instrument constructors do not take any arguments. Instead, create an instrument object and then
     configure the `filter` or other attributes as desired. The most commonly accessed parameters are
     available as object attributes: `filter`, `image_mask`, `pupil_mask`, `pupilopd`. More advanced
-    configuration can be done by editing the :ref:`SpaceTelescopeInstrument.options` dictionary, either by
+    configuration can be done by editing the `options` dictionary attribute, either by
     passing options to ``__init__`` or by directly editing the dict afterwards.
+
+    Attributes
+    ----------
+    telescope : str
+        Name of selected telescope, JWST or Roman.
+    filter : str
+        Bandpass filter name
+    image_mask : str
+        Name of selected image plane mask, e.g. coronagraph mask or spectrograph slit
+    pupil_mask : str
+        Name of selected image plane mask, e.g. coronagraph mask or pupil stop
+    pupilopd : str
+        Filename for telescope pupil wavefront error Optical Path Difference data
+    options : dict
+        Dictionary for specifying additional specialized options, per each subclass and instance.
     """
 
     telescope = 'Generic Space Telescope'
@@ -704,8 +719,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
             configuration is specified (1 per instrument, detector, and filter)
             User also has the option to save the grid as a fits.HDUlist object.
 
-        Use
-        ---
+        Examples
+        --------
         nir = webbpsf.NIRCam()
         nir.filter = "F090W"
         list_of_grids = nir.psf_grid(all_detectors=True, num_psfs=4)
@@ -762,16 +777,16 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 class JWInstrument(SpaceTelescopeInstrument):
     """Superclass for all JWST instruments
 
-    Notable attributes
-    ------------------
-
-    telescope : name of telescope
-    pupilopd : filename or FITS file object
-
-    include_si_wfe : boolean (default: True)
+    Attributes
+    ----------
+    telescope : str
+        name of telescope
+    pupilopd : file-like
+        filename or FITS file object for the pupil Optical Path Difference
+    include_si_wfe : boolean
         Should SI internal WFE be included in models? Requires
         the presence of ``si_zernikes_isim_cv3.fits`` in the
-        ``WEBBPSF_PATH``.
+        ``WEBBPSF_PATH``. Default = True.
     """
 
     telescope = 'JWST'
@@ -1241,7 +1256,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         # Add distortion if set in calc_psf
         if add_distortion:
-            _log.debug('Adding PSF distortion(s) and detector effects')
+            _log.info('Adding PSF distortion(s) and detector effects')
 
             # Set up new extensions to add distortion to:
             n_exts = len(result)
@@ -1278,19 +1293,20 @@ class JWInstrument(SpaceTelescopeInstrument):
                 else:
                     # there is not yet any distortion calibration for the IFU, and
                     # we don't want to apply charge diffusion directly here
-                    psf_distorted = result
+                    psf_distorted = detectors.apply_miri_ifu_broadening(result, options, slice_width=self._ifu_slice_width)
             elif self.name == 'NIRSpec':
                 # Apply distortion effects to NIRSpec psf: Distortion only
                 # (because applying detector effects would only make sense after simulating spectral dispersion)
                 _log.debug('NIRSpec: Adding optical distortion')
-                if 'IFU' not in self.aperturename:
+                if self.mode != 'IFU':
                     psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion model
+                    psf_distorted = detectors.apply_detector_charge_diffusion(
+                        psf_siaf, options
+                    )  # apply detector charge transfer model
+
                 else:
                     # there is not yet any distortion calibration for the IFU.
-                    psf_siaf = result
-                psf_distorted = detectors.apply_detector_charge_diffusion(
-                    psf_siaf, options
-                )  # apply detector charge transfer model
+                    psf_distorted = detectors.apply_nirspec_ifu_broadening(result, options)
 
             # Edit the variable to match if input didn't request distortion
             # (cannot set result = psf_distorted due to return method)
@@ -1298,6 +1314,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in np.arange(len(psf_distorted)):
                 result[ext] = psf_distorted[ext]
 
+        _log.info('Formatting output FITS extensions including for sampling.')
         # Rewrite result variable based on output_mode; this includes binning down to detector sampling.
         SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
 
@@ -1612,6 +1629,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 an estimate of the OTE wavefront nominally at the master chief ray location (between the NIRCams).
                 WebbPSF will automatically add back on top of this the OTE field dependent WFE for the appropriate
                 field point. as usual.
+            - Scale the OPD to match the same size of the user provide pupil file
 
         Parameters
         ----------
@@ -1639,6 +1657,15 @@ class JWInstrument(SpaceTelescopeInstrument):
             which is most of use for some other tool.
 
         """
+        # We use the size of the user supplied name of the JWST pupil in order to create the matching size OPD
+        # The code assume the naming convention for the JWST pupil file: jwst_pupil_RevW_npix<size in pixels>.fits.gz
+        npix_out = int(self.pupil[self.pupil.find('npix') + len('npix'):self.pupil.find('.fits')])
+
+        if verbose and npix_out != 1024:
+            print(
+                  f'The size of the JWST pupil is different than nominal (1024px), {self.pupil}. '
+                  f'The OPD will be scaled accordingly'
+            )
 
         # If the provided filename doesn't exist on the local disk, try retrieving it from MAST
         # Note, this will automatically use cached versions downloaded previously, if present
@@ -1647,12 +1674,12 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         if verbose:
             print(f'Importing and format-converting OPD from {filename}')
-        opdhdu = webbpsf.mast_wss.import_wss_opd(filename)
+        opdhdu = webbpsf.mast_wss.import_wss_opd(filename, npix_out=npix_out)
 
         # Mask out any pixels in the OPD array which are outside the OTE pupil.
         # This is mostly cosmetic, and helps mask out some edge effects from the extrapolation + interpolation in
         # resizing the OPDs
-        ote_pupil_mask = utils.get_pupil_mask() != 0
+        ote_pupil_mask = utils.get_pupil_mask(npix=npix_out) != 0
         opdhdu[0].data *= ote_pupil_mask
 
         # opdhdu[0].header['RMS_OBS'] = (webbpsf.utils.rms(opdhdu[0].data, mask=ote_pupil_mask)*1e9,
@@ -1683,6 +1710,10 @@ class JWInstrument(SpaceTelescopeInstrument):
             sensing_inst.pupil = (
                 self.pupil
             )  # handle the case if the user has selected a different NPIX other than the default 1024
+            sensing_inst.pupilopd = (
+                opdhdu
+            )  # handle the case if the user has selected a different NPIX other than the default 1024
+
             if sensing_inst.name == 'NRC':
                 sensing_inst.filter = 'F212N'
                 # TODO: optionally check for the edge case in which the sensing was done in F187N
@@ -1696,6 +1727,11 @@ class JWInstrument(SpaceTelescopeInstrument):
                 sensing_fp_si_wfe = poppy.FITSOpticalElement(opd=was_targ_file).opd
             else:
                 sensing_fp_si_wfe = sensing_inst.get_wfe('si')
+
+            if npix_out != 1024:   # handle the case if the user has selected a different NPIX other than the default
+                # the results from the zoom function preserve the STD between both phase maps and
+                # the total sum between the phase maps is proportional to the zoom value
+                sensing_fp_si_wfe = scipy.ndimage.zoom(sensing_fp_si_wfe, npix_out / 1024)
 
             sensing_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
 
@@ -1731,7 +1767,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             if plot or save_ote_wfe:
                 # Either of these options will need the total OTE WFE.
                 # Under normal circumstances webbpsf will compute this later automatically, but if needed we do it here too
-                selected_fp_ote_wfe = self.get_wfe('ote_field_dep')
+                selected_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
                 total_ote_wfe_at_fp = opdhdu[0].data + (selected_fp_ote_wfe * ote_pupil_mask)
 
             if plot:
@@ -1813,7 +1849,9 @@ class JWInstrument(SpaceTelescopeInstrument):
         opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
-    def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None, *args, **kwargs):
+    @poppy.utils.quantity_input(wavelengths=units.meter)
+    def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None,
+                           add_distortion=True, *args, **kwargs):
         """Calculate a spectral datacube of PSFs: Simplified, much MUCH faster version.
 
         This is adapted from poppy.Instrument.calc_datacube, optimized and simplified
@@ -1846,6 +1884,8 @@ class JWInstrument(SpaceTelescopeInstrument):
         wavelengths : iterable of floats
             List or ndarray or tuple of floating point wavelengths in meters, such as
             you would supply in a call to calc_psf via the "monochromatic" option
+        add_distortion : bool
+            Same as for regular calc_psf.
 
         compare_methods : bool
             If true, compute the PSF **BOTH WAYS**, and return both for comparisons.
@@ -1866,7 +1906,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         # Set up cube and initialize structure based on PSF at a representative wavelength
         _log.info('Starting fast/simplified multiwavelength data cube calculation.')
         ref_wave = np.mean(wavelengths)
-        MIN_REF_WAVE = 2e-6  # This must not be too short, to avoid phase wrapping for the C3 bump
+        MIN_REF_WAVE = 2e-6 * units.meter  # This must not be too short, to avoid phase wrapping for the C3 bump
         if ref_wave < MIN_REF_WAVE:
             ref_wave = MIN_REF_WAVE
             log_message = (
@@ -1894,7 +1934,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         ext = 0
         cubefast[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
         cubefast[ext].data[0] = psf[ext].data
-        cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
+        cubefast[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0].to_value(units.meter)
 
         # Fast way. Assumes wavelength-independent phase and amplitude at the exit pupil!!
         if compare_methods:
@@ -1925,7 +1965,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             wl = wavelengths[i]
             psfw = quickosys.calc_psf(wavelength=wl, normalize='None')
             cubefast[0].data[i] = psfw[0].data
-            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i]
+            cubefast[ext].header[label_wavelength(nwavelengths, i)] = wavelengths[i].to_value(units.meter)
 
         cubefast[0].header['NWAVES'] = nwavelengths
 
@@ -1942,7 +1982,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             for ext in range(len(psf)):
                 cube[ext].data = np.zeros((nwavelengths, psf[ext].data.shape[0], psf[ext].data.shape[1]))
                 cube[ext].data[0] = psf[ext].data
-                cube[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0]
+                cube[ext].header[label_wavelength(nwavelengths, 0)] = wavelengths[0].to_value(units.meter)
 
             # iterate rest of wavelengths
             print('Running standard way')
@@ -1951,7 +1991,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 psf = self.calc_psf(*args, monochromatic=wl, **kwargs)
                 for ext in range(len(psf)):
                     cube[ext].data[i] = psf[ext].data
-                    cube[ext].header[label_wavelength(nwavelengths, i)] = wl
+                    cube[ext].header[label_wavelength(nwavelengths, i)] = wl.to_value(units.meter)
                     cube[ext].header.add_history('--- Cube Plane {} ---'.format(i))
                     for h in psf[ext].header['HISTORY']:
                         cube[ext].header.add_history(h)
@@ -2065,10 +2105,11 @@ class MIRI(JWInstrument_with_IFU):
 
         self.monochromatic = 8.0
         self._IFU_pixelscale = {
-            'Ch1': (0.176, 0.196),
-            'Ch2': (0.277, 0.196),
-            'Ch3': (0.387, 0.245),
-            'Ch4': (0.645, 0.273),
+                  # slice width, pixel size.   Values from Argyriou et al. 2023 A&A 675
+            'Ch1': (0.177, 0.196),
+            'Ch2': (0.280, 0.196),
+            'Ch3': (0.390, 0.245),
+            'Ch4': (0.656, 0.273),
         }
         # The above tuples give the pixel resolution (first the 'alpha' direction, perpendicular to the slice,
         # then the 'beta' direction, along the slice).
@@ -2454,7 +2495,7 @@ class MIRI(JWInstrument_with_IFU):
 
         if value in self._IFU_bands_cubepars.keys():
             self._band = value
-            # self._slice_width = self._IFU_pixelscale[f"Ch{self._band[0]}"][0]
+            self._ifu_slice_width = self._IFU_pixelscale[f"Ch{self._band[0]}"][0]
             self.aperturename = 'MIRIFU_CHANNEL' + value
             # setting aperturename will also auto update self._rotation
             # self._rotation = self.MRS_rotation[self._band]
@@ -3168,7 +3209,7 @@ class NIRSpec(JWInstrument_with_IFU):
         self.image_mask = 'MSA all open'
         self.pupil_mask = self.pupil_mask_list[-1]
 
-        self.disperser_list = ['PRISM', 'G140M', 'G140H', 'G235M', 'G235H', 'G394M', 'G395H']
+        self.disperser_list = ['PRISM', 'G140M', 'G140H', 'G235M', 'G235H', 'G395M', 'G395H']
         self._disperser = None
         self._IFU_bands_cubepars = {
             'PRISM/CLEAR': (0.10, 0.0050, 0.60, 5.30),
@@ -3323,6 +3364,9 @@ class NIRSpec(JWInstrument_with_IFU):
                         self.image_mask = None
                 else:
                     self._mode = 'imaging'  # More to implement here later!
+        # Update the rotation angle
+        # This works the same for both regular and IFU modes
+        self._rotation = self._get_aperture_rotation(self.aperturename)
 
     def _tel_coords(self):
         """Convert from science frame coordinates to telescope frame coordinates using
@@ -3351,6 +3395,19 @@ class NIRSpec(JWInstrument_with_IFU):
             return super()._get_pixelscale_from_apername('NRS1_FULL')
         else:
             return super()._get_pixelscale_from_apername(apername)
+
+    def _get_aperture_rotation(self, apername):
+        """Get the rotation angle of a given aperture, using values from SIAF.
+
+        Returns ~ position angle counterclockwise from the V3 axis, in degrees
+        (i.e. SIAF V3IdlYangle)
+
+        For NIRSpec this is simple, since even the SLIT type apertures have
+        V3IdlYAngle values defined.  And we don't have the complexity of
+        COMPOUND type apertures that MIRI has to deal with.
+
+        """
+        return self.siaf[apername].V3IdlYAngle
 
     @property
     def disperser(self):

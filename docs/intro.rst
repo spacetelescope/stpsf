@@ -98,7 +98,7 @@ Types of Fourier Transform Calculation in WebbPSF
   * NIRISS NRM, GR799XD: Matrix DFT
   * NIRSpec and NIRISS slit spectroscopy: FFT and Matrix DFT
 
-See :ref:`Optimizing Performance and Parallelization <performance_and_parallelization>` in the POPPY documentation for more details on calculation performance.
+See `Performance and Parallelization <https://poppy-optics.readthedocs.io/en/latest/performance.html>`_ in the POPPY documentation for more details on calculation performance.
 
 Getting WebbPSF
 ---------------

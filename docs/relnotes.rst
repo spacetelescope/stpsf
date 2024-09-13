@@ -14,11 +14,7 @@ See https://github.com/spacetelescope/webbpsf/issues for currently open issues a
   the pupil entrance aperture in the discrete Fourier transform. If you need
   accurate PSF information at such large radii, please contact Marshall Perrin
   or Marcio Melendez for higher resolution pupil data.
-
-**The following factors are NOT included in these simulations:**
-
 * Coronagraphic masks are assumed to be perfect (i.e. the masks exactly match their design parameters.)
-* Most detector effects, such as intrapixel sensitivity variations or interpixel capacitance. There are currently no plans to include these WebbPSF itself.  Generate a subsampled PSF and use a separate detector model code instead. The one exception is a scattering artifact in the MIRI imager detector substrate.
 
 ------------------
 
@@ -27,7 +23,56 @@ See https://github.com/spacetelescope/webbpsf/issues for currently open issues a
 Version History and Change Log
 -------------------------------
 
+
+Version 1.4.0
+=============
+
+*2024 September*
+
+We are pleased to announce the release of the latest version of WebbPSF version 1.4.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
+
+**What's Changed**
+* Improve trending plots, particularly wfe_histogram arrows display by @mperrin in https://github.com/spacetelescope/webbpsf/pull/870
+
+* build(deps): bump photutils from 1.12.0 to 1.13.0 by @dependabot in https://github.com/spacetelescope/webbpsf/pull/872
+
+* more strict units handling; fixes some issues for astropy 6.0.0 compatibility by @mperrin in https://github.com/spacetelescope/webbpsf/pull/879
+
+* add dedicated cache workflow that can be called by other projects by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/877
+
+* fix syntax error in `.github/workflows/download_data.yml` by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/882
+
+* use `pathlib` to handle a `WEBBPSF_PATH` with double slashes by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/886
+
+* Fix #888, typo in NIRSpec disperser list by @mperrin in https://github.com/spacetelescope/webbpsf/pull/889
+
+* Use MASK_NRM to match AMI data by @rcooper295 in https://github.com/spacetelescope/webbpsf/pull/893
+
+* minor: trending function add cycle 3 routine WFS PIDs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/878
+
+* Update NIRSpec aperture PAs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/897
+
+* build(deps): bump scipy from 1.13.0 to 1.14.0 by @dependabot in https://github.com/spacetelescope/webbpsf/pull/874
+
+* Update citations by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/898
+
+* using z range in requirements.txt by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/909
+
+* Docs improvements, including for matching PSFs to data by @mperrin in https://github.com/spacetelescope/webbpsf/pull/899
+
+* Enhance capabilities to simulate PSFs with larger JWST pupil  by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull/908
+
+* IFU mode improvements, continued by @mperrin in https://github.com/spacetelescope/webbpsf/pull/890
+
+* Roman docs & figures updates by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/910
+
+* add CI tests for mast_wss, in test_mast_wss.py by @mperrin in https://github.com/spacetelescope/webbpsf/pull/911
+
+
+**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.3.0...v1.4.0
+
 Version 1.3.0
+=============
 
 *2024 May*
 
@@ -356,7 +401,7 @@ Note, when upgrading to this version you will need to update to the latest data 
 
 **WFIRST Improvements**
 
-- *The WFI optical model has been updated to use optical data from the Cycle 8 design revision.* These include updated Zernike coefficients for field-dependent wavefront error, and masked and unmasked pupil images for each SCA, and updated filter throughputs (consistent with values used in Pandeia 1.4.2). The correct pupil file will automatically be selected for each calculation based on the chosen detector position and filter.   The pupil files are consistent with those provided in the WFI cycle 8 reference information, but have been resampled onto a common pixel scale.  See :ref:`WFIRST instrument model details <wfirst_wfi>` for more.  [:pr:`309` :user:`robelgeda`]
+- *The WFI optical model has been updated to use optical data from the Cycle 8 design revision.* These include updated Zernike coefficients for field-dependent wavefront error, and masked and unmasked pupil images for each SCA, and updated filter throughputs (consistent with values used in Pandeia 1.4.2). The correct pupil file will automatically be selected for each calculation based on the chosen detector position and filter.   The pupil files are consistent with those provided in the WFI cycle 8 reference information, but have been resampled onto a common pixel scale.  See `WFIRST instrument model details <roman.html>`_ for more.  [:pr:`309` :user:`robelgeda`]
 - Note, WFI's filters have been renamed so they all begin with “F”; `see the table here <https://github.com/spacetelescope/webbpsf/pull/309>`_ .
 - *The WFI wavelength range has now been extended to cover the 0.48 - 2.0 µm range.* [:pr:`309` :user:`robelgeda`]
 - *Expanded ``psf_grid`` method’s functionality so it can also be used to make grids of WFIRST PSFs.* Note that focal plane distortion is not yet implemented for WFIRST PSFs and so ``add_distortion`` keyword should not be used for this case. [:pr:`294`, :user:`shanosborne`]
@@ -872,7 +917,7 @@ directory.
   and the developers of the `Astropy affiliated package template <https://github.com/astropy/package-template>`_.
   Thanks in particular to Christine Slocum for integration into the STScI SSB software distribution.
 
-* Improvements to parallelization code. Better :ref:`documentation for parallelization <performance_and_parallelization>`.  PyFFTW3 replaced with pyFFTW for optimized
+* Improvements to parallelization code. Better documentation for parallelization.  PyFFTW3 replaced with pyFFTW for optimized
   FFTs (yes, those are two entirely different packages).
 
 * Alternate GUI using the wxpython widget toolkit in place of the older/less

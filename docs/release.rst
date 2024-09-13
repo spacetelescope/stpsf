@@ -17,11 +17,13 @@ Releasing new data packages
      #. Find webbpsf-data-LATEST.tar.gz, and click on "more options" and "Update Version".  Choose the newest version of webbpsf-data-#.#.#.tar.gz
      #. This will change the name of webbpsf-data-LATEST.tar.gz to be what you just uploaded, rename the file back to "webbpsf-data-LATEST.tar.gz"
      #. Upload to Box a separate version of webbpsf-data-#.#.#.tar.gz shared data folder for future storage.
-     #. Upload to Box the minimal-webbpsf-data-#.#.#.tar.gz shared data folder.
+     #. Find minimal-webbpsf-data-LATEST.tar.gz, and click on "more options" and "Update Version".  Choose the newest version of minimal-webbpsf-data-#.#.#.tar.gz
+     #. This will change the name of minimal-webbpsf-data-LATEST.tar.gz to be what you just uploaded, rename the file back to "minimal-webbpsf-data-LATEST.tar.gz"
+     #. Upload to Box a separate version of minimal-webbpsf-data-#.#.#.tar.gz shared data folder for future storage.
      #. Verify the shared link of webbpsf-data-latest.tar.gz is the same that exists in ``docs/installation.rst`` ("copy shared link" then "link settings")
 
  #. A shared copy will be automatically configured in STScI Central Store with updated symlink ``/grp/jwst/ote/webbpsf-data``
- #. Update the URL in ``installation.rst`` under :ref:`data_install`
+ #. Update the URLS in ``installation.rst`` under :ref:`data_install`
 
 Details for using `master_data_release.sh`:
 -------------------------------------------
@@ -62,30 +64,6 @@ When you are ready, proceed with the WebbPSF release as follows:
      #. Press "Publish Release".
 
  #. Release to PyPI. This should now happen automatically on GitHub Actions. This will be triggered by a GitHub Actions build of a tagged commit on the `stable` branch, so it will happen automatically on the prior step for the PR into `stable`.
-
-.. note::
-
-  Once conda installation is working again, find this page in the documentation
-  for version 1.0.0 and adapt the steps from the "Releasing a new version
-  through AstroConda" section to the new process.
-
-Releasing a new version through AstroConda
-==========================================
-
-To test that an Astroconda package builds, you will need ``conda-build``::
-
-   $ conda install conda-build
-
-#. Fork (if needed) and clone https://github.com/astroconda/astroconda-contrib
-#. If there is a new version of POPPY available to package, edit `poppy/meta.yaml <https://github.com/astroconda/astroconda-contrib/blob/master/poppy/meta.yaml>`_ to reflect the new ``version`` and ``git_tag``.
-#. If the minimum needed version of the webbpsf-data package has changed in ``webbpsf/__init__.py``, edit `webbpsf-data/meta.yaml <https://github.com/astroconda/astroconda-contrib/blob/master/webbpsf-data/meta.yaml>`_ to reflect the new ``version`` and ``url``.
-#. Edit `webbpsf/meta.yaml <https://github.com/astroconda/astroconda-contrib/blob/master/webbpsf/meta.yaml>`_ to reflect the new versions of POPPY and webbpsf-data, if necessary.
-#. Edit in the ``git_tag`` name from ``git tag`` in the PyPI release instructions (``v0.X.Y``).
-#. Verify that you can build the package from the astroconda-contrib directory: ``conda build -c http://ssb.stsci.edu/astroconda webbpsf``
-#. Commit your changes to a new branch and push to GitHub.
-#. Create a pull request against ``astroconda/astroconda-contrib``.
-#. Wait for SSB to build the conda packages.
-#. (optional) Create a new conda environment to test the package installation following :ref:`these instructions <install-with-conda>`.
 
 
 Finishing the release

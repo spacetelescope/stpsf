@@ -1223,7 +1223,7 @@ def _get_initial_pupil_sampling(instrument):
         if isinstance(instrument.pupil, fits.HDUList):
             pupilheader = instrument.pupil[0].header
         else:
-            pupilfile = os.path.join(instrument._datapath, 'OPD', instrument.pupil)
+            pupilfile = os.path.join(utils.get_webbpsf_data_path(), instrument.pupil)
             pupilheader = fits.getheader(pupilfile)
 
         npix = pupilheader['NAXIS1']

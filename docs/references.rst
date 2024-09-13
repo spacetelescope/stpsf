@@ -28,7 +28,7 @@ of the measured distortions within the instruments.
 
 WebbPSF does not include any absolute throughput information for any SIs, only
 the relative weighting for different wavelengths in a broadband calculation.
-See :ref:`the note on PSF normalization <normalization>` for further
+See `the docs on PSF normalization <usage.html#Customizing-PSF-Calculations:-PSF-Normalizations-and-Flux-Calibrations>_` for further
 discussion.
 
 

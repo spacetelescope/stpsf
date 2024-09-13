@@ -3,7 +3,12 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  retrieve_cache:
+    uses: spacetelescope/webbpsf/.github/workflows/retrieve_cache.yml@develop
+    with:
+      minimal: true
   tests:
+    needs: [ retrieve_cache ]
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -57,10 +62,13 @@ jobs:
       run: pip install tox tox-conda>=0.2
 
     - name: Get WebbPSF Data
-      run: | # Get WebbPSF data files (just a subset of the full dataset!) and set up environment variable
-           wget https://stsci.box.com/shared/static/gkbnn3jwcootr9riwv0rv1t8rpvxl3vr.gz -O /tmp/minimal-webbpsf-data.tar.gz
-           tar -xzvf /tmp/minimal-webbpsf-data.tar.gz
-           echo "WEBBPSF_PATH=${{github.workspace}}/webbpsf-data" >> $GITHUB_ENV
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ needs.retrieve_cache.outputs.cache_path }}
+        key: ${{ needs.retrieve_cache.outputs.cache_key }}
+
+    - name: Set WebbPSF data path
+      run: echo "WEBBPSF_PATH=${{ needs.retrieve_cache.outputs.cache_path }}/webbpsf-data/" >> $GITHUB_ENV
 
     - name: Check conda info
       run: conda info
@@ -68,7 +76,7 @@ jobs:
     - name: Run tests with requirements file
       if: ${{ contains(matrix.toxenv,'-latest') }}
       run: |
-        cp $RUNNER_WORKSPACE/webbpsf/requirements.txt /tmp/
+        cp requirements.txt ${{ runner.temp }}
         tox -e ${{ matrix.toxenv }}
 
     - name: Run tests

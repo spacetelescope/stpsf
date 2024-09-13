@@ -15,7 +15,8 @@ WebbPSF is a Python package that computes simulated point spread functions (PSFs
    :align: center
    :alt: Sample PSFs for the filters in the Roman WFI.
 
-   Sample PSFs for the filters in the Roman WFI.
+   Sample PSFs for the filters in the Roman WFI on SCA01. Note that
+   the prism and grism PSFs shown here are monochromatic.
 
 
 **Contributors:**
@@ -24,7 +25,7 @@ WebbPSF has been developed by Marshall Perrin, Marcio Meléndez, Shannon Osborne
 Getting Started with WebbPSF
 ----------------------------
 
-See :ref:`using_api`.
+See `Using WebbPSF <usage.html>`_.
 
 .. admonition:: Quickstart Jupyter Notebook
 
@@ -48,8 +49,8 @@ Contents
    intro.rst
    installation.rst
    relnotes.rst
-   usage.rst
-   psf_grids.rst
+   usage.ipynb
+   psf_grids.ipynb
 
 .. toctree::
    :maxdepth: 1
@@ -60,6 +61,7 @@ Contents
    jwst_measured_opds.ipynb
    jwst_detector_effects.ipynb
    jwst_matching_psfs_to_data.ipynb
+   jwst_large_psf.ipynb
    jwst_optical_budgets.ipynb
    jwst_psf_subtraction.ipynb
    jwst_wavefront_deltas.ipynb
