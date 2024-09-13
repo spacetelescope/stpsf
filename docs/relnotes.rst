@@ -23,7 +23,56 @@ See https://github.com/spacetelescope/webbpsf/issues for currently open issues a
 Version History and Change Log
 -------------------------------
 
+
+Version 1.4.0
+=============
+
+*2024 September*
+
+We are pleased to announce the release of the latest version of WebbPSF version 1.4.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
+
+**What's Changed**
+* Improve trending plots, particularly wfe_histogram arrows display by @mperrin in https://github.com/spacetelescope/webbpsf/pull/870
+
+* build(deps): bump photutils from 1.12.0 to 1.13.0 by @dependabot in https://github.com/spacetelescope/webbpsf/pull/872
+
+* more strict units handling; fixes some issues for astropy 6.0.0 compatibility by @mperrin in https://github.com/spacetelescope/webbpsf/pull/879
+
+* add dedicated cache workflow that can be called by other projects by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/877
+
+* fix syntax error in `.github/workflows/download_data.yml` by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/882
+
+* use `pathlib` to handle a `WEBBPSF_PATH` with double slashes by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/886
+
+* Fix #888, typo in NIRSpec disperser list by @mperrin in https://github.com/spacetelescope/webbpsf/pull/889
+
+* Use MASK_NRM to match AMI data by @rcooper295 in https://github.com/spacetelescope/webbpsf/pull/893
+
+* minor: trending function add cycle 3 routine WFS PIDs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/878
+
+* Update NIRSpec aperture PAs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/897
+
+* build(deps): bump scipy from 1.13.0 to 1.14.0 by @dependabot in https://github.com/spacetelescope/webbpsf/pull/874
+
+* Update citations by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/898
+
+* using z range in requirements.txt by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/909
+
+* Docs improvements, including for matching PSFs to data by @mperrin in https://github.com/spacetelescope/webbpsf/pull/899
+
+* Enhance capabilities to simulate PSFs with larger JWST pupil  by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull/908
+
+* IFU mode improvements, continued by @mperrin in https://github.com/spacetelescope/webbpsf/pull/890
+
+* Roman docs & figures updates by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/910
+
+* add CI tests for mast_wss, in test_mast_wss.py by @mperrin in https://github.com/spacetelescope/webbpsf/pull/911
+
+
+**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.3.0...v1.4.0
+
 Version 1.3.0
+=============
 
 *2024 May*
 

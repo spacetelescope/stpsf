@@ -17,11 +17,13 @@ Releasing new data packages
      #. Find webbpsf-data-LATEST.tar.gz, and click on "more options" and "Update Version".  Choose the newest version of webbpsf-data-#.#.#.tar.gz
      #. This will change the name of webbpsf-data-LATEST.tar.gz to be what you just uploaded, rename the file back to "webbpsf-data-LATEST.tar.gz"
      #. Upload to Box a separate version of webbpsf-data-#.#.#.tar.gz shared data folder for future storage.
-     #. Upload to Box the minimal-webbpsf-data-#.#.#.tar.gz shared data folder.
+     #. Find minimal-webbpsf-data-LATEST.tar.gz, and click on "more options" and "Update Version".  Choose the newest version of minimal-webbpsf-data-#.#.#.tar.gz
+     #. This will change the name of minimal-webbpsf-data-LATEST.tar.gz to be what you just uploaded, rename the file back to "minimal-webbpsf-data-LATEST.tar.gz"
+     #. Upload to Box a separate version of minimal-webbpsf-data-#.#.#.tar.gz shared data folder for future storage.
      #. Verify the shared link of webbpsf-data-latest.tar.gz is the same that exists in ``docs/installation.rst`` ("copy shared link" then "link settings")
 
  #. A shared copy will be automatically configured in STScI Central Store with updated symlink ``/grp/jwst/ote/webbpsf-data``
- #. Update the URL in ``installation.rst`` under :ref:`data_install`
+ #. Update the URLS in ``installation.rst`` under :ref:`data_install`
 
 Details for using `master_data_release.sh`:
 -------------------------------------------
