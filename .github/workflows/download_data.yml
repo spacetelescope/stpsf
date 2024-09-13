@@ -1,6 +1,6 @@
-# downloads WebbPSF dataset and caches it to GitHub cache, 
-# making a new cache for a new data version 
-# the cache key is in the form `webbpsf-data-mini-1.3.0`, 
+# downloads WebbPSF dataset and caches it to GitHub cache,
+# making a new cache for a new data version
+# the cache key is in the form `webbpsf-data-mini-1.3.0`,
 # `webbpsf-data-full-1.2.6`, etc.
 #
 # To provide your own test workflow with the WebbPSF dataset,
@@ -8,7 +8,7 @@
 # and then use `retrieve_cache.yml` to retrieve that cache so you
 # don't have to download the entire dataset every time.
 #
-# to set up a cache of WebbPSF data in your own repository, 
+# to set up a cache of WebbPSF data in your own repository,
 # create a workflow like the following:
 #
 # # .github/workflows/download_webbpsf.yml
@@ -52,7 +52,7 @@ on:
 
 env:
   DATA_URL: https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz
-  MINIMAL_DATA_URL: https://stsci.box.com/shared/static/gkbnn3jwcootr9riwv0rv1t8rpvxl3vr.gz
+  MINIMAL_DATA_URL: https://stsci.box.com/shared/static/0dt9z6b927iqgtify2a4cvls9hvapi6k.gz
 
 jobs:
   download:
@@ -76,4 +76,4 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       cache_path: ${{ steps.cache_path.outputs.cache_path }}
       cache_key: ${{ steps.cache_key.outputs.cache_key }}
-     
+
