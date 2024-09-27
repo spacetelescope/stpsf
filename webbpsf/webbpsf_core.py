@@ -1053,7 +1053,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if not has_custom_pixelscale:
                     self.pixelscale = self._get_pixelscale_from_apername(self._aperturename)
                     _log.debug(
-                        f'Pixelscale updated to {self.pixelscale}',
+                        f'Pixelscale updated to {self.pixelscale}' +
                         f'based on average X+Y SciScale at SIAF aperture {self._aperturename}'
                     )
 
