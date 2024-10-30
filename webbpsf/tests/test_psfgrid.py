@@ -107,7 +107,7 @@ def test_all_detectors():
 
     # Case 1: Shortwave -> check that only the SW detectors are applied for the SW filter
     nir.filter = shortfilt
-    grid1 = nir.psf_grid(all_detectors=True, num_psfs=1, add_distortion=False, fov_pixels=1, oversample=2, verbose=False)
+    grid1 = nir.psf_grid(all_detectors=True, num_psfs=1, add_distortion=False, fov_pixels=4, oversample=2, verbose=False)
     det_list = []
     for hdu in grid1:
         det_list.append(hdu.meta['detector'][0])
@@ -117,7 +117,7 @@ def test_all_detectors():
 
     # Case 2: Longwave -> check that only the LW detectors are applied for the LW filter
     nir.filter = longfilt
-    grid2 = nir.psf_grid(all_detectors=True, num_psfs=1, add_distortion=False, fov_pixels=1, oversample=2, verbose=False)
+    grid2 = nir.psf_grid(all_detectors=True, num_psfs=1, add_distortion=False, fov_pixels=4, oversample=2, verbose=False)
     det_list = []
     for hdu in grid2:
         det_list.append(hdu.meta['detector'][0])
