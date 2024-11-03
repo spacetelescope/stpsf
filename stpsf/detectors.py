@@ -596,6 +596,21 @@ def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
         beta_width = slice_width / pixelscl
         alpha_width = _miri_mrs_analytical_sigma_alpha_broadening(wavelen * 1e6) / pixelscl
         out = _miri_mrs_empirical_broadening(psf_model=hdulist[ext].data, alpha_width=alpha_width, beta_width=beta_width)
+    elif model_type.lower() == 'cruciform':
+        # Model based on empirical PSF properties, Argryiou et al.
+        pixelscl = float(hdulist[ext].header['PIXELSCL'])
+        wavelen = float(hdulist[ext].header['WAVELEN'])
+
+        beta_width = slice_width / pixelscl
+        alpha_width = _miri_mrs_analytical_sigma_alpha_broadening(wavelen * 1e6) / pixelscl
+        out = _miri_mrs_empirical_broadening(psf_model=hdulist[ext].data, alpha_width=alpha_width, beta_width=beta_width)
+        if wavelen * 1e6 <= 7.5:
+            amplitude_cruciform = get_mrs_cruciform_amplitude(wavelen * 1e6)
+            oversample_factor = hdulist[ext].header['DET_SAMP']/7  # optimised parameters with oversampling = 7
+            fwhm_cruciform = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS["MIRI"]["fhwm_cruciform"]*oversample_factor
+            offset_cruciform = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS["MIRI"]["offset_cruciform"]*oversample_factor
+            out = _miri_mrs_empirical_cruciform(psf_model=out, amp=amplitude_cruciform,
+                                                fwhm=fwhm_cruciform, x_0=offset_cruciform)
 
     hdulist[ext].data = out
 
@@ -673,3 +688,54 @@ def _miri_mrs_empirical_broadening(psf_model, alpha_width, beta_width):
          psf_model_alpha = np.apply_along_axis(lambda m: convolve(m, kernel_alpha), axis=1, arr=psf_model)
          psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model_alpha)
      return psf_model_alpha_beta
+
+
+def get_mrs_cruciform_amplitude(wavelen):
+    """
+    Empirical amplitude of additional cruciform component in MIRI IFU data
+    wavelen: wavelength (only applicable if wavelength < 7.5 um - see apply_miri_ifu_broadening)
+    """
+    return -0.16765378*wavelen + 1.23632423  # Patapis 2025 PSF paper
+
+
+def _round_up_to_odd_integer(value):
+    i = np.ceil(value)
+    if i % 2 == 0:
+        return i + 1
+    else:
+        return i
+
+
+def _Lorentz1DKernel(amp, fwhm, x_0):
+    """
+    1D Lorentz model as a convolution kernel
+    x_size : size of kernel, should be odd
+    """
+    if amp is None:
+        amp = 2 / (np.pi * fwhm)
+
+    fwhm_int = _round_up_to_odd_integer(fwhm)
+    return astropy.convolution.Model1DKernel(astropy.modeling.models.Lorentz1D(amplitude=amp, fwhm=fwhm, x_0=x_0),
+                                             x_size=int(8 * fwhm_int + 1))
+
+
+def _miri_mrs_empirical_cruciform(psf_model, amp, fwhm, x_0):
+    """
+    Perform the broadening of a psf model in alpha and beta
+
+    Parameters
+    -----------
+    psf_model : ndarray
+       webbpsf output results, either monochromatic model or datacube
+    amp : float
+       amplitude of Lorentzian in pixels
+    fwhm : float
+       Full Width Half Max of Lorentzian in pixels
+   x_0 : float
+       offset of Lorentzian in pixels
+    """
+    kernel_cruciform = _Lorentz1DKernel(1.0, fwhm, x_0)
+
+    # TODO: extend algorithm to handle the datacube case
+    psf_model_cruciform = np.apply_along_axis(lambda m: convolve(m, kernel_cruciform), axis=1, arr=psf_model)
+    return psf_model+amp*psf_model_cruciform
