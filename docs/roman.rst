@@ -24,8 +24,7 @@ The WFI model is based on the `Cycle 9 instrument reference information <https:/
 
 .. note::
 
-   The current Roman WFI optical model was provided by Goddard Space
-Flight Center circa 2021 (the Cycle 9 reference data); a new optical model is currently being implemented in WebbPSF.
+   The current Roman WFI optical model was provided by Goddard Space Flight Center circa 2021 (the Cycle 9 reference data); a new optical model is currently being implemented in WebbPSF.
 
 
 To work with the WFI model, import and instantiate it just like any of the JWST instruments::
