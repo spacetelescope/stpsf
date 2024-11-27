@@ -28,9 +28,9 @@ imaging, coronagraphic, and spectroscopic modes.
 
 WebbPSF also supports simulating PSFs for the upcoming Nancy Grace Roman Space Telescope (formerly WFIRST),
 including its Wide Field Instrument and a preliminary version of the Coronagraph Instrument.
-> **_NOTE:_**  The current Roman WFI optical model was provided by
-Goddard Space Flight Center circa 2021 (the Cycle 9 reference data); a
-new optical model is currently being implemented in WebbPSF.
+[!NOTE]
+The current Roman WFI optical model was provided by Goddard Space
+Flight Center circa 2021 (the Cycle 9 reference data); a new optical model is currently being implemented in WebbPSF.
 
 Developed by Marshall Perrin, Joseph Long, Shannon Osborne, Robel Geda, Bradley Sappington, Marcio Meléndez, 
 Charles-Philippe Lajoie, Jarron Leisenring, Neil Zimmerman, Keira Brooks, 
