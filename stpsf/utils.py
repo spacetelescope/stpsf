@@ -1070,3 +1070,17 @@ def get_target_phase_map_filename(apername):
         not found under {}.".format(apername.split('_')[1].lower(),path))
 
     return was_targ_file
+
+
+def display_psf_exts(psf, figsize=(12,3), imagecrop=5, colorbar=False, **kwargs):
+    """ Display all extensions of a given PSF.
+
+    See display_psf for additional information on parameters.
+    """
+    import poppy
+    n_exts = len(psf)
+
+    fig, axes = plt.subplots(figsize=figsize, ncols=4)
+    for ext in range(n_exts):
+        poppy.display_psf(psf, ext=ext, ax=axes[ext], title=f'Ext {ext}: {psf[ext].header["EXTNAME"]}',
+                           imagecrop=imagecrop, colorbar=colorbar, **kwargs)
