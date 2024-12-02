@@ -1725,12 +1725,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
             # Select correct target phase map based on sensing field point.
             # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-            if sensing_apername == 'NRCA3_FP1':
-                was_targ_file = os.path.join(utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp1.fits')
-            elif sensing_apername == 'NRCA1_FP6':
-                was_targ_file = os.path.join(utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp6.fits')
-
-            if (sensing_apername == 'NRCA3_FP1' or sensing_apername == 'NRCA1_FP6') and os.path.exists(was_targ_file):
+            if sensing_apername in ['NRCA3_FP1', 'NRCA1_FP6']:
+                was_targ_file = utils.get_target_phase_map_filename(sensing_apername)
                 sensing_fp_si_wfe = poppy.FITSOpticalElement(opd=was_targ_file).opd
             else:
                 sensing_fp_si_wfe = sensing_inst.get_wfe('si')

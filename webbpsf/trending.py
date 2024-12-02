@@ -317,14 +317,7 @@ def wfe_histogram_plot(
 
                 # Get WSS Target Phase Map for the sensing aperture
                 # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-                if sensing_apername == 'NRCA3_FP1':
-                    was_targ_file = os.path.join(
-                    webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp1.fits'
-                )
-                elif sensing_apername == 'NRCA1_FP6':
-                    was_targ_file = os.path.join(
-                        webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp6.fits'
-                    )
+                was_targ_file = webbpsf.utils.get_target_phase_map_filename(sensing_apername)
 
 
                 target_1024 = astropy.io.fits.getdata(was_targ_file)
@@ -646,25 +639,8 @@ def single_measurement_trending_plot(
 
         # Get WSS Target Phase Map for the sensing aperture
         # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-        if sensing_apername == 'NRCA3_FP1':
-            was_targ_file = os.path.join(
-                webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp1.fits'
-            )
-        elif sensing_apername == 'NRCA1_FP6':
-            was_targ_file = os.path.join(
-                webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp6.fits'
-            )
-
-        # target phase map for prev. Needed just when the sensing aperture changed
-
-        if prev_sensing_apername == 'NRCA3_FP1':
-            prev_was_targ_file = os.path.join(
-                webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp1.fits'
-            )
-        elif prev_sensing_apername == 'NRCA1_FP6':
-            prev_was_targ_file = os.path.join(
-                webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp6.fits'
-            )
+        was_targ_file = webbpsf.utils.get_target_phase_map_filename(sensing_apername)
+        prev_was_targ_file = webbpsf.utils.get_target_phase_map_filename(prev_sensing_apername)
 
 
         target_1024 = astropy.io.fits.getdata(was_targ_file)
@@ -1001,15 +977,8 @@ def wavefront_drift_plots(
 
     # Get WSS Target Phase Map for the sensing aperture
     # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-    if sensing_apername == 'NRCA3_FP1':
-        was_targ_file = os.path.join(
-            webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp1.fits'
-        )
-    elif sensing_apername == 'NRCA1_FP6':
-        was_targ_file = os.path.join(
-            webbpsf.utils.get_webbpsf_data_path(), 'NIRCam', 'OPD', 'wss_target_phase_fp6.fits'
-        )
 
+    was_targ_file = webbpsf.utils.get_target_phase_map_filename(sensing_apername)
 
     target_1024 = astropy.io.fits.getdata(was_targ_file)
     target_256 = poppy.utils.krebin(target_1024, (256, 256))

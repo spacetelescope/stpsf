@@ -1048,3 +1048,25 @@ def label_wavelength(nwavelengths, wavelength_slices):
     else:
         raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
     return label
+
+
+def get_target_phase_map_filename(apername):
+    """Get WSS Target Phase Map for the specified aperture
+    Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
+    """
+    path = os.getenv('WEBBPSF_PATH')
+    if apername == 'NRCA3_FP1':
+        fn = 'wss_target_phase_fp1.fits'
+    elif apername == 'NRCA1_FP6':
+        fn = 'wss_target_phase_fp6.fits'
+    else:
+        raise ValueError(f"Target phase map not available for aperture = {apername}")
+
+    was_targ_file = os.path.join(
+        get_webbpsf_data_path(), 'NIRCam', 'OPD', fn)
+
+    if not os.path.exists(was_targ_file):
+        raise ValueError("File wss_target_phase_{}.fits, \
+        not found under {}.".format(apername.split('_')[1].lower(),path))
+
+    return was_targ_file
