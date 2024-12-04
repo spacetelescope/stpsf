@@ -1126,12 +1126,16 @@ def filter_opdtable_for_daterange(start_date, end_date, opdtable):
     return opdtable
 
 
-def filter_opdtable_for_month(year, mon, opdtable):
+def filter_opdtable_for_month(year, mon, opdtable, shift_dates_offset=None):
     """Filter existing opdtable for a given month
     This includes the last measurement in the prior month too (if applicable), so we can compute a delta
     to the first one
     """
     start_date, end_date = get_month_start_end(year, mon)
+    if shift_dates_offset:
+        start_date += shift_dates_offset * u.day
+        end_date += shift_dates_offset * u.day
+
     return filter_opdtable_for_daterange(start_date, end_date, opdtable)
 
 
@@ -1149,7 +1153,7 @@ def get_opdtable_for_daterange(start_date, end_date):
     return opdtable
 
 
-def get_opdtable_for_month(year, mon):
+def get_opdtable_for_month(year, mon, **kwargs):
     """Return table of OPD measurements for a given month.
     retrieve the opd table and filter according to month/year designation
     """
@@ -1157,7 +1161,7 @@ def get_opdtable_for_month(year, mon):
     opdtable0 = webbpsf.mast_wss.retrieve_mast_opd_table()
     opdtable0 = webbpsf.mast_wss.deduplicate_opd_table(opdtable0)
 
-    opdtable = filter_opdtable_for_month(year, mon, opdtable0)
+    opdtable = filter_opdtable_for_month(year, mon, opdtable0, **kwargs)
     return opdtable
 
 
@@ -1216,7 +1220,8 @@ def get_dates_for_pid(pid, project='jwst'):
         return
 
 
-def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter='F200W', vmax=200, pid=None, opdtable=None):
+def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter='F200W', vmax=200, pid=None, opdtable=None,
+                          shift_dates_offset=None):
     """Make monthly trending plot showing OPDs, mirror moves, RMS WFE, and the resulting PSF EEs
 
     year, month : integers
@@ -1229,6 +1234,8 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
         Image display vmax for OPDs, given here in units of nanometers.
     opdtable : astropy.table.Table
         Table of available OPDs, Default None: as returned by retrieve_mast_opd_table()
+    shift_dates_offset: int
+        number of dates to shift later the time period, for showing trends around the month divisions
     """
 
     def vprint(*text):
@@ -1236,6 +1243,10 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
             print(*text)
 
     start_date, end_date = get_month_start_end(year, month)
+
+    if shift_dates_offset:
+        start_date += shift_dates_offset * u.day
+        end_date += shift_dates_offset * u.day
 
     # Look up wavefront sensing and mirror move corrections for that month
     if pid:
@@ -1248,11 +1259,11 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
     try:
         if opdtable is None:
             vprint('obtaining opdtable for month')
-            opdtable = get_opdtable_for_month(year, month)
+            opdtable = get_opdtable_for_month(year, month, shift_dates_offset=shift_dates_offset)
         else:
             vprint('filtering opdtable for month')
             opdtable = check_colnames(opdtable)
-            opdtable = filter_opdtable_for_month(year, month, opdtable)
+            opdtable = filter_opdtable_for_month(year, month, opdtable, shift_dates_offset=shift_dates_offset)
     except ValueError as e:
         print(e)
         raise
@@ -1362,7 +1373,8 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
 
     fs = 14  # Font size for axes labels
 
-    fig.suptitle(f'WF Trending for {year}-{month:02d}', fontsize=fs * 1.5, fontweight='bold')
+    title_extra = f", plus {shift_dates_offset} days" if shift_dates_offset else ""
+    fig.suptitle(f'WF Trending for {year}-{month:02d}{title_extra}', fontsize=fs * 1.5, fontweight='bold')
 
     # Plot 1: Wavefront Error
 
@@ -1538,7 +1550,10 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
         for i in range(3):
             im_axes[i, j].set_visible(False)
 
-    outname = f'wf_trending_{year}-{month:02d}.pdf'
+    if shift_dates_offset:
+        outname = f'wf_trending_{year}-{month:02d}+{shift_dates_offset}days.pdf'
+    else:
+        outname = f'wf_trending_{year}-{month:02d}.pdf'
     plt.savefig(outname, dpi=200, bbox_inches='tight')
     vprint(f'Saved to {outname}')
 
