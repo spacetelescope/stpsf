@@ -646,9 +646,13 @@ def single_measurement_trending_plot(
         target_1024 = astropy.io.fits.getdata(was_targ_file)
         target_256 = poppy.utils.krebin(target_1024, (256, 256)) / 16  # scale factor for rebinning w/out increasing values
 
-        prev_target_1024 = astropy.io.fits.getdata(prev_was_targ_file)
-        prev_target_256 = poppy.utils.krebin(prev_target_1024,
-                                        (256, 256)) / 16  # scale factor for rebinning w/out increasing values
+        if prev_was_targ_file != was_targ_file:
+            prev_target_1024 = astropy.io.fits.getdata(prev_was_targ_file)
+            prev_target_256 = poppy.utils.krebin(prev_target_1024,
+                                                 (256, 256)) / 16  # scale factor for rebinning w/out increasing values
+        else:
+            prev_target_256 = target_256
+
 
         opd -= target_256
         prev_opd -= prev_target_256
