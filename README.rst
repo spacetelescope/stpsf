@@ -21,10 +21,10 @@ WebbPSF: Simulated Point Spread Functions for the James Webb and Nancy Grace Rom
 .. image:: https://img.shields.io/badge/ascl-1504.007-blue.svg?colorB=262255
    :target: http://ascl.net/1504.007
 
-.. warning:: WebbPSF IS BEING MIGRATED TO A NEW REPOSITORY: STPSF (Space Telescope PSF)
+**WebbPSF IS BEING MIGRATED TO A NEW REPOSITORY: STPSF (Space Telescope PSF)
    To reflect its broader support for Roman as well as James Webb, WebbPSF is being migrated to a new repository: STPSF (Space Telescope PSF). This transition is being done in such a way as to maintain back-compatibility for existing code, and existing installations will continue to run as-is.
    This transitional period is ongoing now. Please do not submit pull requests to this webbpsf repo at this time.
-   The STPSF github repository will soon be available for use instead.
+   The STPSF github repository will soon be available for use instead.**
 
 WebbPSF produces simulated PSFs for the James Webb Space Telescope, NASA's
 flagship infrared space telescope. WebbPSF can simulate images for any of the
