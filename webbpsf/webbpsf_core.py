@@ -1697,11 +1697,11 @@ class JWInstrument(SpaceTelescopeInstrument):
             axes[0, 0].set_xlabel(f'RMS: {utils.rms(opdhdu[0].data*1e9, ote_pupil_mask):.2f} nm rms')
 
         if backout_si_wfe:
-            if verbose:
-                print('Backing out SI WFE and OTE field dependence at the WF sensing field point')
-
             # Check which field point was used for sensing
             sensing_apername = opdhdu[0].header['APERNAME']
+
+            if verbose:
+                print(f'Backing out SI WFE and OTE field dependence at the WF sensing field point ({sensing_apername})')
 
             # Create a temporary instance of an instrument, for the sensng instrument and field point,
             # in order to model and extract the SI WFE and OTE field dep WFE at the sensing field point.
