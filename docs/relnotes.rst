@@ -32,6 +32,9 @@ To reflect its broader support for Roman as well as James Webb, WebbPSF is being
 This transition is being done in such a way as to maintain back-compatibility for existing code, and existing installations will continue to run as-is.
 This transitional period is ongoing now.
 
+This release requires new data webbpsf-data-1.5.0 https://stsci.box.com/s/oyoih9ibuaowksxzaia02ua4t6g1bbp1
+For more information on this new data please view https://github.com/spacetelescope/webbpsf/pull/937
+
 **What's Changed**
 * Add IFU+datacubes docs page. by @mperrin in https://github.com/spacetelescope/webbpsf/pull/917
 
