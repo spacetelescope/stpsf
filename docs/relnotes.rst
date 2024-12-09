@@ -24,6 +24,15 @@ Version History and Change Log
 -------------------------------
 
 
+Version 1.5.0
+=============
+*2024 December*
+WebbPSF IS BEING MIGRATED TO A NEW REPOSITORY: STPSF (Space Telescope PSF)
+To reflect its broader support for Roman as well as James Webb, WebbPSF is being migrated to a new repository: STPSF (Space Telescope PSF).
+This transition is being done in such a way as to maintain back-compatibility for existing code, and existing installations will continue to run as-is.
+This transitional period is ongoing now.
+
+
 Version 1.4.0
 =============
 
