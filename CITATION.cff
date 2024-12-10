@@ -42,7 +42,7 @@ authors:
     family-names: "Otor"
     affiliation: "Otor"
     orcid: 'https://orcid.org/0000-0002-4679-5692'
-repository-code: 'https://github.com/spacetelescope/webbpsf'
+repository-code: 'https://github.com/spacetelescope/stpsf'
 abstract: >-
   WebbPSF produces simulated PSFs for the James Webb Space
   Telescope, NASA's flagship infrared space telescope.
