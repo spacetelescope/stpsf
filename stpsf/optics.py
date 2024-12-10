@@ -1771,7 +1771,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
 
         # load the OPD lookup map table (datacube) here
 
-        import webbpsf.constants
+        import stpsf.constants
 
         if self.which_exercise == 'WFR4':
             fp_path = '/ifs/jwst/tel/wfr4_mirage_sims/phase_maps_from_ball/'
@@ -1790,7 +1790,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
 
             self.phasemaps = fits.getdata(phasemap_file)
 
-            self.phasemap_pixelscale = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 256 * units.meter / units.pixel
+            self.phasemap_pixelscale = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 256 * units.meter / units.pixel
             resample = True
 
         elif self.which_exercise == 'MIMF_KDP':
@@ -1805,7 +1805,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
             phasemap_file = fp_path + 'all_26Feb2021.fits'
             self.phasemaps = fits.getdata(phasemap_file)
             self.phasemaps = self.phasemaps.reshape(7 * 11 * 11, 256, 256)
-            self.phasemap_pixelscale = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 256 * units.meter / units.pixel
+            self.phasemap_pixelscale = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 256 * units.meter / units.pixel
             resample = True
         elif self.which_exercise == 'LRE4' or self.which_exercise == 'LRE4-OTE26':
             fp_path = '/ifs/jwst/tel/LRE4/from_ball/'
@@ -1820,7 +1820,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
             self.phasemaps = fits.getdata(phasemap_file)
             # Phase maps have been pre-zoomed in this case by the import notebook
             resample = False
-            self.phasemap_pixelscale = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 1024 * units.meter / units.pixel
+            self.phasemap_pixelscale = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 1024 * units.meter / units.pixel
         elif self.which_exercise == 'MIMF_KDP_2':
             fp_path = '/ifs/jwst/tel/MIMF_KDP_Practice_Sept2021/Ball_Phase_Maps/'
 
@@ -1834,7 +1834,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
             phasemap_file = fp_path + 'complete_wf.fits'
             self.phasemaps = fits.getdata(phasemap_file)
             self.phasemaps = self.phasemaps.reshape(7 * 11 * 11, 256, 256)
-            self.phasemap_pixelscale = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 256 * units.meter / units.pixel
+            self.phasemap_pixelscale = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / 256 * units.meter / units.pixel
             resample = True
 
         self.phasemap_file = phasemap_file

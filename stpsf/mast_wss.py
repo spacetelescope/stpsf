@@ -12,7 +12,7 @@ import numpy as np
 from astropy.time import Time, TimeDelta
 from astroquery.mast import Mast, Observations
 
-import webbpsf.utils
+import stpsf.utils
 
 # Login and authentication
 
@@ -25,7 +25,7 @@ def mast_retrieve_opd(filename, output_path=None, verbose=False, redownload=Fals
     """
 
     if output_path is None:
-        output_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs')
+        output_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs')
     else:
         output_path = output_path
 
@@ -51,7 +51,7 @@ def download_all_opds(opdtable, verbose=False):
     """Download all OPDs included in some table."""
 
     for row in opdtable:
-        webbpsf.mast_wss.mast_retrieve_opd(row['fileName'], verbose=verbose)
+        stpsf.mast_wss.mast_retrieve_opd(row['fileName'], verbose=verbose)
 
 
 # Functions for searching and retrieving OPDs based on time
@@ -287,11 +287,11 @@ def import_wss_opd(filename, npix_out=1024, verbose=False):
     #  We do this before interpolating to minimize edge effects from the
     #  initial coarse resolution on the segment gaps
     mask = inputOPD != 0
-    paddedOPD = webbpsf.utils.border_extrapolate_pad(inputOPD, mask)
+    paddedOPD = stpsf.utils.border_extrapolate_pad(inputOPD, mask)
     wasopd[0].header.add_history('  Dilated OPD values to fill adjacent invalid pixels (i.e. fill in gaps)')
 
     # interpolate to larger size
-    newopd = webbpsf.utils.rescale_interpolate_opd(paddedOPD, npix_out)
+    newopd = stpsf.utils.rescale_interpolate_opd(paddedOPD, npix_out)
     wasopd[0].header.add_history(f'  Interpolated array to {npix_out:d}x{npix_out:d} pixels across')
 
     # Convert units from microns to meters (as expected by poppy)
@@ -301,8 +301,8 @@ def import_wss_opd(filename, npix_out=1024, verbose=False):
 
     # Update FITS header
     wasopd[0].header['BUNIT'] = 'm'
-    wasopd[0].header['PUPLDIAM'] = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER
-    wasopd[0].header['PUPLSCAL'] = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / npix_out
+    wasopd[0].header['PUPLDIAM'] = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER
+    wasopd[0].header['PUPLSCAL'] = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / npix_out
 
     # WebbPSF expects OPDs in the 0th extension, not 1st, so copy the values there too
     wasopd[0].data = newopd

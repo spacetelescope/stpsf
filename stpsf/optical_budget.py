@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import poppy
 
-import webbpsf
-from webbpsf.utils import rms
+import stpsf
+from stpsf.utils import rms
 
 # JWST Optical Budgets Information
 # This module makes extensive use of information from the JWST Optical Budget
@@ -88,7 +88,7 @@ def imagemotion2strehl(rms_jitter_per_axis, wavelength):
     """Compute Strehl Ratio given RMS image motion per axis"""
     # Lightsey guide to the optical budget eq 2
 
-    Dtel = webbpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER * u.m
+    Dtel = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER * u.m
 
     return 1.0 / (1 + 0.25 * (np.pi * Dtel / wavelength) ** 2 * (2 * rms_jitter_per_axis**2))
 
@@ -156,7 +156,7 @@ def extract_si_wfe(inst, wave):
 
 def get_dynamic_vibe(rms_nm=4):
     """WAG to make an OPD for the vibe term"""
-    ote = webbpsf.opds.OTE_Linear_Model_WSS()
+    ote = stpsf.opds.OTE_Linear_Model_WSS()
 
     amp = rms_nm / 1000
     for seg in ote.segnames[0:18]:
@@ -224,10 +224,10 @@ def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_
     # Decompose OTE control-point total WFE into different spatial frequency bins
     vprint(' decomposing WFE into controllable and uncontrollable spatial frequencies')
     if ptt_only:
-        basis = webbpsf.opds.JWST_WAS_PTT_Basis()
+        basis = stpsf.opds.JWST_WAS_PTT_Basis()
         ndof = 3
     else:
-        basis = webbpsf.opds.JWST_WAS_Full_Basis()
+        basis = stpsf.opds.JWST_WAS_Full_Basis()
         ndof = 6
     seg_coeffs = poppy.zernike.opd_expand_segments(wfe_ote, aperture=aperture, nterms=18 * ndof, basis=basis)
     vprint(' modeling controllable and uncontrollable spatial frequencies')

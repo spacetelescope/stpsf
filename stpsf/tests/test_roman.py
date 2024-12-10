@@ -5,7 +5,7 @@ import pytest
 from astropy.table import Table
 from numpy import allclose
 
-from webbpsf import measure_fwhm, roman
+from stpsf import measure_fwhm, roman
 
 GRISM_FILTERS = roman.GRISM_FILTERS
 PRISM_FILTERS = roman.PRISM_FILTERS

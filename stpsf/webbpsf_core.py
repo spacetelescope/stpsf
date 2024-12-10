@@ -35,8 +35,8 @@ import pysiaf
 import scipy.interpolate
 import scipy.ndimage
 
-import webbpsf.mast_wss
-from webbpsf.utils import label_wavelength
+import stpsf.mast_wss
+from stpsf.utils import label_wavelength
 
 from . import DATA_VERSION_MIN, constants, detectors, distortion, gridded_library, opds, optics, utils
 
@@ -1610,9 +1610,9 @@ class JWInstrument(SpaceTelescopeInstrument):
         verbose : bool
             Be more verbose
         """
-        import webbpsf.optical_budget
+        import stpsf.optical_budget
 
-        webbpsf.optical_budget.visualize_wfe_budget(
+        stpsf.optical_budget.visualize_wfe_budget(
             self, slew_delta_time=slew_delta_time, slew_case=slew_case, ptt_only=ptt_only, verbose=verbose
         )
 
@@ -1670,11 +1670,11 @@ class JWInstrument(SpaceTelescopeInstrument):
         # If the provided filename doesn't exist on the local disk, try retrieving it from MAST
         # Note, this will automatically use cached versions downloaded previously, if present
         if not os.path.exists(filename):
-            filename = webbpsf.mast_wss.mast_retrieve_opd(filename, output_path=output_path, verbose=verbose)
+            filename = stpsf.mast_wss.mast_retrieve_opd(filename, output_path=output_path, verbose=verbose)
 
         if verbose:
             print(f'Importing and format-converting OPD from {filename}')
-        opdhdu = webbpsf.mast_wss.import_wss_opd(filename, npix_out=npix_out)
+        opdhdu = stpsf.mast_wss.import_wss_opd(filename, npix_out=npix_out)
 
         # Mask out any pixels in the OPD array which are outside the OTE pupil.
         # This is mostly cosmetic, and helps mask out some edge effects from the extrapolation + interpolation in
@@ -1849,7 +1849,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         if date is None:
             date = astropy.time.Time.now().isot
-        opd_fn = webbpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
+        opd_fn = stpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
         self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
 
     @poppy.utils.quantity_input(wavelengths=units.meter)

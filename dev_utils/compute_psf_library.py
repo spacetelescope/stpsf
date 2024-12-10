@@ -16,7 +16,7 @@ assert exists(os.environ['PYSYN_CDBS']), "Can't load synthetic photometry files!
 
 if not os.environ.get('WEBBPSF_PATH'):
     os.environ['WEBBPSF_PATH'] = '/grp/jwst/ote/webbpsf-data'
-import webbpsf  # noqa
+import stpsf  # noqa
 
 N_PROCESSES = 16
 
@@ -28,7 +28,7 @@ def _worker_logging_setup(queue_instance):
     root.setLevel(logging.DEBUG)
 
 
-INSTRUMENTS = (webbpsf.NIRCam, webbpsf.NIRSpec, webbpsf.MIRI, webbpsf.NIRISS, webbpsf.FGS)
+INSTRUMENTS = (stpsf.NIRCam, stpsf.NIRSpec, stpsf.MIRI, stpsf.NIRISS, stpsf.FGS)
 
 STELLAR_SPECTRAL_TYPE = 'G0V'
 
@@ -232,7 +232,7 @@ def _do_one_psf(InstrumentClass, configuration, output_directory):
         ensure_dir(dirs)
         # TODO contemplate better way to handle special case
         fov_arcsec = 20.0 if inst.name == 'MIRI' else 10.0
-        spectrum = webbpsf.specFromSpectralType(STELLAR_SPECTRAL_TYPE, catalog='ck04')
+        spectrum = stpsf.specFromSpectralType(STELLAR_SPECTRAL_TYPE, catalog='ck04')
         psf = inst.calc_psf(fov_arcsec=fov_arcsec, source=spectrum)
         psf.writeto(output_file_path)
         log.debug('Computed PSF\n\t{}\nand wrote to: {}'.format(configuration, output_file_path))
@@ -276,15 +276,15 @@ if __name__ == '__main__':
         instrument_classes = INSTRUMENTS
     else:
         if args.nircam:
-            instrument_classes.append(webbpsf.NIRCam)
+            instrument_classes.append(stpsf.NIRCam)
         if args.niriss:
-            instrument_classes.append(webbpsf.NIRISS)
+            instrument_classes.append(stpsf.NIRISS)
         if args.nirspec:
-            instrument_classes.append(webbpsf.NIRSpec)
+            instrument_classes.append(stpsf.NIRSpec)
         if args.fgs:
-            instrument_classes.append(webbpsf.FGS)
+            instrument_classes.append(stpsf.FGS)
         if args.miri:
-            instrument_classes.append(webbpsf.MIRI)
+            instrument_classes.append(stpsf.MIRI)
         if len(instrument_classes) == 0:
             print('You must specify at least one instrument to compute PSFs for!')
             sys.exit(1)

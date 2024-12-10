@@ -3,7 +3,7 @@ import astropy
 import astropy.io.fits as fits
 import pysiaf
 
-import webbpsf
+import stpsf
 
 
 def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest'):
@@ -29,7 +29,7 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
         if verbose:
             print('Setting up sim to match provided FITS HDUList object')
 
-    inst = webbpsf.instrument(header['INSTRUME'])
+    inst = stpsf.instrument(header['INSTRUME'])
 
     if inst.name == 'MIRI' and header['EXP_TYPE'] == 'MIR_MRS':
         print("MIRI MRS exposure detected; configuring for IFU mode")

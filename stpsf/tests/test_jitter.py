@@ -1,4 +1,4 @@
-import webbpsf
+import stpsf
 
 
 def test_coarse_jitter():
@@ -6,7 +6,7 @@ def test_coarse_jitter():
     Simple test to verify functionality, and sanity check that more
     blur means a less sharp PSF.
     """
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
     nrc.include_si_wfe = False
     nrc.options['jitter'] = 'PCS=Coarse'
     psf_coarse = nrc.calc_psf(nlambda=1, add_distortion=False, fov_pixels=30)

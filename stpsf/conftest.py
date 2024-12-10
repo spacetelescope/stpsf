@@ -11,7 +11,7 @@ except ImportError:  # In case this plugin is not installed
 # This really depends on how you set up your package version,
 # modify as needed.
 try:
-    from webbpsf import __version__ as version
+    from stpsf import __version__ as version
 except ImportError:
     version = ''
 

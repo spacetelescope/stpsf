@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from photutils.psf import GriddedPSFModel
 
-import webbpsf.detectors
+import stpsf.detectors
 
 
 class CreatePSFLibrary:
@@ -342,7 +342,7 @@ class CreatePSFLibrary:
 
                 # Convolve PSF with a model for interpixel capacitance
                 if self.add_distortion and add_ipc_gridded:
-                    webbpsf.detectors.apply_detector_ipc(psf, extname=ext)
+                    stpsf.detectors.apply_detector_ipc(psf, extname=ext)
                     self.webb.options['add_ipc'] = True  # restore the user's value for the IPC option
 
                 # Add PSF to 5D array

@@ -10,7 +10,7 @@ import numpy as np
 import pysiaf
 import pytest
 
-import webbpsf
+import stpsf
 
 from ..utils import rms
 
@@ -22,11 +22,11 @@ PRD34_MIRI = os.path.join(prd_data_dir, 'PRDOPSSOC-034/SIAFXML/SIAFXML/MIRI_SIAF
 
 def test_enable_adjustable_ote():
     """Some basic tests of the OTE LOM"""
-    nc = webbpsf.NIRCam()
-    nc, ote = webbpsf.enable_adjustable_ote(nc)
+    nc = stpsf.NIRCam()
+    nc, ote = stpsf.enable_adjustable_ote(nc)
 
     # did this produce an OTE object?
-    assert isinstance(ote, webbpsf.opds.OTE_Linear_Model_WSS), "Didn't get an OTE object back"
+    assert isinstance(ote, stpsf.opds.OTE_Linear_Model_WSS), "Didn't get an OTE object back"
 
     # can we compute the rms?
     rms = ote.rms()
@@ -119,7 +119,7 @@ def test_get_thermal_slew_coeffs(time, seg, scaling, start_angle, end_angle, coe
     """
     delta_time = time
     # Create the thermal model
-    otelm = webbpsf.opds.OTE_Linear_Model_WSS()
+    otelm = stpsf.opds.OTE_Linear_Model_WSS()
     otelm.thermal_slew(delta_time, start_angle, end_angle, scaling, case='EOL')
     coeffs = otelm._get_thermal_slew_coeffs(segid=seg)
     # Pull out coefficients
@@ -136,7 +136,7 @@ def test_get_thermal_slew_coeffs(time, seg, scaling, start_angle, end_angle, coe
 def test_thermal_slew_partial_angle():
     """total slew should give same total amplitude if broken into smaller jumps"""
 
-    otelm = webbpsf.opds.OTE_Linear_Model_WSS()
+    otelm = stpsf.opds.OTE_Linear_Model_WSS()
 
     start_angle = -5
     mid_angle = 20
@@ -168,7 +168,7 @@ def test_thermal_slew_update_opd():
     give the expected output
 
     """
-    otelm = webbpsf.opds.OTE_Linear_Model_WSS()
+    otelm = stpsf.opds.OTE_Linear_Model_WSS()
     otelm.thermal_slew(delta_time=1.0 * u.day, case='EOL')
 
     # the exact value expected is affected by which version of the linear model is used.
@@ -196,7 +196,7 @@ def test_thermal_slew_reproducibility():
 
     See issue #338
     """
-    ote = webbpsf.opds.OTE_Linear_Model_WSS()
+    ote = stpsf.opds.OTE_Linear_Model_WSS()
 
     ote.thermal_slew(12 * u.hour, start_angle=-5, end_angle=45, case='EOL')
     opd1 = ote.opd.copy()
@@ -215,7 +215,7 @@ def test_update_opd():
     """The start of what should be many tests of this function"""
 
     # Test the very basics
-    ote = webbpsf.opds.OTE_Linear_Model_WSS()
+    ote = stpsf.opds.OTE_Linear_Model_WSS()
     ote.update_opd()
     assert np.max(ote.opd) == 0.0
 
@@ -235,7 +235,7 @@ def test_update_opd():
 
 def test_sur_basics():
     # test we can create a null SUR
-    sur = webbpsf.surs.SUR()
+    sur = stpsf.surs.SUR()
     assert sur.ngroups == 1
     assert sur.nmoves == 0
     assert isinstance(sur.describe(), str)
@@ -246,14 +246,14 @@ def test_move_sur(plot=False):
     import glob
     import os
 
-    import webbpsf
+    import stpsf
 
-    surdir = os.path.join(webbpsf.__path__[0], 'tests', 'surs')
+    surdir = os.path.join(stpsf.__path__[0], 'tests', 'surs')
     surs = glob.glob(surdir + '/*sur.xml')
 
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
     nrc.filter = 'F212N'
-    nrc, ote = webbpsf.enable_adjustable_ote(nrc)
+    nrc, ote = stpsf.enable_adjustable_ote(nrc)
     ote.zero(zero_original=True)
 
     for s in surs:
@@ -279,7 +279,7 @@ def test_move_sur(plot=False):
     s = glob.glob(surdir + '/example_image_stacking*sur.xml')[0]
     print('Testing moving one group at a time with ' + s)
     ote.reset()
-    sur = webbpsf.surs.SUR(s)
+    sur = stpsf.surs.SUR(s)
 
     ngroups = len(sur.groups)
     oldstate = ote.segment_state.copy()
@@ -299,22 +299,22 @@ def test_move_sur(plot=False):
             plt.figure()
             ote.display_opd(title='After Group {}'.format(igrp))
             plt.figure()
-            webbpsf.display_psf(psf, ext=1, title='After Group {}'.format(igrp))
+            stpsf.display_psf(psf, ext=1, title='After Group {}'.format(igrp))
 
 
 def test_single_seg_psf(segmentid=1):
     """Test calculation of a single segment PSF, including options to remove piston/tip/tilt as used by MIRAGE"""
 
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
     nrc.filter = 'F212N'
-    nrc, ote = webbpsf.enable_adjustable_ote(nrc)
+    nrc, ote = stpsf.enable_adjustable_ote(nrc)
     ote.zero(zero_original=True)
 
-    segname = webbpsf.constants.SEGNAMES_WSS_ORDER[segmentid - 1][0:2]
+    segname = stpsf.constants.SEGNAMES_WSS_ORDER[segmentid - 1][0:2]
 
     ote.move_seg_local(segname, xtilt=1, piston=-1)
 
-    pupil = webbpsf.webbpsf_core.one_segment_pupil(segmentid)
+    pupil = stpsf.webbpsf_core.one_segment_pupil(segmentid)
     ote.amplitude = pupil[0].data
 
     psf = nrc.calc_psf(nlambda=1)
@@ -324,14 +324,14 @@ def test_single_seg_psf(segmentid=1):
     psf_rm_piston = nrc.calc_psf(nlambda=1)
     assert np.allclose(psf[0].data, psf_rm_piston[0].data), 'Piston removal should not affect the overall PSF'
 
-    assert np.allclose(webbpsf.measure_centroid(psf), webbpsf.measure_centroid(psf_rm_piston)), 'centroid should not shift'
+    assert np.allclose(stpsf.measure_centroid(psf), stpsf.measure_centroid(psf_rm_piston)), 'centroid should not shift'
 
     ote.remove_piston_tip_tilt = True
     ote.update_opd()
     psf_rm_ptt = nrc.calc_psf(nlambda=1)
     assert not np.allclose(psf[0].data, psf_rm_ptt[0].data), 'Piston/Tip/Tip removal should shift the overall PSF'
     assert (
-        np.abs(webbpsf.measure_centroid(psf)[0] - webbpsf.measure_centroid(psf_rm_ptt)[0]) > 40
+        np.abs(stpsf.measure_centroid(psf)[0] - stpsf.measure_centroid(psf_rm_ptt)[0]) > 40
     ), 'centroid should shift substantially with/without tip/tilt removal'
 
 
@@ -347,7 +347,7 @@ def test_apply_field_dependence_model():
     """
 
     # Get the OPD without any sort of field dependence
-    ote = webbpsf.opds.OTE_Linear_Model_WSS(v2v3=None)
+    ote = stpsf.opds.OTE_Linear_Model_WSS(v2v3=None)
     # By default, an OTE LOM with zero OPD will implicitly also disable the field dependence.
     # For this test we don't want that so we re-enable it here:
     ote._include_nominal_field_dep = True
@@ -378,10 +378,10 @@ def test_apply_field_dependence_model():
 
     # Now we invoke this via an SI class, to show that works too:
     # Get the OPD at the center of NIRISS
-    nis = webbpsf.NIRISS()
+    nis = stpsf.NIRISS()
     nis.pupilopd = None  # disable any global WFE, so we just look at the field dependent part
     nis.detector_position = (1024, 1024)
-    nis, ote_nis = webbpsf.enable_adjustable_ote(nis)
+    nis, ote_nis = stpsf.enable_adjustable_ote(nis)
     ote_nis._include_nominal_field_dep = True  # Same as above, need this for test with pupilopd=None
 
     # Test if we directly invoke the OTE model, in this case also disabling SI focus implicit optimization
@@ -401,7 +401,7 @@ def test_apply_field_dependence_model():
 
     # Now test as usd in a webbpsf calculation, implicitly, and with the defocus backout ON
     # The WFE here is slightly less, due to the focus optimization
-    nis = webbpsf.NIRISS()
+    nis = stpsf.NIRISS()
     nis.pupilopd = None  # disable any global WFE, so we just look at the field dependent part
     nis.detector_position = (1024, 1024)
     osys = nis.get_optical_system()
@@ -425,7 +425,7 @@ def test_get_zernike_coeffs_from_smif():
     """
 
     # Create an instance of the OTE linear model
-    otelm = webbpsf.opds.OTE_Linear_Model_WSS()
+    otelm = stpsf.opds.OTE_Linear_Model_WSS()
 
     # Case 1: otelm.v2v3 is None, should return None
     otelm._apply_field_dependence_model()
@@ -492,9 +492,9 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
     if plot:
         fig, axs = plt.subplots(3, 5, figsize=(14, 9))  # , sharex = True, sharey = True)
 
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
 
-    ote = webbpsf.opds.OTE_Linear_Model_WSS(npix=npix)
+    ote = stpsf.opds.OTE_Linear_Model_WSS(npix=npix)
     nrc.include_si_wfe = False  # not relevant for this test
 
     tilt = 1.0
@@ -514,19 +514,19 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
     for i, iseg in enumerate(['A1', 'B1', 'C1']):
         ote.zero()
 
-        pupil = webbpsf.webbpsf_core.one_segment_pupil(iseg, npix=npix)
+        pupil = stpsf.webbpsf_core.one_segment_pupil(iseg, npix=npix)
 
         ote.amplitude = pupil[0].data
         nrc.pupil = ote
 
         # CENTERED PSF:
         psf = nrc.calc_psf(**psf_kwargs)
-        cen_ref = webbpsf.measure_centroid(psf, boxsize=10, threshold=1)
+        cen_ref = stpsf.measure_centroid(psf, boxsize=10, threshold=1)
 
         ote.move_seg_local(iseg, xtilt=tilt)
         # XTILT PSF:
         psfx = nrc.calc_psf(**psf_kwargs)
-        cen_xtilt = webbpsf.measure_centroid(psfx, boxsize=10, threshold=1)
+        cen_xtilt = stpsf.measure_centroid(psfx, boxsize=10, threshold=1)
 
         if iseg.startswith('A'):
             assert cen_xtilt[0] < cen_ref[0], 'Expected A1:  +X rotation -> -Y pixels (DMS coords)'
@@ -555,7 +555,7 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
         ote.move_seg_local(iseg, ytilt=tilt)
         # YTILT PSF:
         psfy = nrc.calc_psf(**psf_kwargs)
-        cen_ytilt = webbpsf.measure_centroid(psfy, boxsize=10, threshold=1)
+        cen_ytilt = stpsf.measure_centroid(psfy, boxsize=10, threshold=1)
 
         if iseg.startswith('A'):
             assert cen_ytilt[1] < cen_ref[1], 'Expected A1:  +Y rotation -> -X pixels (DMS coords)'
@@ -590,14 +590,14 @@ def test_changing_npix():
     Test that using different npix will result in same PSF
     """
     # Create a NIRCam instance using the default npix=1024
-    nircam_1024 = webbpsf.NIRCam()
+    nircam_1024 = stpsf.NIRCam()
     nircam_1024.pupilopd = None  # Set to none so I don't have to worry about making new OPDs
     psf_1024 = nircam_1024.calc_psf(oversample=2, nlambda=1, add_distortion=False)
 
     # Create a NIRCam instance using npix=2048
     npix = 2048
-    nircam_2048 = webbpsf.NIRCam()
-    nircam_2048.pupil = os.path.join(webbpsf.utils.get_webbpsf_data_path(), f'jwst_pupil_RevW_npix{npix}.fits.gz')
+    nircam_2048 = stpsf.NIRCam()
+    nircam_2048.pupil = os.path.join(stpsf.utils.get_webbpsf_data_path(), f'jwst_pupil_RevW_npix{npix}.fits.gz')
     nircam_2048.pupilopd = None  # Set to none so I don't have to worry about making new OPDs
     psf_2048 = nircam_2048.calc_psf(oversample=2, nlambda=1, add_distortion=False)
 
@@ -614,7 +614,7 @@ def test_changing_npix():
     # Let's also check a derived property of the whole PSF: the FWHM.
     # The FWHM should be very close to identical for the two PSFs.
     assert np.isclose(
-        webbpsf.measure_fwhm(psf_1024), webbpsf.measure_fwhm(psf_2048), rtol=0.0001
+        stpsf.measure_fwhm(psf_1024), stpsf.measure_fwhm(psf_2048), rtol=0.0001
     ), 'PSF FWHM should not vary for different npix'
 
 
@@ -625,7 +625,7 @@ def test_pupilopd_none():
     as well as setting the global WFE component to zero.
     """
 
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
     nrc.pupilopd = None
     nrc.include_si_wfe = False
 
@@ -633,15 +633,15 @@ def test_pupilopd_none():
     assert ote_lom.rms() == 0, 'RMS WFE should be strictly 0'
 
     psf_small = nrc.calc_psf(fov_pixels=50, monochromatic=2e-6, add_distortion=False)
-    centroid = webbpsf.measure_centroid(psf_small, relativeto='center')
+    centroid = stpsf.measure_centroid(psf_small, relativeto='center')
     assert np.abs(centroid[0]) < 1e-5, 'Centroid should be (0,0)'
     assert np.abs(centroid[1]) < 1e-5, 'Centroid should be (0,0)'
 
 
 def test_get_rms_per_segment():
-    nrc0 = webbpsf.NIRCam()
-    nrc, ote = webbpsf.enable_adjustable_ote(nrc0)
-    rms_per_seg = webbpsf.opds.get_rms_per_segment(ote.opd)
+    nrc0 = stpsf.NIRCam()
+    nrc, ote = stpsf.enable_adjustable_ote(nrc0)
+    rms_per_seg = stpsf.opds.get_rms_per_segment(ote.opd)
 
     assert len(rms_per_seg) == 18, 'Wrong number of elements in result. Must be 18!'
     for seg in rms_per_seg:

@@ -14,15 +14,15 @@ import scipy.interpolate
 from astroquery.mast import Observations
 from matplotlib.backends.backend_pdf import PdfPages
 
-import webbpsf
+import stpsf
 
 
 def _read_opd(filename, auto_download=True):
     """Trivial utilty function to read OPD from a WSS-output FITS file
     If the file does not exist locally, try to retrieve it from MAST automatically."""
-    full_file_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', filename)
+    full_file_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', filename)
     if not os.path.exists(full_file_path) and auto_download:
-        webbpsf.mast_wss.mast_retrieve_opd(filename)
+        stpsf.mast_wss.mast_retrieve_opd(filename)
     opdhdu = fits.open(full_file_path)
     opd = opdhdu[1].data.copy()
     return opd, opdhdu
@@ -75,12 +75,12 @@ def wavefront_time_series_plot(
 
     for row in opdtable:
         if os.path.isfile(row['fileName']) is False:
-            full_file_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
+            full_file_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
         else:
             full_file_path = row['fileName']
         if 'rms_wfe' not in opdtable.colnames:
             rmses.append(fits.getheader(full_file_path, ext=1)['RMS_WFE'])
-        pre_or_post.append(webbpsf.mast_wss.infer_pre_or_post_correction(row))
+        pre_or_post.append(stpsf.mast_wss.infer_pre_or_post_correction(row))
 
     where_pre = ['pre' in a for a in pre_or_post]
     where_post = ['post' in a for a in pre_or_post]
@@ -287,11 +287,11 @@ def wfe_histogram_plot(
         else:
             pid = None
 
-    opdtable0 = webbpsf.mast_wss.deduplicate_opd_table(opdtable)
-    opdtable1 = webbpsf.mast_wss.filter_opd_table(opdtable0, start_time=start_date, end_time=end_date)
+    opdtable0 = stpsf.mast_wss.deduplicate_opd_table(opdtable)
+    opdtable1 = stpsf.mast_wss.filter_opd_table(opdtable0, start_time=start_date, end_time=end_date)
 
     if download_opds:
-        webbpsf.mast_wss.download_all_opds(opdtable1)
+        stpsf.mast_wss.download_all_opds(opdtable1)
 
     # Retrieve all RMSes, from the FITS headers.
     # These are observatory WFE (OTE + NIRCam), at the WFS sensing field point
@@ -304,7 +304,7 @@ def wfe_histogram_plot(
     pre_or_post = []
     for row in opdtable1:
         if download_opds:
-            full_file_path = os.path.join(webbpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
+            full_file_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
         else:
             full_file_path = row['fileName']
         if 'rms_wfe' not in opdtable1.colnames:
@@ -317,17 +317,17 @@ def wfe_histogram_plot(
 
                 # Get WSS Target Phase Map for the sensing aperture
                 # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-                was_targ_file = webbpsf.utils.get_target_phase_map_filename(sensing_apername)
+                was_targ_file = stpsf.utils.get_target_phase_map_filename(sensing_apername)
 
 
                 target_1024 = astropy.io.fits.getdata(was_targ_file)
                 target_256 = poppy.utils.krebin(target_1024, (256, 256)) / 16
                 wf_si = target_256 * mask  # Nircam target phase map at FP1
 
-                rmses.append(webbpsf.utils.rms(opd_data - wf_si, mask=mask))
+                rmses.append(stpsf.utils.rms(opd_data - wf_si, mask=mask))
 
         mjds = opdtable1['date_obs_mjd']
-        pre_or_post.append(webbpsf.mast_wss.infer_pre_or_post_correction(row))
+        pre_or_post.append(stpsf.mast_wss.infer_pre_or_post_correction(row))
 
     where_post = ['post' in a for a in pre_or_post]
 
@@ -491,7 +491,7 @@ def show_opd_image(
 
     Note, assumes the input OPD array is in units of microns, consistent with WSS outputs
     """
-    from webbpsf.optical_budget import rms
+    from stpsf.optical_budget import rms
 
     if ax is None:
         plt.figure(figsize=(10, 8))
@@ -570,7 +570,7 @@ def show_opd_image(
 @functools.lru_cache
 def _get_mimf2_focus_offset_model(npix=256):
     # Precompute a model for the MIMF2 focus adjustment
-    ote = webbpsf.opds.OTE_Linear_Model_WSS(npix=npix)
+    ote = stpsf.opds.OTE_Linear_Model_WSS(npix=npix)
     ote.move_sm_local(piston=-1.789125, trans_unit='micron')  # Piston from M2022042201_sur.xml
     mimf2_focus_offset = ote.opd * 1e6  # convert meters to microns
     return mimf2_focus_offset
@@ -617,7 +617,7 @@ def single_measurement_trending_plot(
     nanmask = np.ones_like(opd)
     nanmask[~mask] = np.nan
 
-    mask_segs = webbpsf.utils.get_pupil_mask(opd.shape[0], label_segments=True)
+    mask_segs = stpsf.utils.get_pupil_mask(opd.shape[0], label_segments=True)
     mask_without_C3 = (mask_segs != 0) & (mask_segs != 12)
 
     # Read prior WFS measurement
@@ -639,8 +639,8 @@ def single_measurement_trending_plot(
 
         # Get WSS Target Phase Map for the sensing aperture
         # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-        was_targ_file = webbpsf.utils.get_target_phase_map_filename(sensing_apername)
-        prev_was_targ_file = webbpsf.utils.get_target_phase_map_filename(prev_sensing_apername)
+        was_targ_file = stpsf.utils.get_target_phase_map_filename(sensing_apername)
+        prev_was_targ_file = stpsf.utils.get_target_phase_map_filename(prev_sensing_apername)
 
 
         target_1024 = astropy.io.fits.getdata(was_targ_file)
@@ -661,7 +661,7 @@ def single_measurement_trending_plot(
     deltatime = get_datetime_utc(opdhdu, return_as='astropy') - get_datetime_utc(prev_opd_hdu, return_as='astropy')
     deltatime_hrs = deltatime.to_value(u.hour)
     delta_opd = opd - prev_opd
-    fit, coeffs = webbpsf.opds.decompose_opd_segment_PTT(delta_opd)
+    fit, coeffs = stpsf.opds.decompose_opd_segment_PTT(delta_opd)
 
     # Compare to reference nominal OPD
     # For this we use the ~ best correction, immediately prior to MIMF-2 measurement
@@ -711,7 +711,7 @@ def single_measurement_trending_plot(
         diff2_title = 'latest - reference'
         delta_opd2 = opd - ref_opd
 
-    fit2, coeffs = webbpsf.opds.decompose_opd_segment_PTT(delta_opd2)
+    fit2, coeffs = stpsf.opds.decompose_opd_segment_PTT(delta_opd2)
 
     # If we have info on the WAS' suggested corrections, we can plot that too.
 
@@ -754,7 +754,7 @@ def single_measurement_trending_plot(
             f'Measurement (Post Move)\n{get_datetime_utc(post_opd_hdu)}', fontsize=fontsize * 1.2, fontweight='bold'
         )
 
-        sur_opd = webbpsf.opds.sur_to_opd(sur_fn, ignore_missing=ignore_missing)
+        sur_opd = stpsf.opds.sur_to_opd(sur_fn, ignore_missing=ignore_missing)
         # cosmetic: handle masking slightly differently here to accomodate slightly different edge pixels
         surnanmask = nanmask.copy()
         surnanmask[sur_opd == 0] = np.nan
@@ -873,7 +873,7 @@ def series_of_measurement_trending_plots(opdtable, ignore_missing=False, start_d
 
     """
 
-    opdtable = webbpsf.mast_wss.deduplicate_opd_table(opdtable)
+    opdtable = stpsf.mast_wss.deduplicate_opd_table(opdtable)
 
     if start_date:
         start_time = astropy.time.Time(start_date)
@@ -914,7 +914,7 @@ def cleanup_global_tt_for_wing_tilt(delta_opd, wing='left'):
     """
     npix = delta_opd.shape[0]
 
-    segmask = webbpsf.utils.get_pupil_mask(npix=npix, label_segments=True)
+    segmask = stpsf.utils.get_pupil_mask(npix=npix, label_segments=True)
     # Fit global PTT to everything that isn't on the affected wing
     if wing == 'left':  # -V2 wing
         bigtiltmask = (segmask != 0) & (segmask != 17) & (segmask != 16) & (segmask != 15)
@@ -927,7 +927,7 @@ def cleanup_global_tt_for_wing_tilt(delta_opd, wing='left'):
     )
 
     ptt_fit = poppy.zernike.compose_opd_from_basis(
-        ptt_coeffs, poppy.zernike.zernike_basis, npix=npix, aperture=webbpsf.utils.get_pupil_mask(npix=npix)
+        ptt_coeffs, poppy.zernike.zernike_basis, npix=npix, aperture=stpsf.utils.get_pupil_mask(npix=npix)
     )
     # Subtract that from the delta OPD
     return delta_opd - ptt_fit
@@ -982,7 +982,7 @@ def wavefront_drift_plots(
     # Get WSS Target Phase Map for the sensing aperture
     # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
 
-    was_targ_file = webbpsf.utils.get_target_phase_map_filename(sensing_apername)
+    was_targ_file = stpsf.utils.get_target_phase_map_filename(sensing_apername)
 
     target_1024 = astropy.io.fits.getdata(was_targ_file)
     target_256 = poppy.utils.krebin(target_1024, (256, 256))
@@ -1000,8 +1000,8 @@ def wavefront_drift_plots(
         wf_obs[i] = opd * 1e-6  # convert from microns to meters
         wf_ote[i] = (opd - wf_si) * 1e-6
 
-        rms_obs[i] = webbpsf.utils.rms(wf_obs[i], mask)
-        rms_ote[i] = webbpsf.utils.rms(wf_ote[i], mask)
+        rms_obs[i] = stpsf.utils.rms(wf_obs[i], mask)
+        rms_ote[i] = stpsf.utils.rms(wf_ote[i], mask)
 
         dates.append(row['date'])
 
@@ -1113,7 +1113,7 @@ def filter_opdtable_for_daterange(start_date, end_date, opdtable):
     """
     # Start a little early, such that we are going to have at least 1 WFS before the start date
     pre_start_date = astropy.time.Time(start_date) - astropy.time.TimeDelta(4 * u.day)
-    opdtable = webbpsf.mast_wss.filter_opd_table(opdtable, start_time=pre_start_date, end_time=end_date)
+    opdtable = stpsf.mast_wss.filter_opd_table(opdtable, start_time=pre_start_date, end_time=end_date)
     if len(opdtable) == 0:
         raise ValueError('The opdtable is empty for this date range.')
 
@@ -1146,8 +1146,8 @@ def get_opdtable_for_daterange(start_date, end_date):
     can compute the first delta at the start of this range.
     """
     # Retrieve full OPD table, then trim to the selected time period
-    opdtable0 = webbpsf.mast_wss.retrieve_mast_opd_table()
-    opdtable0 = webbpsf.mast_wss.deduplicate_opd_table(opdtable0)
+    opdtable0 = stpsf.mast_wss.retrieve_mast_opd_table()
+    opdtable0 = stpsf.mast_wss.deduplicate_opd_table(opdtable0)
 
     opdtable = filter_opdtable_for_daterange(start_date, end_date, opdtable0)
     return opdtable
@@ -1158,8 +1158,8 @@ def get_opdtable_for_month(year, mon, **kwargs):
     retrieve the opd table and filter according to month/year designation
     """
     # Retrieve full OPD table, then trim to the selected time period
-    opdtable0 = webbpsf.mast_wss.retrieve_mast_opd_table()
-    opdtable0 = webbpsf.mast_wss.deduplicate_opd_table(opdtable0)
+    opdtable0 = stpsf.mast_wss.retrieve_mast_opd_table()
+    opdtable0 = stpsf.mast_wss.deduplicate_opd_table(opdtable0)
 
     opdtable = filter_opdtable_for_month(year, mon, opdtable0, **kwargs)
     return opdtable
@@ -1172,13 +1172,13 @@ def check_colnames(opdtable):
     opdtable: astropy.table.Table
         Table of available OPDs
     """
-    colnames = webbpsf.mast_wss.get_colnames(True)
+    colnames = stpsf.mast_wss.get_colnames(True)
     if all(colname in colnames for colname in opdtable.colnames) is False:
-        colnames = webbpsf.mast_wss.get_colnames()
+        colnames = stpsf.mast_wss.get_colnames()
         if all(colname in opdtable.colnames for colname in colnames) is False:
             raise KeyError('Expected the following column names in the opdtable: ' + str(colnames))
         else:
-            opdtable = webbpsf.mast_wss.add_columns_to_track_corrections(opdtable)
+            opdtable = stpsf.mast_wss.add_columns_to_track_corrections(opdtable)
     return opdtable
 
 
@@ -1268,12 +1268,12 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
         print(e)
         raise
 
-    corrections_table = webbpsf.mast_wss.get_corrections(opdtable)
+    corrections_table = stpsf.mast_wss.get_corrections(opdtable)
 
-    inst = webbpsf.instrument(instrument)
+    inst = stpsf.instrument(instrument)
     inst.filter = filter
 
-    apmask = webbpsf.utils.get_pupil_mask()
+    apmask = stpsf.utils.get_pupil_mask()
 
     vprint(f'Computing PSFs for {len(opdtable)} OPD measurements in {year}-{month:02d}')
     vprint(f'Calculating for {instrument}, {filter}')
@@ -1316,15 +1316,15 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
 
         wfes_ote.append(wfe_ote)
 
-        rms_ote.append(webbpsf.utils.rms(wfe_ote, mask=apmask))
-        rms_obs.append(webbpsf.utils.rms(wfe_obs, mask=apmask))
+        rms_ote.append(stpsf.utils.rms(wfe_ote, mask=apmask))
+        rms_obs.append(stpsf.utils.rms(wfe_obs, mask=apmask))
 
     # Compute some derived quantities based on the PSFs
     dates_array = astropy.time.Time(dates, format='isot')
 
     ees = []
     for psf in psfs:
-        ees.append(webbpsf.measure_ee(psf))
+        ees.append(stpsf.measure_ee(psf))
 
     rms_obs = np.asarray(rms_obs)
     rms_ote = np.asarray(rms_ote)
@@ -1498,12 +1498,12 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
                 wfes_ote[i] * 1e6, ax=im_axes[0, plot_index], nanmask=nanmask, vmax=vmax_micron
             )  # , title=None)
             rms_label = im_axes[0, plot_index].text(
-                20, 20, f'{webbpsf.utils.rms(wfes_ote[i], mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
+                20, 20, f'{stpsf.utils.rms(wfes_ote[i], mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
             )
             # Plot drift since last measurement in row 2
             basic_show_image(delta_opd * 1e6, ax=im_axes[1, plot_index], nanmask=nanmask, vmax=vmax_micron)
             im_axes[1, plot_index].text(
-                20, 20, f'{webbpsf.utils.rms(delta_opd, mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
+                20, 20, f'{stpsf.utils.rms(delta_opd, mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
             )
             # mark row 3 as blank (default)
             basic_show_image(delta_opd + np.nan, ax=im_axes[2, plot_index], nanmask=nanmask, vmax=vmax_micron)
@@ -1534,12 +1534,12 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
                 del rms_label  # delete the previously-written one for the pre-move sensing
 
             im_axes[0, plot_index].text(
-                20, 20, f'{webbpsf.utils.rms(wfes_ote[i], mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
+                20, 20, f'{stpsf.utils.rms(wfes_ote[i], mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
             )
             # Plot correction in row 3
             basic_show_image(delta_opd * 1e6, ax=im_axes[2, plot_index], nanmask=nanmask, vmax=vmax_micron)
             im_axes[2, plot_index].text(
-                20, 20, f'{webbpsf.utils.rms(delta_opd, mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
+                20, 20, f'{stpsf.utils.rms(delta_opd, mask=apmask)*1e9:.1f}', color='yellow', fontsize=fs * 0.6
             )
 
     for i, label in enumerate(['Measured\nWFE', 'Drifts', 'Mirror\nCorrections']):
@@ -1593,9 +1593,9 @@ def plot_phase_retrieval_crosscheck(fn, vmax_fraction=1.0):
     """
     from skimage.registration import phase_cross_correlation
 
-    _ = webbpsf.mast_wss.mast_retrieve_opd(fn)
+    _ = stpsf.mast_wss.mast_retrieve_opd(fn)
 
-    opd, hdul = webbpsf.trending._read_opd(fn)
+    opd, hdul = stpsf.trending._read_opd(fn)
 
     # measured
     wlm8_m = hdul[5].data
@@ -1636,8 +1636,8 @@ def plot_phase_retrieval_crosscheck(fn, vmax_fraction=1.0):
     axes[1, 2].imshow(wlp8_m - wlp8_cs * fscale, norm=norm, cmap=cm)
 
     nomask = np.ones_like(wlp8_m)
-    rmserr_m1 = webbpsf.utils.rms(wlm8_m - wlm8_c * fscale, nomask)
-    rmserr_m2 = webbpsf.utils.rms(wlp8_m - wlp8_c * fscale, nomask)
+    rmserr_m1 = stpsf.utils.rms(wlm8_m - wlm8_c * fscale, nomask)
+    rmserr_m2 = stpsf.utils.rms(wlp8_m - wlp8_c * fscale, nomask)
     axes[0, 2].text(10, 5, f'RMS counts: {rmserr_m1:.4}', color='white', fontsize=10)
     axes[1, 2].text(10, 5, f'RMS counts: {rmserr_m2:.4}', color='white', fontsize=10)
 
@@ -1681,15 +1681,15 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     from skimage.registration import phase_cross_correlation
 
     if download_opds:
-        _ = webbpsf.mast_wss.mast_retrieve_opd(fn1)
-        _ = webbpsf.mast_wss.mast_retrieve_opd(fn2)
+        _ = stpsf.mast_wss.mast_retrieve_opd(fn1)
+        _ = stpsf.mast_wss.mast_retrieve_opd(fn2)
 
-    opd, hdul1 = webbpsf.trending._read_opd(fn1)
+    opd, hdul1 = stpsf.trending._read_opd(fn1)
 
     wlm8_m1 = hdul1[5].data
     wlp8_m1 = hdul1[10].data
 
-    opd, hdul2 = webbpsf.trending._read_opd(fn2)
+    opd, hdul2 = stpsf.trending._read_opd(fn2)
 
     wlm8_m2 = hdul2[5].data
     wlp8_m2 = hdul2[10].data
@@ -1726,8 +1726,8 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     axes[1, 2].imshow(wlp8_m1 - wlp8_m2s * fscale, norm=norm, cmap=cm)
 
     nomask = np.ones_like(wlp8_m1)
-    rmserr_m1 = webbpsf.utils.rms(wlm8_m1 - wlm8_m2s * fscale, nomask)
-    rmserr_m2 = webbpsf.utils.rms(wlp8_m1 - wlp8_m2s * fscale, nomask)
+    rmserr_m1 = stpsf.utils.rms(wlm8_m1 - wlm8_m2s * fscale, nomask)
+    rmserr_m2 = stpsf.utils.rms(wlp8_m1 - wlp8_m2s * fscale, nomask)
     axes[0, 2].text(0, 0, f'RMS counts: {rmserr_m1:.4}', color='white', fontsize=12)
     axes[1, 2].text(0, 0, f'RMS counts: {rmserr_m2:.4}', color='white', fontsize=12)
 
@@ -1780,7 +1780,7 @@ def show_wfs_around_obs(filename, verbose='True'):
             print(*args, **kwargs)
 
     # Retrieve header info, and WFS data before and after
-    inst = webbpsf.instrument(header['INSTRUME'])
+    inst = stpsf.instrument(header['INSTRUME'])
     inst.filter = header['filter']
     inst.set_position_from_aperture_name(header['APERNAME'])
 
@@ -1868,20 +1868,20 @@ def show_wfs_around_obs(filename, verbose='True'):
     )
 
     # Retrieve ap mask for overplotting OPDS with the borders nicely grayed out
-    apmask = webbpsf.utils.get_pupil_mask()
+    apmask = stpsf.utils.get_pupil_mask()
     nanmask = np.ones_like(apmask)
     nanmask[apmask == 0] = np.nan
 
     # Plot the OPDs
     vmax = 0.15
-    webbpsf.trending.show_opd_image(wfe_before * nanmask * 1e6, ax=ax1, vmax=vmax, fontsize=10)
+    stpsf.trending.show_opd_image(wfe_before * nanmask * 1e6, ax=ax1, vmax=vmax, fontsize=10)
     ax1.set_title('WFS Before\n ', color='C0', fontweight='bold')
-    webbpsf.trending.show_opd_image(wfe_weighted * nanmask * 1e6, ax=ax2, vmax=vmax, fontsize=10)
+    stpsf.trending.show_opd_image(wfe_weighted * nanmask * 1e6, ax=ax2, vmax=vmax, fontsize=10)
     ax2.set_title('Time-weighted Linear \nEstimate at Obs Time', color='C2', fontweight='bold')
-    webbpsf.trending.show_opd_image(wfe_after * nanmask * 1e6, ax=ax3, vmax=vmax, fontsize=10)
+    stpsf.trending.show_opd_image(wfe_after * nanmask * 1e6, ax=ax3, vmax=vmax, fontsize=10)
     ax3.set_title('WFS After\n ', color='C0', fontweight='bold')
 
-    webbpsf.trending.show_opd_image((wfe_after - wfe_before) * nanmask * 1e6, ax=ax4, vmax=vmax, fontsize=10)
+    stpsf.trending.show_opd_image((wfe_after - wfe_before) * nanmask * 1e6, ax=ax4, vmax=vmax, fontsize=10)
     ax4.set_title('Delta WFE\nAfter-Before', color='C1', fontweight='bold')
 
 
@@ -1920,7 +1920,7 @@ def show_wfs_during_program(
     """
 
     # Query mast for when the observations took place
-    science_visit_table = webbpsf.mast_wss.query_program_visit_times(program, verbose=verbose)
+    science_visit_table = stpsf.mast_wss.query_program_visit_times(program, verbose=verbose)
     science_visit_table.sort(keys=['start_mjd'])
     if verbose:
         for row in science_visit_table:
@@ -1949,10 +1949,10 @@ def show_wfs_during_program(
     for row_index in range(len(opdtable)):
         opd_fn = opdtable[row_index]['fileName']
         try:
-            opd, opd_hdul = webbpsf.trending._read_opd(opd_fn)
+            opd, opd_hdul = stpsf.trending._read_opd(opd_fn)
         except FileNotFoundError:
-            webbpsf.mast_wss.mast_retrieve_opd(opd_fn, verbose=verbose)
-            opd, opd_hdul = webbpsf.trending._read_opd(opd_fn)
+            stpsf.mast_wss.mast_retrieve_opd(opd_fn, verbose=verbose)
+            opd, opd_hdul = stpsf.trending._read_opd(opd_fn)
 
         opds.append(opd)
         wfs_dates.append(opdtable[row_index]['date'])
@@ -1985,7 +1985,7 @@ def show_wfs_during_program(
 
     delta_opds = opd_array - reference_opd
     mask = opd_array.sum(axis=0) != 0
-    delta_rmses = [webbpsf.utils.rms(d, mask=mask) * 1000 for d in delta_opds]
+    delta_rmses = [stpsf.utils.rms(d, mask=mask) * 1000 for d in delta_opds]
 
     # Plot!
     if ax is None:
@@ -2041,7 +2041,7 @@ def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filena
 
     """
 
-    prev_opd_fn, post_opd_fn, prev_delta_t, post_delta_t = webbpsf.mast_wss.mast_wss_opds_around_date_query(
+    prev_opd_fn, post_opd_fn, prev_delta_t, post_delta_t = stpsf.mast_wss.mast_wss_opds_around_date_query(
         datetime, verbose=False
     )
 
@@ -2072,7 +2072,7 @@ def delta_wfe_around_time(datetime, plot=True, ax=None, vmax=0.05, return_filena
 def show_nrc_ta_img(visitid, ax=None, return_handles=False):
     """Retrieve and display a NIRCam target acq image"""
 
-    hdul = webbpsf.mast_wss.get_visit_nrc_ta_image(visitid)
+    hdul = stpsf.mast_wss.get_visit_nrc_ta_image(visitid)
 
     ta_img = hdul['SCI'].data
     mask = np.isfinite(ta_img)
@@ -2124,7 +2124,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
     im_obs_clean = astropy.convolution.interpolate_replace_nans(im_obs_clean, kernel=np.ones((5, 5)))
 
     # Make a matching sim
-    nrc = webbpsf.setup_sim_to_match_file(hdul, verbose=False)
+    nrc = stpsf.setup_sim_to_match_file(hdul, verbose=False)
     opdname = nrc.pupilopd[0].header['CORR_ID'] + '-NRCA3_FP1-1.fits'
     if verbose:
         print('Calculating PSF to match that TA image...')
@@ -2219,7 +2219,7 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
             oss_centroid_text = ''
 
         # WEBBPSF CENTROIDS ###
-        cen = webbpsf.fwcentroid.fwcentroid(im_obs_clean)
+        cen = stpsf.fwcentroid.fwcentroid(im_obs_clean)
         axes[0].scatter(cen[1], cen[0], color='red', marker='+', s=50)
         axes[0].text(cen[1], cen[0], '  webbpsf', color='red', verticalalignment='center')
         axes[0].text(

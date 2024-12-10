@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import webbpsf
+import stpsf
 
 from .. import webbpsf_core
 from .test_errorhandling import _exception_message_starts_with
@@ -127,7 +127,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
     nc = webbpsf_core.NIRCam()
     nc.pupilopd = None
 
-    nc, ote = webbpsf.enable_adjustable_ote(nc)
+    nc, ote = stpsf.enable_adjustable_ote(nc)
     ote._include_nominal_field_dep = False  # disable OTE field dependence model for this test
     # for consistency with expected values prepared before that model existed
 
@@ -355,12 +355,12 @@ def test_defocus(fov_arcsec=1, display=False):
     ), "Defocused PSFs calculated two ways don't agree as precisely as expected"
 
     if display:
-        import webbpsf
+        import stpsf
 
         plt.figure()
-        webbpsf.display_psf(psf)
+        stpsf.display_psf(psf)
         plt.figure()
-        webbpsf.display_psf(psf_2)
+        stpsf.display_psf(psf_2)
 
 
 def test_ways_to_specify_weak_lenses():
@@ -580,7 +580,7 @@ def test_coron_shift(offset_npix_x=4, offset_npix_y=-3, plot=False):
     """
 
     # Make two NIRCam instances, identical instrument config
-    nrc1 = webbpsf.NIRCam()
+    nrc1 = stpsf.NIRCam()
     nrc1.image_mask = 'MASK335R'
     nrc1.pupil_mask = 'MASKRND'
     nrc1.filter = 'F335M'
@@ -611,10 +611,10 @@ def test_coron_shift(offset_npix_x=4, offset_npix_y=-3, plot=False):
 
     if plot:
         fig, axes = plt.subplots(figsize=(16, 9), ncols=2)
-        webbpsf.display_psf(
+        stpsf.display_psf(
             psf1, ax=axes[0], vmax=1e-4, ext=1, title='Using source_offset', colorbar_orientation='horizontal'
         )
-        webbpsf.display_psf(
+        stpsf.display_psf(
             shifted_psf2, ax=axes[1], vmax=1e-4, ext=1, title='Using coron_shift', colorbar_orientation='horizontal'
         )
         for ax in axes:

@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from webbpsf import display_psf, roman
+from stpsf import display_psf, roman
 
 #### Create webbpsf-roman_page_header.png
 long = 4

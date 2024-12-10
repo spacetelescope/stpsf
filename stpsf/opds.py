@@ -45,7 +45,7 @@ import scipy
 import scipy.special as sp
 from packaging.version import Version
 
-import webbpsf
+import stpsf
 
 from . import constants, surs, utils
 
@@ -1227,7 +1227,7 @@ class OTE_Linear_Model_WSS(OPD):
             control_point_instr = 'nirspec'
 
         self.ote_control_point = (
-            webbpsf.webbpsf_core.get_siaf_with_caching(control_point_instr)[
+            stpsf.webbpsf_core.get_siaf_with_caching(control_point_instr)[
                 self.control_point_fieldpoint.upper()
             ].reference_point('tel')
             * u.arcsec
@@ -3279,7 +3279,7 @@ def decompose_opd_segment_PTT(opd, plot=False, plot_vmax=None):
             plot_vmax = np.abs(opd).max()
         masked_opd = opd.copy()
         masked_opd[~combined_mask] = np.nan
-        webbpsf.trending.show_opd_image(np.hstack((masked_opd, fit, opd - fit)), ax=ax, vmax=plot_vmax, labelrms=False)
+        stpsf.trending.show_opd_image(np.hstack((masked_opd, fit, opd - fit)), ax=ax, vmax=plot_vmax, labelrms=False)
         plt.colorbar(mappable=ax.images[0])
         plt.title('OPD, fit to segment PTT terms, and residuals')
 

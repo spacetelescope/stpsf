@@ -5,7 +5,7 @@ import numpy as np
 from scipy.io import loadmat
 
 from scipy import ndimage
-import webbpsf
+import stpsf
 
 
 matfile = '/itar/jwst/tel/share/webbpsf/webbpsf-data-source/JWST_thermal_response_data05_31_2017.mat'
@@ -55,7 +55,7 @@ def natural_key(string_):
 
 
 def get_known_pmsa_centers():
-    aperture = webbpsf.optics.WebbPrimaryAperture()
+    aperture = stpsf.optics.WebbPrimaryAperture()
     return aperture.seg_centers
 
 

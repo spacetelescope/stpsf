@@ -3,8 +3,8 @@ import numpy as np
 from astropy.io import fits
 
 import poppy
-import webbpsf.detectors as detectors
-import webbpsf.webbpsf_core as webbpsf_core
+import stpsf.detectors as detectors
+import stpsf.webbpsf_core as webbpsf_core
 
 
 # @pytest.mark.skip()

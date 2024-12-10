@@ -1,5 +1,5 @@
 import pytest
-import webbpsf
+import stpsf
 from astropy.table import Table
 
 
@@ -10,7 +10,7 @@ def test_load_mast_opd():
     NOTE THIS TEST WILL DOWNLOAD A FILE FROM MAST.
     """
 
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
     nrc.load_wss_opd_by_date('2022-07-30')
 
     assert nrc.pupilopd[0].data.shape == (1024, 1024), "OPD data does not have expected dimensions"
@@ -25,7 +25,7 @@ def test_load_mast_opd_larger_npix(npix=2048):
     NOTE THIS TEST WILL DOWNLOAD A FILE FROM MAST.
     """
 
-    nrc = webbpsf.NIRCam()
+    nrc = stpsf.NIRCam()
     nrc.pupil = f'jwst_pupil_RevW_npix{npix}.fits.gz'
     nrc.load_wss_opd_by_date('2022-07-30')
 
@@ -45,11 +45,11 @@ def test_query_wfsc_images(test_download=False):
     necessary to test that we can download a large file in every CI run.
     """
 
-    filetable = webbpsf.mast_wss.query_wfsc_images_latest()
+    filetable = stpsf.mast_wss.query_wfsc_images_latest()
     assert len(filetable) > 0, "Query should have nonzero results"
     assert isinstance(filetable, Table), "Query should return a table"
 
-    filetable2 = webbpsf.mast_wss.query_wfsc_images_by_program(1160, 1)
+    filetable2 = stpsf.mast_wss.query_wfsc_images_by_program(1160, 1)
     assert len(filetable2) > 0, "Query should have nonzero results"
     assert isinstance(filetable2, Table), "Query should return a table"
 

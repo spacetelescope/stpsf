@@ -11,8 +11,8 @@ from astropy.io import fits
 from astropy import units as u
 from astropy.modeling.functional_models import Gaussian1D, GAUSSIAN_SIGMA_TO_FWHM
 
-import webbpsf
-from webbpsf import constants, utils
+import stpsf
+from stpsf import constants, utils
 
 
 def get_detector_ipc_model(inst, header):
@@ -55,7 +55,7 @@ def get_detector_ipc_model(inst, header):
             'NRCB5': '490',
         }
 
-        webbpsf.webbpsf_core._log.info(f'Detector IPC: NIRCam {det} (added)')
+        stpsf.webbpsf_core._log.info(f'Detector IPC: NIRCam {det} (added)')
         # IPC effect
         # read the SCA extension for the detector
         sca_path = os.path.join(utils.get_webbpsf_data_path(), 'NIRCam', 'IPC', 'KERNEL_IPC_CUBE.fits')
@@ -76,11 +76,11 @@ def get_detector_ipc_model(inst, header):
         meta['PPCFILE'] = (os.path.basename(sca_path_ppc), 'PPC model source file')
 
     elif inst == 'MIRI':
-        webbpsf.webbpsf_core._log.info('Detector IPC: MIRI')
+        stpsf.webbpsf_core._log.info('Detector IPC: MIRI')
 
-        alpha = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][0]
-        beta = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][1]
-        c = webbpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][2]  # real observation noise adjustment
+        alpha = stpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][0]
+        beta = stpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][1]
+        c = stpsf.constants.INSTRUMENT_IPC_DEFAULT_KERNEL_PARAMETERS[inst][2]  # real observation noise adjustment
         miri_kernel = np.array([[c, beta, c], [alpha, 1 - 2 * alpha - 2 * beta - 4 * c, alpha], [c, beta, c]])
         kernel = CustomKernel(miri_kernel)
 
@@ -105,7 +105,7 @@ def get_detector_ipc_model(inst, header):
             maskimage = fits.getdata(voidmask10)
         else:
             maskimage = None
-            webbpsf.webbpsf_core._log.info('Error reading the file voidmask10.fits.  Will assume a non-void position.')
+            stpsf.webbpsf_core._log.info('Error reading the file voidmask10.fits.  Will assume a non-void position.')
 
         nchannel = int(yposition) // 512
         try:
@@ -132,7 +132,7 @@ def get_detector_ipc_model(inst, header):
             meta['IPCTYPA'] = ('NIRISS', 'No kernel file found')
             meta['IPCTYPB'] = ('NIRISS', 'No IPC correction applied')
             meta['IPCFILE'] = ('Not found', 'IPC model source file')
-            webbpsf.webbpsf_core._log.info(f'NIRISS IPC kernel file {ipc_file} not found.')
+            stpsf.webbpsf_core._log.info(f'NIRISS IPC kernel file {ipc_file} not found.')
 
     elif inst in ['FGS', 'NIRSPEC', 'WFI']:
         kernel = None  # No IPC models yet implemented for these
@@ -174,7 +174,7 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
     # In cases for which the user has asked for the IPC
     # to be applied to a not-present extension, we have nothing to add this to
     if extname not in psf_hdulist:
-        webbpsf.webbpsf_core._log.debug(f'Skipping IPC simulation since ext {extname} is not found')
+        stpsf.webbpsf_core._log.debug(f'Skipping IPC simulation since ext {extname} is not found')
         return
 
     # This avoid applying IPC effect simulations twice
@@ -197,18 +197,18 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
 
             out_ipc_0 = convolve(psf_hdulist[extname].data, ipckernel)
             out_ipc = convolve(out_ipc_0, ppckernel)
-            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC and PPC models for {inst}')
+            stpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC and PPC models for {inst}')
         elif inst.upper() == 'NIRISS':
             # the NIRISS code provided by Kevin Volk was developed for a different convolution function
             if oversample != 1:
                 kernel = oversample_ipc_model(kernel, oversample)
             out_ipc = signal.fftconvolve(psf_hdulist[extname].data, kernel, mode='same')
-            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
+            stpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
         else:
             if oversample != 1:
                 kernel = oversample_ipc_model(kernel, oversample)
             out_ipc = convolve(psf_hdulist[extname].data, kernel)
-            webbpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
+            stpsf.webbpsf_core._log.info(f'ext {extname}: Added IPC model for {inst}')
 
         # apply kernel to DET_DIST
         psf_hdulist[extname].data = out_ipc
@@ -219,7 +219,7 @@ def apply_detector_ipc(psf_hdulist, extname='DET_DIST'):
         psf_hdulist[extname].header.add_history('Applied detector interpixel capacitance (IPC) model')
 
     else:
-        webbpsf.webbpsf_core._log.info('IPC model not implemented yet for {}'.format(inst))
+        stpsf.webbpsf_core._log.info('IPC model not implemented yet for {}'.format(inst))
         psf_hdulist[extname].header['IPCINST'] = (inst, 'No IPC correction applied')
 
     return psf_hdulist
@@ -237,11 +237,11 @@ def apply_detector_charge_diffusion(psf_hdulist, options):
         # look up default from constants
         inst = psf_hdulist[0].header['INSTRUME'].upper()
         key = f"NIRCAM_{psf_hdulist[0].header['CHANNEL'][0]}W" if inst == 'NIRCAM' else inst
-        sigma = webbpsf.constants.INSTRUMENT_DETECTOR_CHARGE_DIFFUSION_DEFAULT_PARAMETERS[key]
+        sigma = stpsf.constants.INSTRUMENT_DETECTOR_CHARGE_DIFFUSION_DEFAULT_PARAMETERS[key]
 
     ext = 1  # Apply to the 'OVERDIST' extension
 
-    webbpsf.webbpsf_core._log.info(
+    stpsf.webbpsf_core._log.info(
         'Detector charge diffusion: Convolving with Gaussian with sigma={0:.3f} arcsec'.format(sigma)
     )
     out = scipy.ndimage.gaussian_filter(psf_hdulist[ext].data, sigma / psf_hdulist[0].header['PIXELSCL'])
@@ -351,10 +351,10 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
     y, x = np.indices(kernel_2d.shape)
     r = np.sqrt((x - cen) ** 2 + (y - cen) ** 2) / oversample
     radial_term = (
-        np.exp(-r / 2 / webbpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX)
+        np.exp(-r / 2 / stpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX)
         * kernel_amp
-        * (r > webbpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX)
-        * webbpsf.constants.MIRI_CRUCIFORM_RADIAL_SCALEFACTOR
+        * (r > stpsf.constants.MIRI_CRUCIFORM_INNER_RADIUS_PIX)
+        * stpsf.constants.MIRI_CRUCIFORM_RADIAL_SCALEFACTOR
     )
 
     kernel_2d += radial_term
@@ -577,7 +577,7 @@ def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
 
     ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
-    webbpsf.webbpsf_core._log.info(f'Applying MIRI IFU broadening model: {model_type}')
+    stpsf.webbpsf_core._log.info(f'Applying MIRI IFU broadening model: {model_type}')
     hdulist[ext].header.add_history(f"Added broadening model for IFU PSFs: {model_type}")
 
     hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
@@ -613,7 +613,7 @@ def apply_nirspec_ifu_broadening(hdulist, options):
 
     ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
-    webbpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model ({model_type}) to '+
+    stpsf.webbpsf_core._log.info(f'Applying NRS IFU broadening model ({model_type}) to '+
                                    f'ext {hdulist[ext].header["EXTNAME"]}')
 
     hdulist[ext].header['IFUBROAD'] = (True, "IFU PSF broadening model applied")
