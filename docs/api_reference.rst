@@ -4,4 +4,4 @@
 Detailed API Reference
 =================================
 
-.. automodapi:: webbpsf
+.. automodapi:: stpsf

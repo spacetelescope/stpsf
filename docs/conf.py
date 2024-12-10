@@ -60,7 +60,7 @@ with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as metadata_fil
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath("../"))
-sys.path.insert(0, os.path.abspath("../webbpsf/"))
+sys.path.insert(0, os.path.abspath("../stpsf/"))
 sys.path.insert(0, os.path.abspath("exts/"))
 
 
@@ -233,10 +233,10 @@ man_pages = [("index", project.lower(), project + " Documentation", [author], 1)
 texinfo_documents = [
     (
         master_doc,
-        "webbpsf",
-        "webbpsf Documentation",
+        "stpsf",
+        "stpsf Documentation",
         author,
-        "webbpsf",
+        "stpsf",
         "One line description of project.",
         "Miscellaneous",
     ),
@@ -268,6 +268,6 @@ epub_exclude_files = ["search.html"]
 # See https://github.com/sloria/sphinx-issues
 
 # Github repo
-issues_github_path = "spacetelescope/webbpsf"
+issues_github_path = "spacetelescope/stpsf"
 
 github_issues_url = "https://github.com/{0}/issues/".format(issues_github_path)

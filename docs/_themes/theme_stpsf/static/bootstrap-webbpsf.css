@@ -7,7 +7,7 @@
  *
  * Heavily modified by Kyle Barbary for the AstroPy Project for use with Sphinx.
  *
- * Slightly modified by Marshall Perrin for use with WebbPSF & POPPY with a larger
+ * Slightly modified by Marshall Perrin for use with STPSF & POPPY with a larger
  * font size and some other display tweaks
  */
 
@@ -243,7 +243,7 @@ div.topbar a.brand {
   height: 32px;
   padding: 8px 12px 0px 45px;
   margin-left: -10px;
-  background: transparent url("webbpsf_logo_32.png") no-repeat 10px 4px;
+  background: transparent url("stpsf_logo_32.png") no-repeat 10px 4px;
 }
 
 #logotext1 {

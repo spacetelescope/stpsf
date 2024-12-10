@@ -21,11 +21,11 @@ Introduction
 Conceptually, this simulation code has two layers of abstraction:
 
  * A base package for wavefront propagation through generic optical systems (provided by :py:mod:`POPPY <poppy>`)
- * Models of the JWST and Roman instruments implemented on top of that base system (provided by :py:mod:`WebbPSF <webbpsf>`)
+ * Models of the JWST and Roman instruments implemented on top of that base system (provided by :py:mod:`STPSF <stpsf>`)
 
-.. _intro_why_webbpsf:
+.. _intro_why_stpsf:
 
-Why WebbPSF?
+Why STPSF?
 ------------
 
 For any space telescope, an ability to predict the properties of
@@ -34,14 +34,14 @@ range of preparatory science studies and tool development.
 Tools for producing high
 quality model PSFs must be easily accessible to the entire astronomical
 community.
-WebbPSF provides an easy-to-use tool for PSF simulations of JWST and Roman, in
+STPSF provides an easy-to-use tool for PSF simulations of JWST and Roman, in
 the style of the highly successful "Tiny Tim" PSF simulator for Hubble.
 
-WebbPSF
+STPSF
 simulations are based on a mixture of observatory design parameters and
 as-built properties. The software provides a highly flexible and scriptable toolkit in
 Python for simulating a very wide range of observing modes and science scenarios, using
-efficient computational methods (including optional parallelization and use of GPUs). WebbPSF
+efficient computational methods (including optional parallelization and use of GPUs). STPSF
 is a key building block in higher-level observatory simulators, including the
 JWST `Exposure Time Calculator <https://jwst.etc.stsci.edu>`_.
 
@@ -68,7 +68,7 @@ coronagraph occulter described as a circle of a given radius or a band-limited
 mask function with given free parameters).
 
 
-WebbPSF computes PSFs under the assumption that JWST's instruments are well
+STPSF computes PSFs under the assumption that JWST's instruments are well
 described by Fraunhofer diffraction, as implemented using the usual Fourier
 relationship between optical pupil and image planes (e.g. `Goodman et al. 1996
 <http://books.google.com/books?id=ow5xs_Rtt9AC&printsec=frontcover#v=onepage&q&f=false>`_).
@@ -88,7 +88,7 @@ propagating the entire wavefront from pupil to image and back to pupil in order 
 is actually blocked by the image occulter and then subtract it from the rest of the wavefront at the Lyot plane. This relies on Babinet's principle to achieve the same final PSF
 with more computational efficiency, particularly for the case of highly oversampled image planes (as is necessary to account for fine structure in image plane occulter masks). See Soummer et al. 2007 for a detailed description of this algorithm.
 
-Types of Fourier Transform Calculation in WebbPSF
+Types of Fourier Transform Calculation in STPSF
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   * Any direct imaging calculation, any instrument: Matrix DFT
@@ -100,7 +100,7 @@ Types of Fourier Transform Calculation in WebbPSF
 
 See `Performance and Parallelization <https://poppy-optics.readthedocs.io/en/latest/performance.html>`_ in the POPPY documentation for more details on calculation performance.
 
-Getting WebbPSF
+Getting STPSF
 ---------------
 
 See :ref:`installation`.
@@ -110,7 +110,7 @@ See :ref:`installation`.
 Quick Start
 ------------
 
-Once you have installed the software and data files, we recommend you begin with the 
-`Jupyter Notebook quickstart tutorial <http://nbviewer.jupyter.org/github/spacetelescope/webbpsf/blob/develop/notebooks/WebbPSF_tutorial.ipynb>`_. Downloading and running that notebook is a great way to get started using WebbPSF.
+Once you have installed the software and data files, we recommend you begin with the
+`Jupyter Notebook quickstart tutorial <http://nbviewer.jupyter.org/github/spacetelescope/stpsf/blob/develop/notebooks/STPSF_tutorial.ipynb>`_. Downloading and running that notebook is a great way to get started using STPSF.
 
 

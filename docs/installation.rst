@@ -5,9 +5,9 @@ Requirements & Installation
 
 .. note::
 
-   This is entirely optional, but you may wish to sign up to the mailing list ``webbpsf-users@maillist.stsci.edu``. This is a very low-traffic moderated announce-only list, to which we will periodically post announcements of updates to this software.
+   This is entirely optional, but you may wish to sign up to the mailing list ``stpsf-users@maillist.stsci.edu``. This is a very low-traffic moderated announce-only list, to which we will periodically post announcements of updates to this software.
 
-   To subscribe, visit  the `maillist.stsci.edu server <https://maillist.stsci.edu/scripts/wa.exe?SUBED1=Webbpsf-users&A=1>`_
+   To subscribe, visit  the `maillist.stsci.edu server <https://maillist.stsci.edu/scripts/wa.exe?SUBED1=STPSF-users&A=1>`_
 
 
 .. NOTE: installation with conda is unavailable as of v1.1.0. uncomment and edit the following section once it's back.
@@ -16,35 +16,35 @@ Requirements & Installation
   Recommended: Installing with conda
   ----------------------------------
 
-  If you already use ``conda``, but do not want to install the full suite of STScI software, you can simply add the AstroConda *channel* and install WebbPSF as follows (creating a new environment named ``webbpsf-env``)::
+  If you already use ``conda``, but do not want to install the full suite of STScI software, you can simply add the AstroConda *channel* and install STPSF as follows (creating a new environment named ``stpsf-env``)::
 
     $ conda config --add channels http://ssb.stsci.edu/astroconda
-    $ conda create -n webbpsf-env webbpsf
-    $ conda activate webbpsf-env
+    $ conda create -n stpsf-env stpsf
+    $ conda activate stpsf-env
 
-  Upgrading to the latest version is done with ``conda update -n webbpsf-env --all``.
+  Upgrading to the latest version is done with ``conda update -n stpsf-env --all``.
 
   .. warning::
 
-     You *must* install WebbPSF into a specific environment (e.g. ``webbpsf-env``); our conda package will not work if installed into the default "root" environment.
+     You *must* install STPSF into a specific environment (e.g. ``stpsf-env``); our conda package will not work if installed into the default "root" environment.
 
 .. _install_pip:
 
 Installing with pip
 -------------------
 
-WebbPSF and its underlying optical library POPPY may be installed from the `Python Package Index <http://pypi.python.org/pypi>`_ in the usual manner for Python packages. ::
+STPSF and its underlying optical library POPPY may be installed from the `Python Package Index <http://pypi.python.org/pypi>`_ in the usual manner for Python packages. ::
 
-    $ pip install --upgrade webbpsf
+    $ pip install --upgrade stpsf
     [... progress report ...]
 
-    Successfully installed webbpsf
+    Successfully installed stpsf
 
-Note that ``pip install webbpsf`` only installs the program code. **If you install via pip, you must manually download and install the data files, as** :ref:`described <data_install>` **below.**
+Note that ``pip install stpsf`` only installs the program code. **If you install via pip, you must manually download and install the data files, as** :ref:`described <data_install>` **below.**
 To obtain source spectra for calculations, you should also follow :ref:`installation instructions for synphot <synphot_install>`.
 
 .. note::
-  Installation through conda is not available as of WebbPSF version 1.1.0. Conda
+  Installation through conda is not available as of STPSF version 1.1.0. Conda
   users should instead follow the insructions in the preceding section to
   install via pip.
 
@@ -67,36 +67,36 @@ Installing the Required Data Files
     which case you can skip this section.) [uncomment once conda installation is
     available again]
 
-Files containing such information as the JWST pupil shape, instrument throughputs, and aperture positions are distributed separately from WebbPSF. To run WebbPSF, you must download these files and tell WebbPSF where to find them using the ``WEBBPSF_PATH`` environment variable.
+Files containing such information as the JWST pupil shape, instrument throughputs, and aperture positions are distributed separately from STPSF. To run STPSF, you must download these files and tell STPSF where to find them using the ``STPSF_PATH`` environment variable.
 
-1. Download the following file:  `webbpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz>`_  [approx. 70 MB]
-2. Untar ``webbpsf-data-LATEST.tar.gz`` into a directory of your choosing.
-3. Set the environment variable ``WEBBPSF_PATH`` to point to that directory. e.g. ::
+1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz>`_  [approx. 70 MB]
+2. Untar ``stpsf-data-LATEST.tar.gz`` into a directory of your choosing.
+3. Set the environment variable ``STPSF_PATH`` to point to that directory. e.g. ::
 
-    export WEBBPSF_PATH=$HOME/data/webbpsf-data
+    export STPSF_PATH=$HOME/data/stpsf-data
 
 for bash. (You will probably want to add this to your ``.bashrc``.)
 
-You should now be able to successfully ``import webbpsf`` in a Python session.
+You should now be able to successfully ``import stpsf`` in a Python session.
 
 .. warning::
 
-   If you have previously installed the data files for an earlier version of WebbPSF, and then update to a newer version, the
+   If you have previously installed the data files for an earlier version of STPSF, and then update to a newer version, the
    software may prompt you that you must download and install a new updated version of the data files.
 
 .. Note::
 
    **For STScI Users Only:** Users at STScI may access the required data files from the Central Storage network. Set the following environment variables in your ``bash`` shell. (You will probably want to add this to your ``.bashrc``.) ::
-      export WEBBPSF_PATH="/grp/jwst/ote/webbpsf-data"
+      export STPSF_PATH="/grp/jwst/ote/stpsf-data"
       export PYSYN_CDBS="/grp/hst/cdbs"
 
 Software Requirements
 ---------------------
 
 
-See `the requirements.txt specification file <https://github.com/spacetelescope/webbpsf/blob/develop/requirements.txt>`_ for the required package dependencies.
+See `the requirements.txt specification file <https://github.com/spacetelescope/stpsf/blob/develop/requirements.txt>`_ for the required package dependencies.
 
-**Required Python version**: WebbPSF 1.1 and above require Python 3.10 or higher.
+**Required Python version**: STPSF 1.1 and above require Python 3.10 or higher.
 
 The major dependencies are the standard `NumPy, SciPy <http://www.scipy.org/scipylib/download.html>`_, `matplotlib <http://matplotlib.org>`_ stack, and `Astropy <http://astropy.org>`_.
 
@@ -116,16 +116,16 @@ Additional packages are needed for the optional use of GPUs to accelerate calcul
 
 .. _install_dev_version:
 
-Installing a pre-release version or contributing to WebbPSF development
+Installing a pre-release version or contributing to STPSF development
 -----------------------------------------------------------------------
 
-The `WebbPSF source code repository <https://github.com/spacetelescope/webbpsf>`_ is hosted at GitHub, as is the repository for `POPPY <https://github.com/spacetelescope/poppy>`_. Users may clone or fork in the usual manner. Pull requests with code enhancements welcomed.
+The `STPSF source code repository <https://github.com/spacetelescope/stpsf>`_ is hosted at GitHub, as is the repository for `POPPY <https://github.com/spacetelescope/poppy>`_. Users may clone or fork in the usual manner. Pull requests with code enhancements welcomed.
 
-To install the current development version of WebbPSF, you can use ``pip`` to install directly from a ``git`` repository. To install WebbPSF and POPPY from ``git``, uninstall any existing copies of WebbPSF and POPPY, then invoke pip as follows::
+To install the current development version of STPSF, you can use ``pip`` to install directly from a ``git`` repository. To install STPSF and POPPY from ``git``, uninstall any existing copies of STPSF and POPPY, then invoke pip as follows::
 
     $ pip install -e git+https://github.com/spacetelescope/poppy.git#egg=poppy \
-       -e git+https://github.com/spacetelescope/webbpsf.git#egg=webbpsf
+       -e git+https://github.com/spacetelescope/stpsf.git#egg=stpsf
 
-This will create directories ``./src/poppy`` and ``./src/webbpsf`` in your current directory containing the cloned repository. If you have commit access to the repository, you may want to clone via ssh with a URL like ``git+ssh://git@github.com:spacetelescope/webbpsf.git``. Documentation of the available options for installing directly from Git can be found in the `pip documentation <http://pip.readthedocs.org/en/latest/reference/pip_install.html#git>`_.
+This will create directories ``./src/poppy`` and ``./src/stpsf`` in your current directory containing the cloned repository. If you have commit access to the repository, you may want to clone via ssh with a URL like ``git+ssh://git@github.com:spacetelescope/stpsf.git``. Documentation of the available options for installing directly from Git can be found in the `pip documentation <http://pip.readthedocs.org/en/latest/reference/pip_install.html#git>`_.
 
 Remember to :ref:`install the required data files <data_install>`, if you have not already installed them.

@@ -6,7 +6,7 @@ Optimizing numerical performance of FFTs is a very complicated subject. Just usi
 .. note::
    The following tests were performed using the older PyFFTW3 package, and have not yet been updated for the newer pyFFTW package. However, performance considerations are expected to be fairly similar for both packages since the underlying FFTW library is the same.
 
-   See discussion and test results at https://github.com/spacetelescope/webbpsf/issues/10
+   See discussion and test results at https://github.com/spacetelescope/stpsf/issues/10
 
 This is probably fairly sensitive to hardware details. The following benchmarks were performed on a Mac Pro, dual quad-core 2.66 GHz Xeon, 12 GB RAM.
 
@@ -243,7 +243,7 @@ This leads to substantial savings in total computation time::
 
 Users are encouraged to try different approaches to optimizing performance on their own machines.
 To enable some rudimentary benchmarking for the FFT section of the code, set `poppy.conf.enable_speed_tests=True` and configure
-your logging display to show debug messages. (i.e. `webbpsf.configure_logging('debug')`).
+your logging display to show debug messages. (i.e. `stpsf.configure_logging('debug')`).
 Measured times will be printed in the log stream, for instance like so::
 
     poppy     : INFO     Calculating PSF with 1 wavelengths

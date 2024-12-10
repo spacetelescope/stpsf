@@ -1,23 +1,23 @@
 Diagnostics & Troubleshooting
 =============================
 
-If something does not work right, the first place to look is the :ref:`known_issues` section of the release notes. The next place to check is the `GitHub issues <https://github.com/spacetelescope/webbpsf/issues>`_ page, where another user may have reported the problem.
+If something does not work right, the first place to look is the :ref:`known_issues` section of the release notes. The next place to check is the `GitHub issues <https://github.com/spacetelescope/stpsf/issues>`_ page, where another user may have reported the problem.
 
 To report a new issue, you will need a free GitHub account. Alternatively, you may report the issue via email to the project maintainers. Include code that exhibits the issue to facilitate debugging.
 
-WebbPSF includes a helper function that will return a report with information that may be useful for troubleshooting. An example of its usage is given below::
+STPSF includes a helper function that will return a report with information that may be useful for troubleshooting. An example of its usage is given below::
 
-   In [1]: import webbpsf
-   WebbPSF log messages of level INFO and above will be shown.
-   WebbPSF log outputs will be directed to the screen.
+   In [1]: import stpsf
+   STPSF log messages of level INFO and above will be shown.
+   STPSF log outputs will be directed to the screen.
 
-   In [2]: print webbpsf.system_diagnostic()
+   In [2]: print stpsf.system_diagnostic()
 
    OS: Darwin-13.4.0-x86_64-i386-64bit
    Python version: 2.7.8 (default, Oct  2 2014, 13:50:25)  [GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.51)]
    numpy version: 1.9.1
    poppy version: 0.3.3.dev335
-   webbpsf version: 0.3rc4
+   stpsf version: 0.3rc4
 
    tkinter version: 0.3.1
    wxpython version: not found
