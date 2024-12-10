@@ -1,16 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 """
-WebbPSF: Simulated Point Spread Functions for the James Webb Space Telescope
+STPSF: Simulated Point Spread Functions for the James Webb Space Telescope
 ----------------------------------------------------------------------------
 
-WebbPSF produces simulated PSFs for the James Webb Space Telescope, NASA's next
-flagship infrared space telescope. WebbPSF can simulate images for any of the
+STPSF produces simulated PSFs for the James Webb Space Telescope, NASA's next
+flagship infrared space telescope. STPSF can simulate images for any of the
 four science instruments plus the fine guidance sensor, including both direct
 imaging and coronagraphic modes.
 
 Developed by Marshall Perrin and collaborators at STScI, 2010-2018.
 
-Documentation can be found online at https://webbpsf.readthedocs.io/
+Documentation can be found online at https://stpsf.readthedocs.io/
 """
 
 import sys
@@ -32,20 +32,20 @@ if sys.version_info < tuple(
     (int(val) for val in __minimum_python_version__.split("."))
 ):
     raise UnsupportedPythonError(
-        "webbpsf does not support Python < {}".format(__minimum_python_version__)
+        "stpsf does not support Python < {}".format(__minimum_python_version__)
     )
 
 
-# This tuple gives the *minimum* version of the WebbPSF data package
-# required. If changes to the code and data mean WebbPSF won't work
+# This tuple gives the *minimum* version of the STPSF data package
+# required. If changes to the code and data mean STPSF won't work
 # properly with an old data package, increment this version number.
-# (It's checked against $WEBBPSF_DATA/version.txt)
+# (It's checked against $STPSF_DATA/version.txt)
 DATA_VERSION_MIN = (1, 5, 0)
 
 
 class Conf(_config.ConfigNamespace):
     """
-    Configuration parameters for `webbpsf`.
+    Configuration parameters for `stpsf`.
     """
 
     default_oversampling = _config.ConfigItem(
@@ -65,20 +65,20 @@ class Conf(_config.ConfigNamespace):
     )
 
     # Should be package settings:
-    WEBBPSF_PATH = _config.ConfigItem(
+    STPSF_PATH = _config.ConfigItem(
         "from_environment_variable",
-        "Directory path to data files required for WebbPSF calculations, such as OPDs and filter transmissions.\
-        This will be overridden by the environment variable $WEBBPSF_PATH, if present.",
+        "Directory path to data files required for STPSF calculations, such as OPDs and filter transmissions.\
+        This will be overridden by the environment variable $STPSF_PATH, if present.",
     )
     autoconfigure_logging = _config.ConfigItem(
         False,
-        "Should WebbPSF configure logging for itself and POPPY? This adds handlers that report "
+        "Should STPSF configure logging for itself and POPPY? This adds handlers that report "
         "calculation progress and information",
     )
     logging_level = _config.ConfigItem(
         ["INFO", "DEBUG", "WARN", "ERROR", "CRITICAL", "NONE"],
         # (the default value is the first item in the options list)
-        "Desired logging level for WebbPSF optical calculations.",
+        "Desired logging level for STPSF optical calculations.",
     )
     logging_filename = _config.ConfigItem(
         "none", "Desired filename to save log messages to."
@@ -113,7 +113,7 @@ from poppy import (  # noqa
     fwcentroid,
 )
 
-from .webbpsf_core import (  # noqa
+from .stpsf_core import (  # noqa
     instrument,
     SpaceTelescopeInstrument,
     JWInstrument,
