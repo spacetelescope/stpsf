@@ -7,7 +7,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "webbpsf"
+name = "stpsf"
 description = "Creates simulated point spread functions for the James Webb Space Telescope"
 authors = [
     { name = "Association of Universities for Research in Astronomy", email = "help@stsci.edu" },
@@ -48,8 +48,8 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "http://webbpsf.readthedocs.io/"
-github_project = "https://github.com/spacetelescope/webbpsf"
+Homepage = "http://stpsf.readthedocs.io/"
+github_project = "https://github.com/spacetelescope/stpsf"
 
 [tool.setuptools.packages.find]
 namespaces = false
@@ -58,17 +58,17 @@ namespaces = false
 "*" = [
     "*.fits, *.csv",
 ]
-"webbpsf.tests" = [
+"stpsf.tests" = [
     "data/*",
 ]
 
 [tool.setuptools_scm]
-write_to = "webbpsf/version.py"
+write_to = "stpsf/version.py"
 
 [tool.pytest.ini_options]
 minversion = "2.2"
 testpaths = [
-    "webbpsf/tests",
+    "stpsf/tests",
 ]
 norecursedirs = [
     "build",
@@ -81,27 +81,27 @@ addopts = "-p no:warnings"
 
 [tool.coverage.run]
 source = [
-    "webbpsf",
+    "stpsf",
 ]
 omit = [
-    "webbpsf/conftest*",
-    "webbpsf/cython_version*",
-    "webbpsf/setup_package*",
-    "webbpsf/*/setup_package*",
-    "webbpsf/*/*/setup_package*",
-    "webbpsf/tests/*",
-    "webbpsf/*/tests/*",
-    "webbpsf/*/*/tests/*",
-    "webbpsf/version*",
-    "*/webbpsf/conftest*",
-    "*/webbpsf/cython_version*",
-    "*/webbpsf/setup_package*",
-    "*/webbpsf/*/setup_package*",
-    "*/webbpsf/*/*/setup_package*",
-    "*/webbpsf/tests/*",
-    "*/webbpsf/*/tests/*",
-    "*/webbpsf/*/*/tests/*",
-    "*/webbpsf/version*",
+    "stpsf/conftest*",
+    "stpsf/cython_version*",
+    "stpsf/setup_package*",
+    "stpsf/*/setup_package*",
+    "stpsf/*/*/setup_package*",
+    "stpsf/tests/*",
+    "stpsf/*/tests/*",
+    "stpsf/*/*/tests/*",
+    "stpsf/version*",
+    "*/stpsf/conftest*",
+    "*/stpsf/cython_version*",
+    "*/stpsf/setup_package*",
+    "*/stpsf/*/setup_package*",
+    "*/stpsf/*/*/setup_package*",
+    "*/stpsf/tests/*",
+    "*/stpsf/*/tests/*",
+    "*/stpsf/*/*/tests/*",
+    "*/stpsf/version*",
 ]
 
 [tool.coverage.report]
@@ -114,22 +114,22 @@ exclude_lines = [
     "pragma: py{ignore_python_version}",
 ]
 omit = [
-    "webbpsf/conftest*",
-    "webbpsf/cython_version*",
-    "webbpsf/setup_package*",
-    "webbpsf/*/setup_package*",
-    "webbpsf/*/*/setup_package*",
-    "webbpsf/tests/*",
-    "webbpsf/*/tests/*",
-    "webbpsf/*/*/tests/*",
-    "webbpsf/version*",
-    "*/webbpsf/conftest*",
-    "*/webbpsf/cython_version*",
-    "*/webbpsf/setup_package*",
-    "*/webbpsf/*/setup_package*",
-    "*/webbpsf/*/*/setup_package*",
-    "*/webbpsf/tests/*",
-    "*/webbpsf/*/tests/*",
-    "*/webbpsf/*/*/tests/*",
-    "*/webbpsf/version*",
+    "stpsf/conftest*",
+    "stpsf/cython_version*",
+    "stpsf/setup_package*",
+    "stpsf/*/setup_package*",
+    "stpsf/*/*/setup_package*",
+    "stpsf/tests/*",
+    "stpsf/*/tests/*",
+    "stpsf/*/*/tests/*",
+    "stpsf/version*",
+    "*/stpsf/conftest*",
+    "*/stpsf/cython_version*",
+    "*/stpsf/setup_package*",
+    "*/stpsf/*/setup_package*",
+    "*/stpsf/*/*/setup_package*",
+    "*/stpsf/tests/*",
+    "*/stpsf/*/tests/*",
+    "*/stpsf/*/*/tests/*",
+    "*/stpsf/version*",
 ]
