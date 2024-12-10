@@ -1,6 +1,6 @@
 """
 ============
-WebbPSF Core
+STPSF Core
 ============
 
 An object-oriented modeling system for the JWST instruments.
@@ -14,8 +14,8 @@ Classes:
       * NIRISS
       * FGS
 
-WebbPSF makes use of python's ``logging`` facility for log messages, using
-the logger name "webbpsf".
+STPSF makes use of python's ``logging`` facility for log messages, using
+the logger name "stpsf".
 
 Code by Marshall Perrin <mperrin@stsci.edu>
 """
@@ -53,7 +53,7 @@ if _HAS_SYNPHOT:
     import synphot
 import logging
 
-_log = logging.getLogger('webbpsf')
+_log = logging.getLogger('stpsf')
 
 Filter = namedtuple('Filter', ['name', 'filename', 'default_nlambda'])
 
@@ -159,13 +159,13 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
     """
 
     def _get_filters(self):
-        filter_table = ioascii.read(os.path.join(self._WebbPSF_basepath, self.name, 'filters.tsv'))
+        filter_table = ioascii.read(os.path.join(self._STPSF_basepath, self.name, 'filters.tsv'))
         filter_info = {}
         filter_list = []  # preserve the order from the table
 
         for filter_row in filter_table:
             filter_filename = os.path.join(
-                self._WebbPSF_basepath,
+                self._STPSF_basepath,
                 self.name,
                 'filters',
                 '{}_throughput.fits'.format(filter_row['filter'])
@@ -185,11 +185,11 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
     def __init__(self, name='', pixelscale=0.064):
         self.name = name
 
-        self._WebbPSF_basepath, self._data_version = utils.get_webbpsf_data_path(
+        self._STPSF_basepath, self._data_version = utils.get_stpsf_data_path(
             data_version_min=DATA_VERSION_MIN, return_version=True
         )
 
-        self._datapath = os.path.join(self._WebbPSF_basepath, self.name)
+        self._datapath = os.path.join(self._STPSF_basepath, self.name)
         self._image_mask = None
         self._pupil_mask = None
 
@@ -352,8 +352,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         if self.pupil_mask is not None:
             result[0].header['PUPIL'] = (self.pupil_mask, 'Pupil plane mask')
 
-        result[0].header['VERSION'] = (version, 'WebbPSF software version')
-        result[0].header['DATAVERS'] = (self._data_version, 'WebbPSF reference data files version')
+        result[0].header['VERSION'] = (version, 'STPSF software version')
+        result[0].header['DATAVERS'] = (self._data_version, 'STPSF reference data files version')
 
         result[0].header['DET_NAME'] = (self.detector, 'Name of detector on this instrument')
 
@@ -578,7 +578,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
                 if os.path.exists(self.pupil):
                     pupil_transmission = self.pupil
                 else:
-                    pupil_transmission = os.path.join(self._WebbPSF_basepath, self.pupil)
+                    pupil_transmission = os.path.join(self._STPSF_basepath, self.pupil)
             elif isinstance(self.pupil, fits.HDUList):
                 # POPPY can use self.pupil as-is
                 pupil_transmission = self.pupil
@@ -706,11 +706,11 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         single_psf_centered : bool
             If num_psfs is set to 1, this defines where that psf is located.
             If True it will be the center of the detector, if False it will
-            be the location defined in the WebbPSF attribute detector_position
+            be the location defined in the STPSF attribute detector_position
             (reminder - detector_position is (x,y)). Default is True
             This is also rarely needed.
         **kwargs
-            Any extra arguments to pass the WebbPSF calc_psf() method call.
+            Any extra arguments to pass the STPSF calc_psf() method call.
 
         Returns
         -------
@@ -721,11 +721,11 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         Examples
         --------
-        nir = webbpsf.NIRCam()
+        nir = stpsf.NIRCam()
         nir.filter = "F090W"
         list_of_grids = nir.psf_grid(all_detectors=True, num_psfs=4)
 
-        wfi = webbpsf.WFI()
+        wfi = stpsf.WFI()
         wfi.filter = "Z087"
         wfi.detector = "SCA02"
         grid = wfi.psf_grid(all_detectors=False, oversample=5, fov_pixels=101)
@@ -786,7 +786,7 @@ class JWInstrument(SpaceTelescopeInstrument):
     include_si_wfe : boolean
         Should SI internal WFE be included in models? Requires
         the presence of ``si_zernikes_isim_cv3.fits`` in the
-        ``WEBBPSF_PATH``. Default = True.
+        ``STPSF_PATH``. Default = True.
     """
 
     telescope = 'JWST'
@@ -808,7 +808,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         self.opd_list = []
         for filename in glob.glob(os.path.join(opd_path, 'OPD*.fits*')):
             self.opd_list.append(os.path.basename(os.path.abspath(filename)))
-        for filename in glob.glob(os.path.join(self._WebbPSF_basepath, 'JWST_OTE_OPD*.fits*')):
+        for filename in glob.glob(os.path.join(self._STPSF_basepath, 'JWST_OTE_OPD*.fits*')):
             self.opd_list.append(os.path.basename(os.path.abspath(filename)))
 
         if not len(self.opd_list) > 0:
@@ -817,7 +817,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         self.opd_list.sort()
         self.pupilopd = 'JWST_OTE_OPD_cycle1_example_2022-07-30.fits'  # Default is now an on-orbit measured example OPD
 
-        self.pupil = os.path.abspath(os.path.join(self._WebbPSF_basepath, 'jwst_pupil_RevW_npix1024.fits.gz'))
+        self.pupil = os.path.abspath(os.path.join(self._STPSF_basepath, 'jwst_pupil_RevW_npix1024.fits.gz'))
         'Filename *or* fits.HDUList for JWST pupil mask. Usually there is no need to change this.'
 
         self._aperturename = None
@@ -876,8 +876,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         The OPD may be:
          - a local or absolute path,
-         - or relative implicitly within an SI directory, e.g. $WEBBPSF_PATH/NIRCam/OPD
-         - or relative implicitly within $WEBBPSF_PATH
+         - or relative implicitly within an SI directory, e.g. $STPSF_PATH/NIRCam/OPD
+         - or relative implicitly within $STPSF_PATH
 
         This function handles filling in the implicit path in the latter cases.
         """
@@ -890,7 +890,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         elif self.name in opdfilename:
             return os.path.join(self._datapath, 'OPD', opdfilename)
         else:
-            return os.path.join(self._WebbPSF_basepath, opdfilename)
+            return os.path.join(self._STPSF_basepath, opdfilename)
 
     def _get_telescope_pupil_and_aberrations(self):
         """return OpticalElement modeling wavefront aberrations for the telescope.
@@ -931,7 +931,7 @@ class JWInstrument(SpaceTelescopeInstrument):
                 if os.path.exists(self.pupil):
                     pupil_transmission = self.pupil
                 else:
-                    pupil_transmission = os.path.join(self._WebbPSF_basepath, self.pupil)
+                    pupil_transmission = os.path.join(self._STPSF_basepath, self.pupil)
                 # Get npix from pupil_transmission
                 npix = int(pupil_transmission.split('npix')[-1].split('.')[0])
             elif isinstance(self.pupil, fits.HDUList):
@@ -1594,11 +1594,11 @@ class JWInstrument(SpaceTelescopeInstrument):
     def visualize_wfe_budget(self, slew_delta_time=14 * units.day, slew_case='EOL', ptt_only=False, verbose=True):
         """Display a visual WFE budget showing the various terms that sum into the overall WFE for a given instrument
 
-        Compares a WebbPSF instrument instance with the JWST optical budget for that instrument
+        Compares a STPSF instrument instance with the JWST optical budget for that instrument
 
         Parameters
         ----------
-        inst : webbpsf.JWInstrument
+        inst : stpsf.JWInstrument
             A JWST instrument instance
         slew_delta_time : astropy.Quantity time
             Time duration for thermal slew model
@@ -1620,14 +1620,14 @@ class JWInstrument(SpaceTelescopeInstrument):
         """Load an OPD produced by the JWST WSS into this instrument instance, specified by filename
 
         This includes:
-            - If necessary, downloading that OPD from MAST. Downloaded files are cached in $WEBBPSF_PATH/MAST_JWST_WSS_OPDs
+            - If necessary, downloading that OPD from MAST. Downloaded files are cached in $STPSF_PATH/MAST_JWST_WSS_OPDs
             - calling `import_wss_opd` to load the OPD from the FITS file and perform some necessary format conversions
             - Subtract off the instrument WFE for the field point used in wavefront sensing, to get an
-                OTE-only wavefront. WebbPSF will separately add back in the SI WFE for the appropriate
+                OTE-only wavefront. STPSF will separately add back in the SI WFE for the appropriate
                 field point, as usual.
             - Subtract off the modeled field dependence term in the OTE WFE for the sensing field point, to get
                 an estimate of the OTE wavefront nominally at the master chief ray location (between the NIRCams).
-                WebbPSF will automatically add back on top of this the OTE field dependent WFE for the appropriate
+                STPSF will automatically add back on top of this the OTE field dependent WFE for the appropriate
                 field point. as usual.
             - Scale the OPD to match the same size of the user provide pupil file
 
@@ -1638,8 +1638,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         output_path : str
             Downloaded OPD are saved in this location.
-            This option is convinient for STScI users using /grp/jwst/ote/webbpsf-data/.
-            Default is $WEBBPSF_PATH/MAST_JWST_WSS_OPDs
+            This option is convinient for STScI users using /grp/jwst/ote/stpsf-data/.
+            Default is $STPSF_PATH/MAST_JWST_WSS_OPDs
 
         backout_si_wfe : bool
             Subtract model for science instrument WFE at the sensing field point? Generally this should be true
@@ -1649,8 +1649,8 @@ class JWInstrument(SpaceTelescopeInstrument):
             Generate informative plots showing WFE, including the backout steps. Only works if backout_si_wfe is True.
 
         save_ote_wfe : bool
-            Save OTE-only WFE model? This is not needed for calculations in WebbPSF, but can be used to export
-            OTE WFE models for use with other software. The file will be saved in the WEBBPSF_DATA_PATH directory
+            Save OTE-only WFE model? This is not needed for calculations in STPSF, but can be used to export
+            OTE WFE models for use with other software. The file will be saved in the STPSF_DATA_PATH directory
             and a message will be printed on screen with the filename.
             Note that the exported OPD file will give the OTE estimated total WFE at the selected Instrument's field
             point, not the OTE global at master chief ray, since it is the OTE WFE at the selected field point
@@ -1682,7 +1682,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         ote_pupil_mask = utils.get_pupil_mask(npix=npix_out) != 0
         opdhdu[0].data *= ote_pupil_mask
 
-        # opdhdu[0].header['RMS_OBS'] = (webbpsf.utils.rms(opdhdu[0].data, mask=ote_pupil_mask)*1e9,
+        # opdhdu[0].header['RMS_OBS'] = (stpsf.utils.rms(opdhdu[0].data, mask=ote_pupil_mask)*1e9,
         #                               "[nm] RMS Observatory WFE (i.e. OTE+SI) at sensing field pt")
 
         if plot:
@@ -1721,7 +1721,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             # Set to the sensing aperture, and retrieve the OPD there
             sensing_inst.set_position_from_aperture_name(sensing_apername)
             # special case: for the main sensing points FP1 or FP6, we use the official WAS target phase map,
-            # rather than the WebbPSF-internal SI WFE model.
+            # rather than the STPSF-internal SI WFE model.
 
             # Select correct target phase map based on sensing field point.
             # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
@@ -1769,7 +1769,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
             if plot or save_ote_wfe:
                 # Either of these options will need the total OTE WFE.
-                # Under normal circumstances webbpsf will compute this later automatically, but if needed we do it here too
+                # Under normal circumstances stpsf will compute this later automatically, but if needed we do it here too
                 selected_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
                 total_ote_wfe_at_fp = opdhdu[0].data + (selected_fp_ote_wfe * ote_pupil_mask)
 
@@ -1880,7 +1880,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         A consequence of the above assumption 1 is that this method is not well applicable
         for cases that have image plane masks, nor for NIRCam in general. It does seem to be
         reasonably applicable for NIRSpec IFU calculations within the current limited fidelity
-        of webbpsf for that mode, IF we also neglect the image plane stop around the IFU FOV.
+        of stpsf for that mode, IF we also neglect the image plane stop around the IFU FOV.
 
         Parameters
         ----------
@@ -2342,7 +2342,7 @@ class MIRI(JWInstrument_with_IFU):
             optsys.planes[-1].wavefront_display_hint = 'intensity'
         else:  # all the MIRI filters have a tricontagon outline, even the non-coron ones.
             optsys.add_pupil(
-                transmission=self._WebbPSF_basepath + '/tricontagon.fits.gz',
+                transmission=self._STPSF_basepath + '/tricontagon.fits.gz',
                 name='filter cold stop',
                 shift_x=shift_x,
                 shift_y=shift_y,
@@ -3121,7 +3121,7 @@ class NIRCam(JWInstrument):
 
         else:
             optsys.add_pupil(
-                transmission=self._WebbPSF_basepath + '/tricontagon_oversized_4pct.fits.gz',
+                transmission=self._STPSF_basepath + '/tricontagon_oversized_4pct.fits.gz',
                 name='filter stop',
                 shift_x=shift_x,
                 shift_y=shift_y,
@@ -3166,7 +3166,7 @@ class NIRSpec(JWInstrument_with_IFU):
         Additional features for modeling NRS IFU PSFs are enabled by setting the .mode attribute to 'IFU'.
 
         The pipeline-output data products, assuming the 'ifualign' frame is used in the cube build step, which
-        is rotated relative to the typical 'sci' output frame used in all other webbpsf sim outputs.
+        is rotated relative to the typical 'sci' output frame used in all other stpsf sim outputs.
         For convenience, for IFU-mode simulations an extra rotation is included in the PSF calculation
         such that the output product orientation matches the IFUalign s3d cube orientation. This happens
         automatically and transparently to the user (and source offset parameters, e.g. options['source_offset_x']
@@ -3275,7 +3275,7 @@ class NIRSpec(JWInstrument_with_IFU):
 
         if (self.pupil_mask is not None) and ('grating' in self.pupil_mask.lower()):
             # NIRSpec pupil stop at the grating appears to be a rectangle.
-            # see notes and ray trace from Erin Elliot in the webbpsf-data/NIRSpec/sources directory
+            # see notes and ray trace from Erin Elliot in the stpsf-data/NIRSpec/sources directory
             optsys.add_pupil(optic=poppy.RectangleAperture(height=8.41, width=7.91, name='Pupil stop at grating wheel'))
             optsys.planes[-1].wavefront_display_hint = 'intensity'
 
@@ -3459,7 +3459,7 @@ class NIRISS(JWInstrument):
 
     **Imaging:**
 
-    WebbPSF models the direct imaging and nonredundant aperture masking modes of NIRISS in the usual manner.
+    STPSF models the direct imaging and nonredundant aperture masking modes of NIRISS in the usual manner.
 
     Note that long wavelength filters (>2.5 microns) have a pupil which includes the pupil alignment reference.
     If auto_pupil is set, the pupil will be toggled between CLEAR and CLEARP automatically depending on filter.
@@ -3475,14 +3475,14 @@ class NIRISS(JWInstrument):
 
         Prototype implementation - Not yet fully tested or verified.
 
-    Note that WebbPSF does not model the spectral dispersion in any of NIRISS'
+    Note that STPSF does not model the spectral dispersion in any of NIRISS'
     slitless spectroscopy modes.  For wide-field slitless spectroscopy, this
-    can best be simulated by using webbpsf output PSFs as input to the aXe
+    can best be simulated by using stpsf output PSFs as input to the aXe
     spectroscopy code. Contact Van Dixon at STScI for further information.
     For SOSS mode, contact Loic Albert at Universite de Montreal.
 
     The other two slitless spectroscopy grisms use the regular pupil and do not require any special
-    support in WebbPSF.
+    support in STPSF.
 
     """
 
@@ -3739,7 +3739,7 @@ class DetectorGeometry(object):
     in science frame pixels and field of view angular coordinates in arcminutes.
 
 
-    This is an internal class used within webbpsf; most users will never need to
+    This is an internal class used within stpsf; most users will never need to
     interact directly with this class.
 
     Parameters
@@ -3869,16 +3869,16 @@ def one_segment_pupil(segmentname, npix=1024):
 
     Example
     -------
-    nc = webbpsf.NIRCam()
-    nc.pupil = webbpsf.one_segment_pupil('B1')
+    nc = stpsf.NIRCam()
+    nc.pupil = stpsf.one_segment_pupil('B1')
 
     """
 
     # get the master pupil file, which may or may not be gzipped
-    segmap = os.path.join(utils.get_webbpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits.gz')
+    segmap = os.path.join(utils.get_stpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits.gz')
     if not os.path.exists(segmap):
         # try without .gz
-        segmap = os.path.join(utils.get_webbpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits')
+        segmap = os.path.join(utils.get_stpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits')
 
     newpupil = fits.open(segmap)
     if newpupil[0].header['VERSION'] < 2:

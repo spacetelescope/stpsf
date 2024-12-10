@@ -22,4 +22,4 @@ def pytest_configure():
     PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['Photutils'] = 'photutils'
     PYTEST_HEADER_MODULES['Poppy'] = 'poppy'
-    TESTED_VERSIONS['Webbpsf'] = version
+    TESTED_VERSIONS['STPSF'] = version

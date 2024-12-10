@@ -19,21 +19,21 @@ available in April 2016, specifically from values in the Science Instruments
 Aperture File (SIAF) data, as provided by the various instrument teams to the
 Telescope group via the SIAF Working Group. For instruments with multiple
 detectors, the values provided are averaged over the relevant detectors.
-WebbPSF calculates PSFs on an isotropic pixel grid (i.e. square pixels), but at
+STPSF calculates PSFs on an isotropic pixel grid (i.e. square pixels), but at
 high precision the SI pixel scales can differ between the X and Y axes by
-between 0.5% (for NIRCam) up to 2.5% (for FGS). WebbPSF also does not model any
+between 0.5% (for NIRCam) up to 2.5% (for FGS). STPSF also does not model any
 of the measured distortions within the instruments.
 
 
 
-WebbPSF does not include any absolute throughput information for any SIs, only
+STPSF does not include any absolute throughput information for any SIs, only
 the relative weighting for different wavelengths in a broadband calculation.
 See `the docs on PSF normalization <usage.html#Customizing-PSF-Calculations:-PSF-Normalizations-and-Flux-Calibrations>_` for further
 discussion.
 
 
 
-*Note: The WebbPSF software and all of its associated data files are entirely ITAR-free.*
+*Note: The STPSF software and all of its associated data files are entirely ITAR-free.*
 
 OTE
 ----

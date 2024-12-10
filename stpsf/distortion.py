@@ -6,7 +6,7 @@ import pysiaf
 from scipy.interpolate import RegularGridInterpolator
 from scipy.ndimage import rotate
 
-import stpsf.webbpsf_core
+import stpsf.stpsf_core
 
 
 def _get_default_siaf(instrument, aper_name):
@@ -40,7 +40,7 @@ def _get_default_siaf(instrument, aper_name):
         siaf = pysiaf.Siaf('Roman')
         aper = siaf[aper_name]
     else:
-        siaf = stpsf.webbpsf_core.get_siaf_with_caching(siaf_name)
+        siaf = stpsf.stpsf_core.get_siaf_with_caching(siaf_name)
         aper = siaf.apertures[aper_name]
 
     return aper
@@ -70,7 +70,7 @@ def distort_image(
     Parameters
     ----------
     hdulist_or_filename : str or HDUList
-        A PSF from WebbPSF, either as an HDUlist object or as a filename
+        A PSF from STPSF, either as an HDUlist object or as a filename
     ext : int
         Extension of HDUList to perform distortion on.
     fill_value : float or None
@@ -221,7 +221,7 @@ def apply_distortion(hdulist_or_filename=None, fill_value=0):
     Parameters
     ----------
     hdulist_or_filename :
-        A PSF from WebbPSF, either as an HDUlist object or as a filename
+        A PSF from STPSF, either as an HDUlist object or as a filename
     fill_value : float
         Value used to fill in any blank space by the skewed PSF. Default = 0
 
@@ -282,12 +282,12 @@ def apply_distortion(hdulist_or_filename=None, fill_value=0):
 def apply_rotation(hdulist_or_filename=None, rotate_value=None, crop=True):
     """
     Apply the detector's rotation to the PSF. This is for NIRCam, NIRISS, and FGS.
-    MIRI and NIRSpec's large rotation is already added inside WebbPSF's calculations.
+    MIRI and NIRSpec's large rotation is already added inside STPSF's calculations.
 
     Parameters
     ----------
     hdulist_or_filename :
-        A PSF from WebbPSF, either as an HDUlist object or as a filename
+        A PSF from STPSF, either as an HDUlist object or as a filename
     rotate_value : float
         Rotation in degrees that PSF needs to be. If set to None, function
         will pull the most up to date SIAF value. Default = None.
@@ -320,7 +320,7 @@ def apply_rotation(hdulist_or_filename=None, rotate_value=None, crop=True):
         aper_name = hdu_list[0].header['APERNAME'].upper()
 
     if instrument in ['MIRI', 'NIRSPEC']:
-        raise ValueError("{}'s rotation is already included in WebbPSF and " "shouldn't be added again.".format(instrument))
+        raise ValueError("{}'s rotation is already included in STPSF and " "shouldn't be added again.".format(instrument))
     if instrument == 'WFI':
         raise ValueError('Rotation not necessary for {:} as pupil are aligned with SCAs (to confirm).'.format(instrument))
 

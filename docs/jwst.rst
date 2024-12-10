@@ -8,7 +8,7 @@ JWST Instrument Model Details
 
 The following describes specific details for the various JWST instrument classes. See also :ref:`the references page <references>` for information on data sources.
 
-One general note is that the ``webbpsf`` class interfaces do not attempt to exactly
+One general note is that the ``stpsf`` class interfaces do not attempt to exactly
 model the implementation details of all instrument mechanisms, particularly for
 NIRCam and NIRISS that each have multiple wheels. The
 ``filter`` attribute of a given class is used to select any and all filters,
@@ -44,7 +44,7 @@ All classes share some common attributes:
 
 .. warning::
 
-    WebbPSF provides some sanity checking on user inputs, but does not
+    STPSF provides some sanity checking on user inputs, but does not
     strive to strictly forbid users from trying to simulate instrument
     configurations that  may not be achievable in practice.  Users are
     responsible for knowing the available modes well enough to be aware
@@ -55,7 +55,7 @@ All classes share some common attributes:
 JWST Optical Budgets
 ====================
 
-The total system performance for JWST is tracked in optical budgets for OTE and SI WFE. WebbPSF includes representations of many of these component terms.
+The total system performance for JWST is tracked in optical budgets for OTE and SI WFE. STPSF includes representations of many of these component terms.
 These can be visualized as plots of OPDs. See :doc:`jwst_optical_budgets`.
 
 .. _jwst_ote_details:
@@ -70,7 +70,7 @@ The JWST Optical Telescope Element consists of the telescope optics that serve a
   * The WFE will vary with field position, which is inherent in the OTE optical design even if perfectly aligned
   * Aberrations can be introduced by pupil shear or other misalignments between the OTE and each science instrument
 
-These effects are simulated at high fidelity in models maintained by Ball Aerospace, which in turn were used to create the OPD map files for the JWST instruments included in WebbPSF. Specifically, WebbPSF uses information derived from the as-built OTE optical model Revision G (for the static surface figures of each segments) and the overall JWST optical error budget Revision W (for OTE to ISIM misalignments, WFSC residuals, stability, and budgeted uncertainties for both the OTE and SI contributions).
+These effects are simulated at high fidelity in models maintained by Ball Aerospace, which in turn were used to create the OPD map files for the JWST instruments included in STPSF. Specifically, STPSF uses information derived from the as-built OTE optical model Revision G (for the static surface figures of each segments) and the overall JWST optical error budget Revision W (for OTE to ISIM misalignments, WFSC residuals, stability, and budgeted uncertainties for both the OTE and SI contributions).
 
 JWST's optical system has been extremely precisely engineered and assembled. Individual mirrors typically have below 30 nm r.m.s. WFE, and the overall OTE system including alignment tolerances and dynamics is expected to deliver wavefronts of roughly 100 to 150 nm r.m.s. WFE to each of the instruments. This corresponds to Strehl ratios of 90% or better for wavelengths beyond 2 microns.
 
@@ -78,20 +78,20 @@ Further information on JWST's predicted optical performance is available in `"St
 
 For each science instrument, if you examine ``inst.opd_list`` (where ``inst`` is an instance of an instrument model), you will see the filenames for two "predicted" OPDs and a "requirements" OPD map. For example::
 
-   >>> nc = webbpsf.NIRCam()
+   >>> nc = stpsf.NIRCam()
    >>> nc.opd_list
    ['JWST_OTE_OPD_RevAA_prelaunch_predicted.fits.gz',
     'OPD_RevW_ote_for_NIRCam_predicted.fits.gz',
     'OPD_RevW_ote_for_NIRCam_requirements.fits.gz']
 
-As of WebbPSF 1.0, WebbPSF selects the 'JWST_OTE_OPD_RevAA_prelaunch_predicted.fits.gz' OPD as the default OPD map for all instruments. This is a *significant change* from prior versions::
+As of STPSF 1.0, STPSF selects the 'JWST_OTE_OPD_RevAA_prelaunch_predicted.fits.gz' OPD as the default OPD map for all instruments. This is a *significant change* from prior versions::
 
    >>> nc.pupilopd
   'JWST_OTE_OPD_RevAA_prelaunch_predicted.fits.gz'
 
-Performance predictions for a large active deployable space telescope are inherently probabilistic, and Monte Carlo methods have been used to derive overall probability distributions based on the individual error budget terms. The "prelaunch_predicted" OPD maps provided with WebbPSF are based on a recent integrated modeling cycle, the so-called PSR2020 ("Predicted Stability Requirements 2020") modeling effort, and provide a reasonable approximation of current performance expectations. However, performance at such levels is not guaranteed.  See :doc:`jwst_optical_budgets` for more details on the contents of this OPD model.
+Performance predictions for a large active deployable space telescope are inherently probabilistic, and Monte Carlo methods have been used to derive overall probability distributions based on the individual error budget terms. The "prelaunch_predicted" OPD maps provided with STPSF are based on a recent integrated modeling cycle, the so-called PSR2020 ("Predicted Stability Requirements 2020") modeling effort, and provide a reasonable approximation of current performance expectations. However, performance at such levels is not guaranteed.  See :doc:`jwst_optical_budgets` for more details on the contents of this OPD model.
 
-The older "predicted" and "requirements" OPD maps are more conservative, dating to 2016. The Requirements map is set to the slightly higher levels of residual wavefront error that we can be confident will be achieved in practice. Both the predicted and required values contain maximal budgeted contributions from OTE temporal drifts and dynamics (roughly 55 nm of low and mid frequency error); i.e. they correspond to times well after a wavefront control and shortly before a next set of control moves might be issued. Further, they also include very conservative levels of instrument WFE, which is both higher than the as-built instruments *and* is double-booked relative to the SI WFE models elsewhere in webbpsf. These files are kept for consistency with past versions of WebbPSF, but we now know hopefully we may do better in flight.
+The older "predicted" and "requirements" OPD maps are more conservative, dating to 2016. The Requirements map is set to the slightly higher levels of residual wavefront error that we can be confident will be achieved in practice. Both the predicted and required values contain maximal budgeted contributions from OTE temporal drifts and dynamics (roughly 55 nm of low and mid frequency error); i.e. they correspond to times well after a wavefront control and shortly before a next set of control moves might be issued. Further, they also include very conservative levels of instrument WFE, which is both higher than the as-built instruments *and* is double-booked relative to the SI WFE models elsewhere in stpsf. These files are kept for consistency with past versions of STPSF, but we now know hopefully we may do better in flight.
 
 To select a different OPD map, simply assign it to the ``pupilopd`` attribute before calculating the PSF::
 
@@ -121,14 +121,14 @@ wavefront error contributions from optics internal to the science instrument. Th
 We recommend the use of the newer "prelaunch_predicted" OPDs instead. Additional details
 on the SI-specific wavefront error models are given under each instrument model section below.
 
-How well will any of these models represent the true in-flight performance that will be achieved by the observatory? We'll all learn together in 2022. Stay tuned for WebbPSF 1.1 and beyond.
+How well will any of these models represent the true in-flight performance that will be achieved by the observatory? We'll all learn together in 2022. Stay tuned for STPSF 1.1 and beyond.
 
 Field Dependent Aberrations
 ---------------------------
 While the OTE is designed to have low aberrations across all of the science instruments, it has small intrinsic aberrations
 which furthermore vary across the field. This is true even if all mirrors are aligned perfectly, due to design residuals and
-the as-built mirror surface quality. 
-For the as-built WFE, a particularly significant contributor is the tertiary mirror. Because this is not at a pupil plane, 
+the as-built mirror surface quality.
+For the as-built WFE, a particularly significant contributor is the tertiary mirror. Because this is not at a pupil plane,
 different portions are illuminated for different field points. Surface print-through of manufacturing artifacts into the
 tertiary mirror surface then results in increased field dependent WFE.
 
@@ -151,10 +151,10 @@ field of view.
 
 .. image:: ./jwst_figures/ote_field_dependence_model_results_v2.png
     :scale: 50%
-    :alt: OTE Field-dependent WFE 
+    :alt: OTE Field-dependent WFE
 
 .. admonition:: Click to enlarge figures
-   
+
     For the above figure, and all others on this page, click the figure to view it larger and full screen.
 
 
@@ -164,7 +164,7 @@ NIRCam
 Imaging
 --------
 
-NIRCam is one of the more complicated classes in ``webbpsf``, and has several unique selectable options to model the two copies of NIRCam each with two channels.
+NIRCam is one of the more complicated classes in ``stpsf``, and has several unique selectable options to model the two copies of NIRCam each with two channels.
 
 The ``detector`` attribute can be used to select between any of the ten detectors,
 A1-A5 and B1-B5.  Additional attributes are then automatically set for ``channel``
@@ -211,12 +211,12 @@ These are based on the nominal design properties as provided by the NIRCam team,
 not on any specific measurements of the as-built masks. The simulations of the occulting mask
 fields also include the nearby neutral density squares for target acquisitions.
 
-WebbPSF won't prevent users from simulating configuration using a coronagraph
+STPSF won't prevent users from simulating configuration using a coronagraph
 image mask without the Lyot stop, but that's not something that can be done for
 real with NIRCam.
 
 Note, the Lyot masks have multiple names for historical reasons: The names
-'CIRCLYOT' and 'WEDGELYOT' have been used since early in WebbPSF development, and
+'CIRCLYOT' and 'WEDGELYOT' have been used since early in STPSF development, and
 can still be used, but the same masks can also be referred to as "MASKRND" and
 "MASKSWB" or "MASKLWB", the nomenclature that was eventually adopted for use in
 APT and other JWST documentation. Both ways work and will continue to do so.
@@ -231,14 +231,14 @@ False``.
 **Offsets along the MASKLWB and MASKSWB masks**:
 
 Each allowable filter has its own default location along one of these masks. The appropriate offset is automatically selected
-in WebbPSF based on the currently selected filter name. If you want to do something different, you can
+in STPSF based on the currently selected filter name. If you want to do something different, you can
 set the ``bar_offset`` option::
 
    >>> nc.options['bar_offset'] = 2.0    # Offsets 2 arcseconds in +X along the mask
    or
    >>> nc.options['bar_offset'] = 'F480M'  # Use the position for F480M regardless of the currently selected filter
 
-Note that just because you can simulate such arbitrary position in WebbPSF does not mean you can
+Note that just because you can simulate such arbitrary position in STPSF does not mean you can
 easily actually achieve that pointing with the flight hardware.
 
 
@@ -262,7 +262,7 @@ easily actually achieve that pointing with the flight hardware.
 Weak Lenses for Wavefront Sensing
 ---------------------------------
 
-WebbPSF includes models for the three weak lenses used for wavefront sensing, including the
+STPSF includes models for the three weak lenses used for wavefront sensing, including the
 pairs of lenses that can be used together simultaneously.
 
 The convention is such that the "negative" 8 waves lens is concave, the
@@ -272,7 +272,7 @@ becomes behind or beyond best focus. Negative weak lenses move best focus behind
 or equivalently the image on the detector is moved closer to the OTE exit pupil
 than best focus.
 
-Note that the weak lenses are in the short wave channel only; webbpsf won't stop
+Note that the weak lenses are in the short wave channel only; stpsf won't stop
 you from simulating a LW image with a weak lens, but that's not a real
 configuration that can be achieved with NIRCam.
 
@@ -284,7 +284,7 @@ SI internal WFE measurements are from ISIM CV3 testing (See JWST-RPT-032131 by D
 The SI internal WFE measurements are distinct for each of the modules and
 channels. When enabled, these are added to the final pupil of the optical
 train, i.e. after the coronagraphic image planes. For field-points outside of
-the measurement bounds, WebbPSF performs an extrapolation routine.
+the measurement bounds, STPSF performs an extrapolation routine.
 
 .. image:: ./jwst_figures/opds_combined_for_NIRCam_A_SW.png
    :scale: 45 %
@@ -317,7 +317,7 @@ This model was first validated in imaging mode, and then the appropriate optical
 elements were inserted to produce the coronagraphic configuration.
 In this case, both modules were assumed have the exact same (albeit, mirrored)
 field-dependent WFE maps. Note, this substantial WFE occurs physically *after*
-the coronagraphic focal plane spots in NIRCam, and is modeled as such in WebbPSF.
+the coronagraphic focal plane spots in NIRCam, and is modeled as such in STPSF.
 
 
 Wavelength-Dependent Focus Variations
@@ -327,7 +327,7 @@ NIRCam's wavelength-dependent defocus was measured during ISIM CV2 at a given fi
 (See JWST-RPT-029985 by Randal Telfer). Overall, the measurements are consistent with
 predictions from the nominal optical model. The departure of the data from the
 model curve has been determined to be from residual power in individual filters.
-In particular, the F323N filter has a significant extra defocus; WebbPSF includes
+In particular, the F323N filter has a significant extra defocus; STPSF includes
 this measured defocus if the selected filter is F323N.
 
 
@@ -341,7 +341,7 @@ this measured defocus if the selected filter is F323N.
 
 
 All SI WFE maps were derived from measurements with the F212N and F323N filters.
-WebbPSF utilizes polynomial fits to the nominal focus model to derive focus offset values
+STPSF utilizes polynomial fits to the nominal focus model to derive focus offset values
 relative to these narrowband filters for a given wavelength. The derived delta focus
 is then translated to a Zernike focus image, which is subsequently applied to the
 instrument OPD map.
@@ -354,7 +354,7 @@ NIRSpec
 Imaging and spectroscopy
 ------------------------
 
-WebbPSF models the optics of NIRSpec, mostly in **imaging** mode or for monochromatic PSFs that can be assembled into spectra using other tools.
+STPSF models the optics of NIRSpec, mostly in **imaging** mode or for monochromatic PSFs that can be assembled into spectra using other tools.
 
 This is not a substitute for a spectrograph model, but rather a way of
 simulating a PSF as it would appear with NIRSpec in imaging mode (e.g. for
@@ -362,7 +362,7 @@ target acquisition).  It can also be used to produce monochromatic PSFs
 appropriate for spectroscopic modes, but other software must be used for
 assembling those monochromatic PSFs into a spectrum.
 
-Slits: WebbPSF includes models of each of the fixed slits in NIRSpec (S200A1, S1600A1, and so forth), plus a
+Slits: STPSF includes models of each of the fixed slits in NIRSpec (S200A1, S1600A1, and so forth), plus a
 few patterns with the MSA: (1) a single open shutter, (2) three adjacent
 open shutters to make a mini-slit, and (3) all shutters open at once.
 Other MSA patterns could be added if requested by users.
@@ -399,25 +399,25 @@ NIRISS
 Imaging and AMI
 ----------------
 
-WebbPSF models the direct imaging and nonredundant aperture masking interferometry modes of NIRISS in the usual manner.
+STPSF models the direct imaging and nonredundant aperture masking interferometry modes of NIRISS in the usual manner.
 
 Note that long wavelength filters (>2.5 microns) are used with a pupil
 obscuration which includes the pupil alignment reference fixture. This is called
 the "CLEARP" pupil.
 
-Based on the selected filter, WebbPSF will automatically toggle the
+Based on the selected filter, STPSF will automatically toggle the
 ``pupil_mask`` between "CLEARP" and the regular clear pupil (i.e.
 ``pupil_mask = None``).
 
-AMI mask geometry is as provided to the WebbPSF team by Anand Sivaramakrishnan. To match the orientation of the
-mask as installed in the flight hardware, the simulated mask model was flipped in X coordinates as of the spring 2019 version of WebbPSF;
+AMI mask geometry is as provided to the STPSF team by Anand Sivaramakrishnan. To match the orientation of the
+mask as installed in the flight hardware, the simulated mask model was flipped in X coordinates as of the spring 2019 version of STPSF;
 thanks to Kevin Volk and Deepashri Thatte for determining this was necessary to match the test data.
 
 
 Slitless Spectroscopy
 ---------------------
 
-WebbPSF provides preliminary support for
+STPSF provides preliminary support for
 the single-object slitless
 spectroscopy ("SOSS") mode using the GR700XD cross-dispersed grating. Currently
 this includes the clipping of the pupil due to the undersized grating and its
@@ -428,14 +428,14 @@ in one direction.
 
     Prototype implementation - Not yet fully tested or verified.
 
-Note that WebbPSF does not model the spectral dispersion in any of NIRISS'
+Note that STPSF does not model the spectral dispersion in any of NIRISS'
 slitless spectroscopy modes.  For wide-field slitless spectroscopy, this
-can best be simulated by using WebbPSF output PSFs as input to the aXe
+can best be simulated by using STPSF output PSFs as input to the aXe
 spectroscopy code. Contact Van Dixon at STScI for further information.
 For SOSS mode, contact Loic Albert at Universite de Montreal.
 
 The other two slitless spectroscopy grisms use the regular pupil and do not require any special
-support in WebbPSF; just calculate monochromatic PSFs at the desired wavelengths
+support in STPSF; just calculate monochromatic PSFs at the desired wavelengths
 and assemble them into spectra using tools such as aXe.
 
 Coronagraph Masks
@@ -444,7 +444,7 @@ Coronagraph Masks
 NIRISS includes four coronagraphic occulters, machined as features on its
 pick-off mirror. These were part of its prior incarnation as TFI, and are not
 expected to see much use in NIRISS. However they remain a part of the physical
-instrument and we retain in WebbPSF the capability to simulate them.
+instrument and we retain in STPSF the capability to simulate them.
 
 SI WFE
 -------
@@ -465,7 +465,7 @@ MIRI
 Imaging
 -------
 
-WebbPSF models the MIRI imager; currently there is no specific support for MRS,
+STPSF models the MIRI imager; currently there is no specific support for MRS,
 however monochromatic PSFS computed for the imager may be used as a reasonable
 proxy for PSF properties at the entrance to the MRS slicers.
 
@@ -476,9 +476,9 @@ MIRI detector cross artifact
 The MIRI imager's Si:As IBC detector exhibits a so-called "cross artifact", particularly at
 short wavelengths (5-8 microns), due to internal diffraction of photons within the detector substrate
 itself. See `Gaspar et al. 2021 <https://ui.adsabs.harvard.edu/abs/2021PASP..133a4504G/abstract>`_ for details.
-WebbPSF implements a simplified model for this effect, following the approach described by Glasse et al. in
+STPSF implements a simplified model for this effect, following the approach described by Glasse et al. in
 MIRI technical report MIRI-TN-00076-ATC_Imager_PSF_Issue_4.pdf. The model coefficients have been adjusted to
-better match the cross artifact amplitudes from WebbPSF to the MIRI Calibration Data Product reference PSFs.
+better match the cross artifact amplitudes from STPSF to the MIRI Calibration Data Product reference PSFs.
 
 .. note:: Where to find Results from the Cross Artifact Model
 
@@ -486,9 +486,9 @@ better match the cross artifact amplitudes from WebbPSF to the MIRI Calibration 
     are stored in FITS extensions 2 and 3 (ext names OVERDIST and DET_DIST for oversampled and detector sampled, respectively
     *not* in the default 0th extension which is the raw oversampled PSF.  E.g.::
 
-        miri = webbpsf.MIRI()
+        miri = stpsf.MIRI()
         psf = miri.calc_psf()
-        webbpsf.display_psf(psf, ext=3)
+        stpsf.display_psf(psf, ext=3)
         result = psf['DET_DIST'].data   # This is the PSF with the cross artifact model included
 
 
@@ -498,16 +498,16 @@ better match the cross artifact amplitudes from WebbPSF to the MIRI Calibration 
    :alt: MIRI cross artifact
 
    Comparison of models for the MIRI detector cross artifact.  Click for full size. Shown are the MIRI Calibration Data
-   Product PSFs (Left), the WebbPSF results (Center) and their difference.
+   Product PSFs (Left), the STPSF results (Center) and their difference.
    The cross artifact is negligible at wavelengths beyond ~12 microns.
 
 
 Coronagraphy
 -------------
 
-WebbPSF includes models for all three FQPM coronagraphs and the Lyot
+STPSF includes models for all three FQPM coronagraphs and the Lyot
 coronagraph. In practice, the wavelength selection filters and the Lyot stop are
-co-mounted. WebbPSF models this by automatically setting the ``pupil_mask``
+co-mounted. STPSF models this by automatically setting the ``pupil_mask``
 element to one of the coronagraph masks or the regular pupil when the ``filter``
 is changed. If you want to disable this behavior, set ``miri.auto_pupil = False``.
 
@@ -520,7 +520,7 @@ selection can be disabled by setting ``miri.auto_aperturename = False``.
 LRS Spectroscopy
 ----------------
 
-WebbPSF includes models for the LRS slit and the subsequent pupil stop on the
+STPSF includes models for the LRS slit and the subsequent pupil stop on the
 grism in the wheels. Users should select ``miri.image_mask = "LRS slit"`` and ``miri.pupil_mask = 'P750L'``.
 That said, the LRS simulations have not been extensively tested yet;
 feedback is appreciated about any issues encountered.
@@ -546,11 +546,11 @@ train, i.e. after the coronagraphic image planes.
 Minor Field-Dependent Pupil Vignetting
 ----------------------------------------
 
-**TODO** Add documentation here of this effect and how WebbPSF models it.
+**TODO** Add documentation here of this effect and how STPSF models it.
 
 A fold mirror at the MIRI Imager's internal cold pupil is used to redirect light from the MIRI calibration sources towards the detector,
 to enable flat field calibrations. For a subset of field positions, this fold mirror slightly obscures a small portion of the pupil.
-This is a small effect with little practical consequence for MIRI PSFs, but WebbPSF does model it.
+This is a small effect with little practical consequence for MIRI PSFs, but STPSF does model it.
 
 
 

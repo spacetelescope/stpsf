@@ -1,8 +1,8 @@
 import logging
 
-from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
+from .test_stpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
-_log = logging.getLogger('test_webbpsf')
+_log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())
 
 

@@ -49,7 +49,7 @@ import stpsf
 
 from . import constants, surs, utils
 
-_log = logging.getLogger('webbpsf')
+_log = logging.getLogger('stpsf')
 
 __doc__ = """
 
@@ -120,7 +120,7 @@ class OPD(poppy.FITSOpticalElement):
 
         if opd is None and transmission is None:
             _log.debug('Neither a pupil mask nor OPD were specified. Using the default JWST pupil.')
-            transmission = os.path.join(utils.get_webbpsf_data_path(), f'jwst_pupil_RevW_npix{self.npix}.fits.gz')
+            transmission = os.path.join(utils.get_stpsf_data_path(), f'jwst_pupil_RevW_npix{self.npix}.fits.gz')
 
         super(OPD, self).__init__(
             name=name,
@@ -145,10 +145,10 @@ class OPD(poppy.FITSOpticalElement):
         if segment_mask_file is None:
             segment_mask_file = f'JWpupil_segments_RevW_npix{self.npix}.fits.gz'
 
-        full_seg_mask_file = os.path.join(utils.get_webbpsf_data_path(), segment_mask_file)
+        full_seg_mask_file = os.path.join(utils.get_stpsf_data_path(), segment_mask_file)
         if not os.path.exists(full_seg_mask_file):
             # try without .gz
-            full_seg_mask_file = os.path.join(utils.get_webbpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits')
+            full_seg_mask_file = os.path.join(utils.get_stpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits')
 
         self._segment_masks = fits.getdata(full_seg_mask_file)
         if not self._segment_masks.shape[0] == self.npix:
@@ -1161,7 +1161,7 @@ class OTE_Linear_Model_WSS(OPD):
             os.path.join(__location__, 'otelm', 'JWST_influence_functions_control_with_sm.fits')
         )
 
-        # With updated sign convention in poppy 1.0.0, the WSS influence function values can be used in WebbPSF directly,
+        # With updated sign convention in poppy 1.0.0, the WSS influence function values can be used in STPSF directly,
         # with no change in sign.
         if Version(poppy.__version__) < Version('1.0'):
             # For earlier poppy versions, fix IFM sign convention for consistency to WSS
@@ -1227,7 +1227,7 @@ class OTE_Linear_Model_WSS(OPD):
             control_point_instr = 'nirspec'
 
         self.ote_control_point = (
-            stpsf.webbpsf_core.get_siaf_with_caching(control_point_instr)[
+            stpsf.stpsf_core.get_siaf_with_caching(control_point_instr)[
                 self.control_point_fieldpoint.upper()
             ].reference_point('tel')
             * u.arcsec
@@ -1311,7 +1311,7 @@ class OTE_Linear_Model_WSS(OPD):
                 coeffs[i, h] = table[i]['Hexike_{}'.format(h)]
 
         # the coefficients are in the table natively in units of microns,
-        # as preferred by most Ball code. WebbPSF works natively in meters
+        # as preferred by most Ball code. STPSF works natively in meters
         # for wavefront, so we have to convert from microns to meters here:
         return coeffs * 1e-6
 
@@ -1338,7 +1338,7 @@ class OTE_Linear_Model_WSS(OPD):
                 coeffs[i, h] = table[i]['Hexike_{}'.format(h)]
 
         # the coefficients are in the table natively in units of microns,
-        # as preferred by most Ball code. WebbPSF works natively in meters
+        # as preferred by most Ball code. STPSF works natively in meters
         # for wavefront, so we have to convert from microns to meters here:
         return coeffs * 1e-6
 
@@ -1509,7 +1509,7 @@ class OTE_Linear_Model_WSS(OPD):
         ]  # PISTON
 
         # GET SM INFLUENCE MATRIX:
-        # HEXIKE PROJECTED ONTO ENTRANCE PUPIL (WHAT WEBBPSF NEEDS):
+        # HEXIKE PROJECTED ONTO ENTRANCE PUPIL (WHAT STPSF NEEDS):
         smif = astropy.table.Table.read(os.path.join(__location__, 'otelm', 'SMIF_hexike.csv'), header_start=5)
 
         alphas = smif[smif['Type'] == 'alpha']
@@ -1624,7 +1624,7 @@ class OTE_Linear_Model_WSS(OPD):
         Returns True if successful (file loaded OK, or was already loaded), False for failure.
         """
 
-        base_path = utils.get_webbpsf_data_path()
+        base_path = utils.get_stpsf_data_path()
         field_dep_file = os.path.join(base_path, f'{instrument}/OPD/field_dep_table_{instrument.lower()}.fits')
 
         # For efficiency, load from disk only if needed. And, for back-compatibility, fail gracefully if file not found
@@ -1760,7 +1760,7 @@ class OTE_Linear_Model_WSS(OPD):
 
         # Get value of Legendre Polynomials at desired field point.  Need to implement model in G. Brady's prototype
         # polynomial basis code, independent of that code for now.  Perhaps at some point in the future this model
-        # can become more tightly coupled with WebbPSF/Poppy and we just call it here instead.
+        # can become more tightly coupled with STPSF/Poppy and we just call it here instead.
         # Calculate value of Legendre at all orders at our field point of interest.
 
         field_center_x = (max_x_field + min_x_field) / 2
@@ -2249,7 +2249,7 @@ class OTE_Linear_Model_WSS(OPD):
         Parameters
         ----------
         sur_file : file name, or SUR object instance
-            Path to SUR XML file, or a webbpsf.surs.SUR object
+            Path to SUR XML file, or a stpsf.surs.SUR object
         group : one-based int index
             Index to a single group to run. Default is to run all groups. Note,
             this index counts up from 1 (not 0) for consistency with group indexing
@@ -2748,13 +2748,13 @@ class OTE_Linear_Model_WSS(OPD):
 
 def enable_adjustable_ote(instr):
     """
-    Set up a WebbPSF instrument instance to have a modifiable OTE
+    Set up a STPSF instrument instance to have a modifiable OTE
     wavefront error OPD via an OTE linear optical model (LOM).
 
     Parameters
     ----------
-    inst : WebbPSF Instrument instance
-        an instance of one of the WebbPSF instrument classes.
+    inst : STPSF Instrument instance
+        an instance of one of the STPSF instrument classes.
 
     Returns
     -------
@@ -3256,7 +3256,7 @@ def decompose_opd_segment_PTT(opd, plot=False, plot_vmax=None):
     fit_opd : 2d ndarray
         Projection of the input OPD into JWST PTT modes
     coeffs : float array
-        Coefficients per mode, in order corresponding to the webbpsf.opds.JWST_WAS_PTT_Basis class,
+        Coefficients per mode, in order corresponding to the stpsf.opds.JWST_WAS_PTT_Basis class,
         which is {piston, xtilt, ytilt} repeated per segments in order
 
     """
@@ -3339,7 +3339,7 @@ def get_coarse_blur_parameters(
     cen : 2-tuple of floats
         Mean offset in V2,V3 during the exposure
     kernel : 2D ndarray
-        Convolution kernel to pass to WebbPSF, generated from the LOS model during the observation
+        Convolution kernel to pass to STPSF, generated from the LOS model during the observation
         sampled/rasterized into the specified pixel scale.
     """
 
@@ -3429,7 +3429,7 @@ def get_rms_per_segment(opd, plot=False):
 
     npix = opd.shape[0]
 
-    segmap_fn = os.path.join(utils.get_webbpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits.gz')
+    segmap_fn = os.path.join(utils.get_stpsf_data_path(), f'JWpupil_segments_RevW_npix{npix}.fits.gz')
     segmap = fits.getdata(segmap_fn)
 
     rms_per_seg = dict()

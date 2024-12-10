@@ -78,19 +78,19 @@ class CreatePSFLibrary:
         Parameters
         ----------
         instrument : instance
-            The instance of WebbPSF that is calling this class inside the psf_grid
+            The instance of STPSF that is calling this class inside the psf_grid
             method.
 
         filter_name : str
             The name of the filter you want to create a library for. Spelling/
-            capitalization must match what WebbPSF expects.
+            capitalization must match what STPSF expects.
 
         detectors : str
             Which detector(s) you want to create a library for.
 
             Can be a string of 1 detector name or the default "all" will run through
-            all the detectors in the detector_list attribute of webbpsf.INSTR().
-            Spelling/capitalization must match what WebbPSF expects. If detectors="all"
+            all the detectors in the detector_list attribute of stpsf.INSTR().
+            Spelling/capitalization must match what STPSF expects. If detectors="all"
             for NIRCam, only the correct shortwave/longwave detectors will be pulled
             based on the wavelength of the filter.
 
@@ -134,7 +134,7 @@ class CreatePSFLibrary:
             True/False boolean to print status updates. Default is True.
 
         **kwargs
-            This can be used to add any extra arguments to the WebbPSF calc_psf() method
+            This can be used to add any extra arguments to the STPSF calc_psf() method
             call.
 
         Returns
@@ -151,7 +151,7 @@ class CreatePSFLibrary:
 
         """
 
-        # Pull WebbPSF instance
+        # Pull STPSF instance
         self.webb = instrument
         self.instr = instrument.name
 
@@ -163,7 +163,7 @@ class CreatePSFLibrary:
         if isinstance(filter_name, str):
             self.filter = filter_name
         else:
-            raise TypeError('Filter input must be a string with spelling/capitalization matching what WebbPSF expects')
+            raise TypeError('Filter input must be a string with spelling/capitalization matching what STPSF expects')
 
         self.detector_list = self._set_detectors(self.filter, detectors)
 
@@ -262,7 +262,7 @@ class CreatePSFLibrary:
                 else:
                     max_size = self.webb._detector_npixels - 1
                 loc_list = [int(round(num * max_size)) for num in np.linspace(0, 1, self.length, endpoint=True)]
-                location_list = list(itertools.product(loc_list, loc_list))  # list of tuples (x,y) (for WebbPSF)
+                location_list = list(itertools.product(loc_list, loc_list))  # list of tuples (x,y) (for STPSF)
 
         return location_list
 
@@ -318,7 +318,7 @@ class CreatePSFLibrary:
 
             # For each of the locations on the detector (loc = tuple = (x,y))
             for i, loc in enumerate(self.location_list):
-                self.webb.detector_position = loc  # (X,Y) - line 286 in webbpsf_core.py
+                self.webb.detector_position = loc  # (X,Y) - line 286 in stpsf_core.py
 
                 if self.verbose is True:
                     print('    Position {}/{}: {} pixels'.format(i + 1, len(self.location_list), loc))
@@ -350,7 +350,7 @@ class CreatePSFLibrary:
 
             # Normalize the output PSFs as expected by photutils.GriddedPSFModel:
             #  PSFs should be in surface brightness units, independent of oversampling.
-            #  This is different than webbpsf/poppy's default in which PSFs usually sum to 1
+            #  This is different than stpsf/poppy's default in which PSFs usually sum to 1
             #  so the counts/pixel varies based on sampling. Apply the necessary conversion
             #  factor here. See issue #302.
             psf_arr *= self.oversample**2
@@ -433,8 +433,8 @@ class CreatePSFLibrary:
 
             meta['DATE'] = (psf[ext].header['DATE'], 'Date of calculation')
             meta['AUTHOR'] = (psf[ext].header['AUTHOR'], 'username@host for calculation')
-            meta['VERSION'] = (psf[ext].header['VERSION'], 'WebbPSF software version')
-            meta['DATAVERS'] = (psf[ext].header['DATAVERS'], 'WebbPSF reference data files version')
+            meta['VERSION'] = (psf[ext].header['VERSION'], 'STPSF software version')
+            meta['DATAVERS'] = (psf[ext].header['DATAVERS'], 'STPSF reference data files version')
 
             # Create GriddedPSFModel object
             model = self.to_model(psf_arr, meta)
@@ -525,7 +525,7 @@ class CreatePSFLibrary:
         primaryhdu.header.insert('INSTRUME', ('COMMENT', '/ PSF Library Information'))
 
         primaryhdu.header.insert('NORMALIZ', ('', ''))
-        primaryhdu.header.insert('NORMALIZ', ('COMMENT', '/ WebbPSF Creation Information'))
+        primaryhdu.header.insert('NORMALIZ', ('COMMENT', '/ STPSF Creation Information'))
 
         primaryhdu.header.insert('DATAVERS', ('COMMENT', '/ File Description'), after=True)
         primaryhdu.header.insert('DATAVERS', ('', ''), after=True)

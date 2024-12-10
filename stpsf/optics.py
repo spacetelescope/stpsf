@@ -12,9 +12,9 @@ from astropy.table import Table
 from scipy.interpolate import RegularGridInterpolator, griddata
 from scipy.ndimage import rotate
 
-from . import constants, utils, webbpsf_core
+from . import constants, utils, stpsf_core
 
-_log = logging.getLogger('webbpsf')
+_log = logging.getLogger('stpsf')
 
 
 #  Classes for modeling aspects of JWST's segmented active primary #####
@@ -36,7 +36,7 @@ def segment_zernike_basis(segnum=1, nterms=15, npix=512, outside=np.nan):
         Value to fill the array with outside of the valid segment.
 
     """
-    from .webbpsf_core import segname
+    from .stpsf_core import segname
 
     aper = WebbPrimaryAperture(label_segments=True)
     w = poppy.Wavefront(npix=npix, diam=constants.JWST_CIRCUMSCRIBED_DIAMETER)
@@ -151,7 +151,7 @@ class WebbOTEPupil(poppy.FITSOpticalElement):
 
         # determine filename for pupil amplitude array
         aperture_file = 'jwst_pupil_revW_npix1024.fits.gz'
-        aperture_file = os.path.abspath(os.path.join(utils.get_webbpsf_data_path(), aperture_file))
+        aperture_file = os.path.abspath(os.path.join(utils.get_stpsf_data_path(), aperture_file))
 
         # determine filename for the OPD array
         #   This should contain a precomputed combination of
@@ -160,10 +160,10 @@ class WebbOTEPupil(poppy.FITSOpticalElement):
         # Depends on what the 'level' parameter is.
 
         if level == 'perfect':
-            opd_file = os.path.join(utils.get_webbpsf_data_path(), 'OPD_jwst_ote_perfectly_aligned.fits')
+            opd_file = os.path.join(utils.get_stpsf_data_path(), 'OPD_jwst_ote_perfectly_aligned.fits')
         elif level in ('predicted', 'requirements'):
             opd_file = os.path.join(
-                utils.get_webbpsf_data_path(),
+                utils.get_stpsf_data_path(),
                 self.instr_name,
                 'OPD',
                 'OPD_RevW_ote_for_{}_{}.fits'.format(self.instr_name, level),
@@ -346,7 +346,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
             dispersion direction and the science frame Y-axis is at a right angle
             to the X-axis in a right-handed coordinate system (Swade 2003)
 
-        We choose here to ignore that complication; WebbPSF simulates the 2D sky projected
+        We choose here to ignore that complication; STPSF simulates the 2D sky projected
         image in "Sci" coordinates in the terminology for SIAF from Lallo et al.
         In this coordinate system, the dispersion from the cylinder lens is aligned
         almost along V2 and the longer wavelengths are oriented toward +V3.
@@ -386,7 +386,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
             raise NotImplementedError('Rotated field mask for LLNL grism not yet implemented!')
         elif which == 'Bach':
             transmission = os.path.join(
-                utils.get_webbpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz'
+                utils.get_stpsf_data_path(), 'NIRISS/optics/MASKGR700XD.fits.gz'
             )  # TODO - Unused value, delete entire statement?
         else:
             raise NotImplementedError('Unknown grating name:' + which)
@@ -625,8 +625,8 @@ class NIRISS_CLEARP(poppy.CompoundAnalyticOptic):
     serve as the pupil stop, in practice this model
     simplification should not affect output PSFs in imaging
     modes. This simplification may be removed in a future
-    version of WebbPSF.
-    See https://github.com/mperrin/webbpsf/issues/71
+    version of STPSF.
+    See https://github.com/mperrin/stpsf/issues/71
 
 
     CLEARP pupil info from:
@@ -746,7 +746,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             raise NotImplementedError('invalid name for NIRCam occulter: ' + self.name)
 
         # EDIT: updated on 8 Dec 2021 to grab offsets directly from pySIAF
-        self.siaf = webbpsf_core.get_siaf_with_caching('NIRCAM')
+        self.siaf = stpsf_core.get_siaf_with_caching('NIRCAM')
         self.offset_swb = {
             filt: self.get_bar_offset_from_siaf(filt, channel='SW')
             for filt in ['F182M', 'F187N', 'F210M', 'F212N', 'F200W', 'narrow']
@@ -1223,7 +1223,7 @@ def _get_initial_pupil_sampling(instrument):
         if isinstance(instrument.pupil, fits.HDUList):
             pupilheader = instrument.pupil[0].header
         else:
-            pupilfile = os.path.join(utils.get_webbpsf_data_path(), instrument.pupil)
+            pupilfile = os.path.join(utils.get_stpsf_data_path(), instrument.pupil)
             pupilheader = fits.getheader(pupilfile)
 
         npix = pupilheader['NAXIS1']
@@ -1271,12 +1271,12 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
         # Check special case NIRCam coronagraphy
         if is_nrc_coron:
             zfile = 'si_zernikes_coron_wfe.fits'
-        zernike_file = os.path.join(utils.get_webbpsf_data_path(), zfile)
+        zernike_file = os.path.join(utils.get_stpsf_data_path(), zfile)
 
         if not os.path.exists(zernike_file):
             raise RuntimeError(
                 'Could not find Zernike coefficients file {} \
-                               in WebbPSF data directory'.format(zfile)
+                               in STPSF data directory'.format(zfile)
             )
         else:
             self.ztable_full = Table.read(zernike_file)
@@ -1402,7 +1402,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
             # oversized tricontagons
             if self.instrument.name == 'NIRISS':
                 self.amplitude = fits.getdata(
-                    os.path.join(utils.get_webbpsf_data_path(), 'tricontagon_oversized_4pct.fits.gz')
+                    os.path.join(utils.get_stpsf_data_path(), 'tricontagon_oversized_4pct.fits.gz')
                 )
                 # cut out central region to match the OPD, which is hard coded
                 # to 1024
@@ -1410,7 +1410,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
             elif self.instrument.name == 'MIRI':
                 self.amplitude = fits.getdata(
                     os.path.join(
-                        utils.get_webbpsf_data_path(), 'MIRI', 'optics', 'MIRI_tricontagon_oversized_rotated.fits.gz'
+                        utils.get_stpsf_data_path(), 'MIRI', 'optics', 'MIRI_tricontagon_oversized_rotated.fits.gz'
                     )
                 )
 
@@ -1502,7 +1502,7 @@ class NIRCamFieldAndWavelengthDependentAberration(WebbFieldDependentAberration):
         # results should correspond to Zernike coefficients in meters.
         # Fits were performed to the SW and LW optical design focus model
         # as provided by Randal Telfer.
-        # See plot at https://github.com/spacetelescope/webbpsf/issues/179
+        # See plot at https://github.com/spacetelescope/stpsf/issues/179
         # The relative wavelength dependence of these focus models are very
         # similar for coronagraphic mode in the Zemax optical prescription,
         # so we opt to use the same focus model in both imaging and coronagraphy.
@@ -1670,7 +1670,7 @@ class MIRIFieldDependentAberrationAndObscuration(WebbFieldDependentAberration):
         # the OTE entrance pupil
         # But the OTE exit pupil as seen at the MIRI internal pupil is rotated by
         # 5 degrees with respect to that, and flipped in handedness as well
-        # (but only in V3, given webbpsf axes conventions relative to the definition of the V frame)
+        # (but only in V3, given stpsf axes conventions relative to the definition of the V frame)
         # Therefore we must transform the v2 and v3 to match the wavefront coords at the
         # intermediate plane.
 
@@ -1680,7 +1680,7 @@ class MIRIFieldDependentAberrationAndObscuration(WebbFieldDependentAberration):
 
         # handle V3 flip from OTE entrance to exit pupils
         # no flip needed for V2 since that's already implicitly done between
-        # the V frame looking "in" to the OTE vs WebbPSF simulations looking
+        # the V frame looking "in" to the OTE vs STPSF simulations looking
         # "out" from the detector toward the sky.
         proj_v3 *= -1
 
@@ -1713,7 +1713,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
 
     Usage:
     ------
-        inst = webbpsf.NIRCam()  # or any other SI
+        inst = stpsf.NIRCam()  # or any other SI
         inst._si_wfe_class = LookupTableFieldDependentAberration()
 
     """
@@ -2063,7 +2063,7 @@ class NIRCamFieldDependentWeakLens(poppy.OpticalElement):
         """
 
         if self.ztable_full is None:
-            zernike_file = os.path.join(utils.get_webbpsf_data_path(), 'si_zernikes_isim_cv3.fits')
+            zernike_file = os.path.join(utils.get_stpsf_data_path(), 'si_zernikes_isim_cv3.fits')
             self.ztable_full = Table.read(zernike_file)
 
         lookup_name = f'NIRCam{instr.channel.upper()[0]}W{instr.module}'

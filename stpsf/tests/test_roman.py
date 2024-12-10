@@ -312,7 +312,7 @@ def test_coronagraph_psf(display=False):
     char_spc = roman.RomanCoronagraph()
     char_spc.mode = 'CHARSPC_F660'
 
-    # print('Reading instrument data from {:s}'.format(charspc._WebbPSF_basepath)
+    # print('Reading instrument data from {:s}'.format(charspc._STPSF_basepath)
     # print('Filter list: {:}'.format(charspc.filter_list))
 
     monopsf = char_spc.calc_psf(nlambda=1, display=False)

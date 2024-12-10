@@ -20,12 +20,12 @@ service = 'Mast.Jwst.Filtered.Wss'
 
 
 def mast_retrieve_opd(filename, output_path=None, verbose=False, redownload=False):
-    """Download an OPD from MAST. Files are saved in the WebbPSF data folder.
+    """Download an OPD from MAST. Files are saved in the STPSF data folder.
     If file is already present locally, the download is skipped and the cached file is used.
     """
 
     if output_path is None:
-        output_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs')
+        output_path = os.path.join(stpsf.utils.get_stpsf_data_path(), 'MAST_JWST_WSS_OPDs')
     else:
         output_path = output_path
 
@@ -244,13 +244,13 @@ def get_opd_at_time(date, choice='closest', verbose=False, output_path=None):
 
 
 def import_wss_opd(filename, npix_out=1024, verbose=False):
-    """Import an OPD produced by the JWST WSS, and convert to the right format for use with WebbPSF.
+    """Import an OPD produced by the JWST WSS, and convert to the right format for use with STPSF.
 
     This includes:
     - Rescale from the input size, probably 256x256, up to 1024x1024 (or any other requested size).
     - To reduce interpolation artifacts along edges, before interpolating, pad OPD values along segment edges
-    - Update FITS header to include keywords as needed for WebbPSF
-    - Copy OPD values from the 1st extension (where the WSS puts it) to the 0th extension (where webbpsf wants it)
+    - Update FITS header to include keywords as needed for STPSF
+    - Copy OPD values from the 1st extension (where the WSS puts it) to the 0th extension (where stpsf wants it)
 
     Note, this function does NOT subtract off the SI WFE portion; see "load_wss_opd" for that.
 
@@ -274,9 +274,9 @@ def import_wss_opd(filename, npix_out=1024, verbose=False):
     inputOPD = wasopd['RESULT_PHASE'].data
     npix_in = inputOPD.shape[0]
 
-    wasopd[0].header.add_history('OPD file retrieved from MAST for use by WebbPSF.')
+    wasopd[0].header.add_history('OPD file retrieved from MAST for use by STPSF.')
 
-    wasopd[0].header.add_history('Converting input for use with WebbPSF:')
+    wasopd[0].header.add_history('Converting input for use with STPSF:')
     wasopd[0].header.add_history(f'  Input file is: {filename:s} ')
     wasopd[0].header.add_history(f'  Need to rescale from {npix_in:d}x{npix_in:d} to {npix_out:d}x{npix_out:d} pixels.')
 
@@ -304,10 +304,10 @@ def import_wss_opd(filename, npix_out=1024, verbose=False):
     wasopd[0].header['PUPLDIAM'] = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER
     wasopd[0].header['PUPLSCAL'] = stpsf.constants.JWST_CIRCUMSCRIBED_DIAMETER / npix_out
 
-    # WebbPSF expects OPDs in the 0th extension, not 1st, so copy the values there too
+    # STPSF expects OPDs in the 0th extension, not 1st, so copy the values there too
     wasopd[0].data = newopd
 
-    # The WSS puts many addtional phase retrieval products in later OPDs, which webbpsf doesn't need.
+    # The WSS puts many addtional phase retrieval products in later OPDs, which stpsf doesn't need.
     while len(wasopd) > 2:
         del wasopd[2]
 

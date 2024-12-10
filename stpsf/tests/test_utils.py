@@ -3,10 +3,10 @@ import logging
 import astropy.io.fits as fits
 import numpy as np
 
-from .. import conf, utils, webbpsf_core
+from .. import conf, utils, stpsf_core
 from .test_errorhandling import _exception_message_starts_with
 
-_log = logging.getLogger('test_webbpsf')
+_log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())
 
 
@@ -49,7 +49,7 @@ def test_logging_setup():
 
 def test_diagnostic():
     res = utils.system_diagnostic()
-    assert 'webbpsf version' in res
+    assert 'stpsf version' in res
     assert 'poppy version' in res
 
 
@@ -59,7 +59,7 @@ def test_measure_strehl(npix=100):
     # for now I just doubled the tolerance to 6% instead of 3.
     wave = 2.12e-6
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
     nc.filter = 'F212N'
     defpsf = nc.calc_psf(nlambda=1, fov_pixels=npix, add_distortion=False)
     meas_strehl = utils.measure_strehl(defpsf, display=False, verbose=False)
@@ -76,7 +76,7 @@ def test_measure_strehl(npix=100):
     ), 'measured Strehl for that OPD file is too discrepant from the expected value from Marechal approximation.'
 
     # and test a perfect PSF too
-    perfnc = webbpsf_core.NIRCam()
+    perfnc = stpsf_core.NIRCam()
     perfnc.filter = 'F212N'
     perfnc.pupilopd = None
     perfnc.include_si_wfe = False

@@ -14,7 +14,7 @@ from stpsf.utils import rms
 # by Paul Lightsey et al.
 # See Lightsey's 'Guide to the Optical Budget'
 #
-# Note, WebbPSF does *not* parameterize the optical parameters in strictly the same way
+# Note, STPSF does *not* parameterize the optical parameters in strictly the same way
 # as the budget, intentionally. That's a statistical document, whereas this software attempts to
 # model specific instances. We also combine some of the terms differently here when presenting,
 # however the overall sums are precisely consistent.
@@ -56,7 +56,7 @@ def get_optical_budget_ref_wavelength(inst):
 
     Parameters
     ----------
-    inst : webbpsf.Instrument instance
+    inst : stpsf.Instrument instance
 
     """
     # see optical budget page 'Syst' cell V5 formula
@@ -169,11 +169,11 @@ def get_dynamic_vibe(rms_nm=4):
 def visualize_wfe_budget(inst, slew_delta_time=14 * u.day, slew_case='EOL', ptt_only=False, verbose=True):
     """Display a visual WFE budget showing the various terms that sum into the overall WFE for a given instrument
 
-    Compares a WebbPSF instrument instance with the JWST optical budget for that instrument
+    Compares a STPSF instrument instance with the JWST optical budget for that instrument
 
     Parameters
     ----------
-    inst : webbpsf.JWInstrument
+    inst : stpsf.JWInstrument
         A JWST instrument instance
     slew_delta_time : astropy.Quantity time
         Time duration for thermal slew model

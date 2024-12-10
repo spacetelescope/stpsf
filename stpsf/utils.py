@@ -13,7 +13,7 @@ from astropy.nddata import NDData
 
 from . import conf
 
-_log = logging.getLogger('webbpsf')
+_log = logging.getLogger('stpsf')
 
 
 _DISABLE_FILE_LOGGING_VALUE = 'none'
@@ -37,7 +37,7 @@ class FilterLevelRange(object):
 
 
 def restart_logging(verbose=True):
-    """Restart logging using the same settings as the last WebbPSF
+    """Restart logging using the same settings as the last STPSF
     session, as stored in the configuration system.
 
     Parameters
@@ -48,7 +48,7 @@ def restart_logging(verbose=True):
     """
 
     level = str(conf.logging_level).upper()
-    lognames = ['webbpsf', 'poppy']
+    lognames = ['stpsf', 'poppy']
 
     root_logger = logging.getLogger()
     root_logger.handlers = []
@@ -57,7 +57,7 @@ def restart_logging(verbose=True):
         level_id = getattr(logging, level)  # obtain one of the DEBUG, INFO, WARN,
         # or ERROR constants
         if verbose:
-            print('WebbPSF log messages of level {0} and above will be shown.'.format(level))
+            print('STPSF log messages of level {0} and above will be shown.'.format(level))
     elif level == 'NONE':
         root_logger.handlers = []  # n.b. this will clear any handlers other libs/users configured
         return
@@ -82,7 +82,7 @@ def restart_logging(verbose=True):
     root_logger.addHandler(stderr_handler)
 
     if verbose:
-        print('WebbPSF log outputs will be directed to the screen.')
+        print('STPSF log outputs will be directed to the screen.')
 
     # set up file logging
     filename = conf.logging_filename
@@ -95,7 +95,7 @@ def restart_logging(verbose=True):
         root_logger.addHandler(hdlr)
 
         if verbose:
-            print('WebbPSF log outputs will also be saved to file {}'.format(filename))
+            print('STPSF log outputs will also be saved to file {}'.format(filename))
 
 
 def setup_logging(level='INFO', filename=None):
@@ -103,13 +103,13 @@ def setup_logging(level='INFO', filename=None):
     (screen and/or file)
 
     This is a convenience wrapper to Python's built-in logging package,
-    as used by `webbpsf` and `poppy`. By default, this sets up log
+    as used by `stpsf` and `poppy`. By default, this sets up log
     messages to be written to the screen, but the user can also
     request logging to a file.
 
-    Editing the WebbPSF config file to set `autoconfigure_logging = True`
+    Editing the STPSF config file to set `autoconfigure_logging = True`
     (and any of the logging settings you wish to persist) instructs
-    WebbPSF to apply your settings on import. (This is not
+    STPSF to apply your settings on import. (This is not
     done by default in case you have configured `logging` yourself
     and don't wish to overwrite your configuration.)
 
@@ -128,16 +128,16 @@ def setup_logging(level='INFO', filename=None):
     Examples
     --------
 
-    >>> webbpsf.setup_logging(filename='webbpsflog.txt')
+    >>> stpsf.setup_logging(filename='stpsflog.txt')
 
-    This will save all log messages to 'webbpsflog.txt' in the current
-    directory. If you later start another copy of webbpsf in a
+    This will save all log messages to 'stpsflog.txt' in the current
+    directory. If you later start another copy of stpsf in a
     different directory, that session will also write to
-    'webbpsflog.txt' in *that* directory. Alternatively you can specify
+    'stpsflog.txt' in *that* directory. Alternatively you can specify
     a fully qualified absolute path to save all your logs to one
     specific file.
 
-    >>> webbpsf.setup_logging(level='WARN')
+    >>> stpsf.setup_logging(level='WARN')
 
     This will show only WARNING or ERROR messages on screen, and not
     save any logs to files at all (since the filename argument is None)
@@ -162,25 +162,25 @@ def setup_logging(level='INFO', filename=None):
 
 # Helper routines for data handling and system setup: ###
 
-MISSING_WEBBPSF_DATA_MESSAGE = """
+MISSING_STPSF_DATA_MESSAGE = """
  ***********  ERROR  ******  ERROR  ******  ERROR  ******  ERROR  ***********
  *                                                                          *
- *  WebbPSF requires several data files to operate.                         *
+ *  STPSF requires several data files to operate.                         *
  *  These files could not be located automatically at this time, or this    *
  *  version of the software requires a newer set of reference files than    *
  *  you have installed.  For more details see:                              *
  *                                                                          *
- *        https://webbpsf.readthedocs.io/en/stable/installation.html        *
+ *        https://stpsf.readthedocs.io/en/stable/installation.html        *
  *                                                                          *
  *  under "Installing the Required Data Files".                             *
- *  WebbPSF will not be able to function properly until the appropriate     *
+ *  STPSF will not be able to function properly until the appropriate     *
  *  reference files have been downloaded to your machine and installed.     *
  *                                                                          *
  ****************************************************************************
 """
 
 
-def auto_download_webbpsf_data():
+def auto_download_stpsf_data():
     import os
     import tarfile
     from pathlib import Path
@@ -188,19 +188,19 @@ def auto_download_webbpsf_data():
     from urllib.request import urlretrieve
 
     # Create a default directory for the data files
-    default_path = Path.home() / "data" / "webbpsf-data"
+    default_path = Path.home() / "data" / "stpsf-data"
     default_path.mkdir(parents=True, exist_ok=True)
 
-    os.environ["WEBBPSF_PATH"] = str(default_path)
+    os.environ["STPSF_PATH"] = str(default_path)
 
     # Download the data files if the directory is empty
     if not any(default_path.iterdir()):
-        warnings.warn("WebbPSF data files not found in default location, attempting to download them now...")
+        warnings.warn("STPSF data files not found in default location, attempting to download them now...")
 
         with TemporaryDirectory() as tmpdir:
             # Download the data files to a temporary directory
             url = "https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz"
-            filename = Path(tmpdir) / "webbpsf-data-LATEST.tar.gz"
+            filename = Path(tmpdir) / "stpsf-data-LATEST.tar.gz"
             urlretrieve(url, filename)
 
             # Extract the tarball
@@ -208,38 +208,38 @@ def auto_download_webbpsf_data():
                 tar.extractall(default_path.parent, filter="fully_trusted")
 
         if not any(default_path.iterdir()):
-            raise IOError(f"Failed to get and extract WebbPSF data files to {default_path}")
+            raise IOError(f"Failed to get and extract STPSF data files to {default_path}")
 
     return default_path
 
 
-def get_webbpsf_data_path(data_version_min=None, return_version=False):
-    """Get the WebbPSF data path
+def get_stpsf_data_path(data_version_min=None, return_version=False):
+    """Get the STPSF data path
 
     Simply checking an environment variable is not always enough, since
     for packaging this code as a Mac .app bundle, environment variables are
     not available since .apps run outside the Terminal or X11 environments.
 
-    Therefore, check first the environment variable WEBBPSF_PATH, and secondly
+    Therefore, check first the environment variable STPSF_PATH, and secondly
     check the configuration file in the user's home directory.
 
     If data_version_min is supplied (as a 3-tuple of integers), it will be
-    compared with the version number from version.txt in the WebbPSF data
+    compared with the version number from version.txt in the STPSF data
     package.
     """
     import os
     from pathlib import Path
 
-    path_from_config = conf.WEBBPSF_PATH  # read from astropy configuration
+    path_from_config = conf.STPSF_PATH  # read from astropy configuration
     if path_from_config == 'from_environment_variable':
-        path = os.getenv('WEBBPSF_PATH')
+        path = os.getenv('STPSF_PATH')
         if path is None:
             message = (
-                'Environment variable $WEBBPSF_PATH is not set!\n'
-                f'{MISSING_WEBBPSF_DATA_MESSAGE} searching default location..s'
+                'Environment variable $STPSF_PATH is not set!\n'
+                f'{MISSING_STPSF_DATA_MESSAGE} searching default location..s'
             )
             warnings.warn(message)
-            path = auto_download_webbpsf_data()
+            path = auto_download_stpsf_data()
     else:
         path = path_from_config
 
@@ -247,10 +247,10 @@ def get_webbpsf_data_path(data_version_min=None, return_version=False):
 
     # at minimum, the path must be a valid directory
     if not path.is_dir():
-        raise IOError(f'WEBBPSF_PATH ({path}) is not a valid directory path!\n{MISSING_WEBBPSF_DATA_MESSAGE}')
+        raise IOError(f'STPSF_PATH ({path}) is not a valid directory path!\n{MISSING_STPSF_DATA_MESSAGE}')
 
     if data_version_min is not None:
-        # Check if the data in WEBBPSF_PATH meet the minimum data version
+        # Check if the data in STPSF_PATH meet the minimum data version
         version_file_path = path / 'version.txt'
         try:
             with open(version_file_path) as f:
@@ -260,19 +260,19 @@ def get_webbpsf_data_path(data_version_min=None, return_version=False):
             version_tuple = tuple(map(int, parts))
         except (IOError, ValueError):
             raise EnvironmentError(
-                f"Couldn't read the version number from {version_file_path}. (Do you need to update the WebbPSF "
-                'data? See https://webbpsf.readthedocs.io/en/stable/installation.html#data-install '
+                f"Couldn't read the version number from {version_file_path}. (Do you need to update the STPSF "
+                'data? See https://stpsf.readthedocs.io/en/stable/installation.html#data-install '
                 'for a link to the latest version.)'
-                f'\n{MISSING_WEBBPSF_DATA_MESSAGE}'
+                f'\n{MISSING_STPSF_DATA_MESSAGE}'
             )
 
         if not version_tuple >= data_version_min:
             min_ver = '{}.{}.{}'.format(*data_version_min)
             raise EnvironmentError(
-                f'WebbPSF data package has version {version_contents}, but {min_ver} is needed. '
-                'See https://webbpsf.readthedocs.io/en/stable/installation.html#data-install '
+                f'STPSF data package has version {version_contents}, but {min_ver} is needed. '
+                'See https://stpsf.readthedocs.io/en/stable/installation.html#data-install '
                 'for a link to the latest version.'
-                f'\n{MISSING_WEBBPSF_DATA_MESSAGE}'
+                f'\n{MISSING_STPSF_DATA_MESSAGE}'
             )
 
         if return_version:
@@ -296,7 +296,7 @@ pyFFTW version: {pyfftw}
 Anaconda Accelerate version: {accelerate}
 
 poppy version: {poppy}
-webbpsf version: {webbpsf}
+stpsf version: {stpsf}
 
 tkinter version: {tkinter}
 wxpython version: {wxpython}
@@ -329,7 +329,7 @@ def get_pupil_mask(npix=1024, label_segments=False):
     """
     basename = f'JWpupil_segments_RevW_npix{npix}.fits.gz' if label_segments else f'jwst_pupil_RevW_npix{npix}.fits.gz'
 
-    fullname = os.path.join(get_webbpsf_data_path(), basename)
+    fullname = os.path.join(get_stpsf_data_path(), basename)
 
     if not os.path.exists(fullname):
         fullname = fullname.replace('.fits.gz', '.fits')
@@ -337,7 +337,7 @@ def get_pupil_mask(npix=1024, label_segments=False):
         data = fits.getdata(fullname)
     except FileNotFoundError as e:
         raise FileNotFoundError(
-            f'No pupil file found for npix={npix}. Check your WebbPSF data directory, '
+            f'No pupil file found for npix={npix}. Check your STPSF data directory, '
             + "and make sure you're using a value which is a power of 2, at least 256"
         ) from e
     return data
@@ -466,7 +466,7 @@ def system_diagnostic():
         numpy=numpy.__version__,
         python=sys.version.replace('\n', ' '),
         poppy=poppy.__version__,
-        webbpsf=version,
+        stpsf=version,
         tkinter=ttk_version,
         wxpython=wx_version,
         pyfftw=pyfftw_version,
@@ -505,7 +505,7 @@ def measure_strehl(HDUlist_or_filename=None, ext=0, slice=0, center=None, displa
 
     WARNING: This routine attempts to infer how to calculate a perfect reference
     PSF based on FITS header contents. It will likely work for simple direct imaging
-    cases with WebbPSF but will not work (yet) for more complicated cases such as
+    cases with STPSF but will not work (yet) for more complicated cases such as
     coronagraphy, anything with image or pupil masks, etc. Code contributions to add
     such cases are welcomed.
 
@@ -537,7 +537,7 @@ def measure_strehl(HDUlist_or_filename=None, ext=0, slice=0, center=None, displa
 
     from poppy import display_psf
 
-    from .webbpsf_core import instrument
+    from .stpsf_core import instrument
 
     if isinstance(HDUlist_or_filename, str):
         HDUlist = fits.open(HDUlist_or_filename)
@@ -840,8 +840,8 @@ def benchmark_imaging(iterations=1, nlambda=1, add_distortion=True):
     timer = timeit.Timer(
         'psf = nc.calc_psf(nlambda=nlambda, add_distortion={})'.format(add_distortion),
         setup="""
-import webbpsf
-nc = webbpsf.NIRCam()
+import stpsf
+nc = stpsf.NIRCam()
 nc.filter='F360M'
 nlambda={nlambda:d}""".format(nlambda=nlambda),
     )
@@ -857,8 +857,8 @@ def benchmark_nircam_coronagraphy(iterations=1, nlambda=1, add_distortion=True):
     timer = timeit.Timer(
         'psf = nc.calc_psf(nlambda=nlambda, add_distortion={})'.format(add_distortion),
         setup="""
-import webbpsf
-nc = webbpsf.NIRCam()
+import stpsf
+nc = stpsf.NIRCam()
 nc.filter='F335M'
 nc.image_mask='MASK335R'
 nc.pupil_mask='MASKRND'
@@ -876,8 +876,8 @@ def benchmark_miri_coronagraphy(iterations=1, nlambda=1):
     timer = timeit.Timer(
         'psf = miri.calc_psf(nlambda=nlambda)',
         setup="""
-import webbpsf
-miri = webbpsf.MIRI()
+import stpsf
+miri = stpsf.MIRI()
 miri.filter='F1065C'
 miri.image_mask='FQPM1065'
 miri.pupil_mask='MASKFQPM'
@@ -1054,7 +1054,7 @@ def get_target_phase_map_filename(apername):
     """Get WSS Target Phase Map for the specified aperture
     Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
     """
-    path = os.getenv('WEBBPSF_PATH')
+    path = os.getenv('STPSF_PATH')
     if apername == 'NRCA3_FP1':
         fn = 'wss_target_phase_fp1.fits'
     elif apername == 'NRCA1_FP6':
@@ -1063,7 +1063,7 @@ def get_target_phase_map_filename(apername):
         raise ValueError(f"Target phase map not available for aperture = {apername}")
 
     was_targ_file = os.path.join(
-        get_webbpsf_data_path(), 'NIRCam', 'OPD', fn)
+        get_stpsf_data_path(), 'NIRCam', 'OPD', fn)
 
     if not os.path.exists(was_targ_file):
         raise ValueError("File wss_target_phase_{}.fits, \

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from .. import gridded_library
-from .. import webbpsf_core
+from .. import stpsf_core
 from .. import roman
 from .. import utils
 from .. import detectors
@@ -27,7 +27,7 @@ def test_compare_to_calc_psf_oversampled():
     nlambda = 1
 
     # Create PSF grid
-    fgs = webbpsf_core.FGS()
+    fgs = stpsf_core.FGS()
     fgs.detector = 'FGS1'
     grid = fgs.psf_grid(
         all_detectors=False, num_psfs=4, oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda, verbose=False
@@ -62,7 +62,7 @@ def test_compare_to_calc_psf_detsampled():
     nlambda = 1
 
     # Create PSF grid
-    mir = webbpsf_core.MIRI()
+    mir = stpsf_core.MIRI()
     mir.filter = 'F560W'
     mir.detector = 'MIRIM'
     grid = mir.psf_grid(
@@ -101,7 +101,7 @@ def test_all_detectors():
     particular for NIRCam, test that the detectors pulled are correct
     (shortwave vs longwave) with respect to the filter
     """
-    nir = webbpsf_core.NIRCam()
+    nir = stpsf_core.NIRCam()
     longfilt = 'F250M'
     shortfilt = 'F140M'
 
@@ -131,7 +131,7 @@ def test_one_psf():
     oversample = 2
     fov_pixels = 11
 
-    nis = webbpsf_core.NIRISS()
+    nis = stpsf_core.NIRISS()
     nis.filter = 'F140M'
 
     # Case 1: The PSF is centered on the detector (with single_psf_centered=True)
@@ -184,7 +184,7 @@ def test_nircam_errors():
     longdet = 'NRCB5'
     shortdet = 'NRCA3'
 
-    nir = webbpsf_core.NIRCam()
+    nir = stpsf_core.NIRCam()
 
     # Shouldn't error - applying SW to SW and LW to LW
     nir.filter = longfilt
@@ -223,7 +223,7 @@ def test_saving(tmpdir):
     file = 'test1.fits'
 
     # Test using default calc_psf values
-    fgs = webbpsf_core.FGS()
+    fgs = stpsf_core.FGS()
     fgs.filter = 'FGS'
     fgs.detector = 'FGS2'
     grid = fgs.psf_grid(

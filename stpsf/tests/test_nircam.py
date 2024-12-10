@@ -9,11 +9,11 @@ import pytest
 
 import stpsf
 
-from .. import webbpsf_core
+from .. import stpsf_core
 from .test_errorhandling import _exception_message_starts_with
-from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
+from .test_stpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
-_log = logging.getLogger('test_webbpsf')
+_log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())
 
 
@@ -60,12 +60,12 @@ def test_nircam_blc_wedge_45(**kwargs):
 
 
 # The test setup for this one is not quite right yet
-#  See https://github.com/mperrin/webbpsf/issues/30
+#  See https://github.com/mperrin/stpsf/issues/30
 #  and https://github.com/mperrin/poppy/issues/29
 @pytest.mark.xfail
 def test_nircam_SAMC(oversample=4):
     _log.info('Comparing semi-analytic and direct FFT calculations for NIRCam coronagraphy')
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     nc.pupilopd = None
     nc.filter = 'F212N'
@@ -117,14 +117,14 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
     """Test NIRCam BLC coronagraphs
 
     Compute BLC PSFs on axis and offset and check the values against the expectation.
-    Note that the 'correct' values are just prior calculations with WebbPSF; the purpose of
+    Note that the 'correct' values are just prior calculations with STPSF; the purpose of
     this routine is just to check for basic functionality of the code and consistency with
     prior results. See the validate_* tests instead for validation against independent
     models of JWST coronagraphy performance - that is NOT what we're trying to do here.
 
     """
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
     nc.pupilopd = None
 
     nc, ote = stpsf.enable_adjustable_ote(nc)
@@ -137,7 +137,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
         nc.image_mask = 'MASK210R'
         nc.pupil_mask = 'CIRCLYOT'
         fn = 'm210r'
-        expected_total_fluxes = [1.84e-5, 0.0240, 0.1376]  # Based on a prior calculation with WebbPSF
+        expected_total_fluxes = [1.84e-5, 0.0240, 0.1376]  # Based on a prior calculation with STPSF
         # values updated slightly for Rev W aperture results
         # Updated 2019-05-02 for coron WFE - changes from [1.35e-5, 0.0240, 0.1376] to [1.84e-5, 0.0240, 0.1376]
     else:
@@ -148,7 +148,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
         # which are now the default.
         fn = 'mswb'
         if angle == 0:
-            expected_total_fluxes = [3.71e-6, 0.0628, 0.1449]  # Based on a prior calculation with WebbPSF
+            expected_total_fluxes = [3.71e-6, 0.0628, 0.1449]  # Based on a prior calculation with STPSF
             # Updated 2019-05-02 for coron WFE - changes from [2.09e-6, .0415, 0.1442] to [3.71e-6, .0628, 0.1449]
         elif angle == 45 or angle == -45:
             expected_total_fluxes = [3.71e-6, 0.0221, 0.1192]  # Based on a prior calculation
@@ -209,7 +209,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
 
 
 def test_nircam_get_detector():
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     detname = nc.detector
     assert detname == 'NRCA1'
@@ -218,7 +218,7 @@ def test_nircam_get_detector():
 def test_nircam_auto_pixelscale():
     # This test now uses approximate equality in all the checks, to accomodate the fact that
     # NIRCam pixel scales are drawn directly from SIAF for the aperture, and thus vary for each detector/
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     nc.filter = 'F200W'
     assert _close_enough(nc.pixelscale, nc._pixelscale_short)
@@ -275,7 +275,7 @@ def test_nircam_auto_pixelscale():
 def test_validate_nircam_wavelengths():
     # Same as above test: allow for up to 1.5% variance between NIRCam detectors in each channel
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     # wavelengths fit on shortwave channel -> no exception
     nc.filter = 'F200W'
@@ -309,10 +309,10 @@ def test_validate_nircam_wavelengths():
 
 def test_nircam_coron_unocculted(plot=False):
     """NIRCam with lyot mask but not an occulter
-    See https://github.com/mperrin/webbpsf/issues/157
+    See https://github.com/mperrin/stpsf/issues/157
     """
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
     nc.pupilopd = None
     nc.filter = 'F212N'
     nc.pupil_mask = 'WEDGELYOT'
@@ -335,7 +335,7 @@ def test_defocus(fov_arcsec=1, display=False):
 
     Test for #59 among other things
     """
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
     nrc.set_position_from_aperture_name('NRCA3_FP1')
     nrc.pupilopd = None
     nrc.include_si_wfe = False
@@ -386,7 +386,7 @@ def test_ways_to_specify_weak_lenses():
         ('F212N', 'WLP12', 'WLP12'),
     )
 
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
     nrc.pupilopd = None  # irrelevant for this test and slows it down
     nrc.include_si_wfe = False  # irrelevant for this test and slows it down
     for filt, pup, expected in testcases:
@@ -422,7 +422,7 @@ def test_nircam_coron_wfe_offset(fov_pix=15, oversample=2, fit_gaussian=True):
         rtol = 0.1
 
     # Set up an off-axis coronagraphic PSF
-    inst = webbpsf_core.NIRCam()
+    inst = stpsf_core.NIRCam()
     inst.filter = 'F335M'
     inst.pupil_mask = 'CIRCLYOT'
     inst.image_mask = None
@@ -479,7 +479,7 @@ def test_nircam_auto_aperturename():
     Test that correct apertures are chosen depending on channel, module, detector, mode, etc.
     """
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     nc.filter = 'F200W'
     assert nc.aperturename == 'NRCA1_FULL'
@@ -631,7 +631,7 @@ def test_coron_shift(offset_npix_x=4, offset_npix_y=-3, plot=False):
 
 def test_coron_extra_lyot_plane():
     # Test adding the optional output of the WFE prior to the Lyot stop plane
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
     nrc.pupil_mask = 'MASKLWB'
     nrc.image_mask = 'MASKLWB'
     nrc.filter = 'F460M'
@@ -646,7 +646,7 @@ def test_coron_extra_lyot_plane():
 
 
 def test_ways_to_specify_detectors():
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
 
     nrc.detector = 'NRCALONG'
     assert nrc.detector == 'NRCA5', 'NRCALONG should be synonymous to NRCA5'
@@ -658,7 +658,7 @@ def test_ways_to_specify_detectors():
 
 def test_dhs():
     """Basic test that it's possible to calculate a PSF for one of the NIRCam DHS subapertures"""
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
 
     nrc.pupil_mask = 'DHS_07'
 

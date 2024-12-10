@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from stpsf import display_psf, roman
 
-#### Create webbpsf-roman_page_header.png
+#### Create stpsf-roman_page_header.png
 long = 4
 wide = 3
 
@@ -37,7 +37,7 @@ for i, ifilter in enumerate(sorted(all_filters)):
 
 axes[-1].remove()
 
-# fig.savefig('webbpsf-roman_page_header.png', dpi=100, facecolor='w')
+# fig.savefig('stpsf-roman_page_header.png', dpi=100, facecolor='w')
 
 #### Create compare_wfi_sca09_sca17.png
 wfi2 = roman.WFI()
@@ -51,11 +51,11 @@ psf_sca17 = wfi2.calc_psf()
 
 fig2, (ax_sca09, ax_sca17, ax_diff) = plt.subplots(1, 3, figsize=(16, 4))
 
-webbpsf.display_psf(psf_sca09, ax=ax_sca09, imagecrop=2.0,
+stpsf.display_psf(psf_sca09, ax=ax_sca09, imagecrop=2.0,
                     title='WFI SCA09, bottom left - F129')
-webbpsf.display_psf(psf_sca17, ax=ax_sca17, imagecrop=2.0,
+stpsf.display_psf(psf_sca17, ax=ax_sca17, imagecrop=2.0,
                     title='WFI SCA17, top right - F129')
-webbpsf.display_psf_difference(psf_sca09, psf_sca17, ax=ax_diff,
+stpsf.display_psf_difference(psf_sca09, psf_sca17, ax=ax_diff,
                                vmax=5e-3, title='SCA09 - SCA17', imagecrop=2.0)
 fig2.tight_layout(w_pad=.5)
 # fig2.savefig('compare_wfi_sca09_sca17.png', dpi=100, facecolor='w')

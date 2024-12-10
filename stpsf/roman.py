@@ -18,9 +18,9 @@ import poppy
 from astropy.io import fits
 from scipy.interpolate import griddata
 
-from . import distortion, utils, webbpsf_core
+from . import distortion, utils, stpsf_core
 
-_log = logging.getLogger('webbpsf')
+_log = logging.getLogger('stpsf')
 
 GRISM_FILTERS = ('GRISM0', 'GRISM1')
 PRISM_FILTERS = ('PRISM',)
@@ -257,7 +257,7 @@ def _load_wfi_detector_aberrations(filename):
 
 
 @utils.combine_docstrings
-class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
+class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
     PUPIL_RADIUS = 2.4 / 2.0
     """
     RomanInstrument contains data and functionality common to Roman
@@ -313,13 +313,13 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
             self.options['add_distortion'] = False
             self.options['crop_psf'] = False
             info_message = (
-                'Geometric distortions are not implemented in WebbPSF for Roman CGI.  '
+                'Geometric distortions are not implemented in STPSF for Roman CGI.  '
                 'The add_distortion keyword must be set to False for this case.'
             )
             _log.info(info_message)
 
         # Run poppy calc_psf
-        psf = webbpsf_core.SpaceTelescopeInstrument.calc_psf(
+        psf = stpsf_core.SpaceTelescopeInstrument.calc_psf(
             self,
             outfile=outfile,
             source=source,
@@ -419,7 +419,7 @@ class RomanInstrument(webbpsf_core.SpaceTelescopeInstrument):
                 result[ext] = psf_distorted[ext]
 
         # Rewrite result variable based on output_mode set:
-        webbpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
+        stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
 
 
 class WFIPupilController:
@@ -438,7 +438,7 @@ class WFIPupilController:
         self._pupil_basepath = None
 
         self._pupil = None
-        self._pupil_mask = None  # new for webbpsf 1.0
+        self._pupil_mask = None  # new for stpsf 1.0
 
         # Flag to en-/disable automatic selection of the appropriate pupil_mask
         self._auto_pupil = True
@@ -505,13 +505,13 @@ class WFIPupilController:
 
     def set_base_path(self, datapath):
         """
-        Sets the root directory of the path to WebbPSF's data files.
+        Sets the root directory of the path to STPSF's data files.
         This should be set before this class is used.
 
         Parameters
         ----------
         datapath : string
-            Path to WebbPSF-WFI data files
+            Path to STPSF-WFI data files
         """
         self._datapath = datapath
         self._pupil_basepath = os.path.join(self._datapath, 'pupils')
@@ -652,7 +652,7 @@ class WFI(RomanInstrument):
         self._load_detector_aberrations(self._aberration_files[self.mode])
         self.detector = 'SCA01'
 
-        self.opd_list = [os.path.join(self._WebbPSF_basepath, 'upscaled_HST_OPD.fits')]
+        self.opd_list = [os.path.join(self._STPSF_basepath, 'upscaled_HST_OPD.fits')]
         self.pupilopd = self.opd_list[-1]
 
     def _addAdditionalOptics(self, optsys, **kwargs):
@@ -665,7 +665,7 @@ class WFI(RomanInstrument):
         aberrations, loads the Zernike values and populates the class'
         dictator list with `FieldDependentAberration` detectors. This
         function achieves this by calling the
-        `webbpsf.roman._load_wfi_detector_aberrations` function.
+        `stpsf.roman._load_wfi_detector_aberrations` function.
 
         Users should use the `override_aberrations` function to override
         current aberrations.
@@ -847,9 +847,9 @@ class WFI(RomanInstrument):
         - ...
 
         Please refer to the default aberration files for examples. If
-        you have the WebbPSF data installed and defined, you can get the
+        you have the STPSF data installed and defined, you can get the
         path to that file by running the following:
-        >>> from webbpsf import roman
+        >>> from stpsf import roman
         >>> wfi = roman.WFI()
         >>> print(wfi._aberration_files['imaging'])
 
@@ -973,11 +973,11 @@ class RomanCoronagraph(RomanInstrument):
         self._detector_npixels = 1024
         self._detectors = {camera: 'placeholder' for camera in self.camera_list}
 
-        self.pupil_mask_list = self.lyotstop_list  # alias for use in webbpsf_core
-        self.image_mask_list = self.fpm_list  # alias for use in webbpsf_core
-        self.pupil = os.path.join(self._WebbPSF_basepath, 'AFTA_CGI_C5_Pupil_onax_256px_flip.fits')
+        self.pupil_mask_list = self.lyotstop_list  # alias for use in stpsf_core
+        self.image_mask_list = self.fpm_list  # alias for use in stpsf_core
+        self.pupil = os.path.join(self._STPSF_basepath, 'AFTA_CGI_C5_Pupil_onax_256px_flip.fits')
         if apply_static_opd:
-            self.pupilopd = os.path.join(self._WebbPSF_basepath, 'CGI', 'OPD', 'CGI_static_OPD.fits')
+            self.pupilopd = os.path.join(self._STPSF_basepath, 'CGI', 'OPD', 'CGI_static_OPD.fits')
         else:
             self.pupilopd = None
         self.aberration_optic = None
@@ -1147,7 +1147,7 @@ class RomanCoronagraph(RomanInstrument):
 
     def print_mode_table(self):
         """Print the table of observing mode options and their associated optical configuration"""
-        _log.info('Printing the table of Roman Coronagraph Instrument observing modes supported by WebbPSF.')
+        _log.info('Printing the table of Roman Coronagraph Instrument observing modes supported by STPSF.')
         _log.info(
             'Each is defined by a combo of camera, filter, apodizer, ' 'focal plane mask (FPM), and Lyot stop settings:'
         )

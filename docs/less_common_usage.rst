@@ -8,7 +8,7 @@ This page documents options which exist, but are less frequently likely to be of
 Adjusting simulated telescope line-of-sight pointing jitter
 ------------------------------------------------------------
 
-Imprecisions in telescope pointing can have the effect of smearing out the PSF. WebbPSF models these as a Gaussian convolution. To simulate this with WebbPSF, the option names are ``jitter`` and ``jitter_sigma``.
+Imprecisions in telescope pointing can have the effect of smearing out the PSF. STPSF models these as a Gaussian convolution. To simulate this with STPSF, the option names are ``jitter`` and ``jitter_sigma``.
 
 >>> instrument.options['jitter'] = 'gaussian'   # jitter model name or None
 >>> instrument.options['jitter_sigma'] = 0.009  # in arcsec per axis, default 0.007
@@ -32,15 +32,15 @@ Or if you really care about writing it as a primary HDU rather than an extension
 Writing out intermediate images
 -------------------------------
 
-Your calculation may involve intermediate pupil and image planes (in fact, it most likely does). WebbPSF / POPPY allow you to inspect the intermediate pupil and image planes visually with the display keyword argument to :py:meth:`~webbpsf.JWInstrument.calc_psf`. Sometimes, however, you may want to save these arrays to FITS files for analysis. This is done with the ``save_intermediates`` keyword argument to :py:meth:`~webbpsf.JWInstrument.calc_psf`.
+Your calculation may involve intermediate pupil and image planes (in fact, it most likely does). STPSF / POPPY allow you to inspect the intermediate pupil and image planes visually with the display keyword argument to :py:meth:`~stpsf.JWInstrument.calc_psf`. Sometimes, however, you may want to save these arrays to FITS files for analysis. This is done with the ``save_intermediates`` keyword argument to :py:meth:`~stpsf.JWInstrument.calc_psf`.
 
-The intermediate wavefront planes will be written out to FITS files in the current directory, named in the format ``wavefront_plane_%03d.fits``. You can additionally specify what representation of the wavefront you want saved with the ``save_intermediates_what`` argument to :py:meth:`~webbpsf.JWInstrument.calc_psf`. This can be ``all``, ``parts``, ``amplitude``, ``phase`` or ``complex``, as defined as in :py:meth:`poppy.Wavefront.asFITS`. The default is to write ``all`` (intensity, amplitude, and phase as three 2D slices of a data cube).
+The intermediate wavefront planes will be written out to FITS files in the current directory, named in the format ``wavefront_plane_%03d.fits``. You can additionally specify what representation of the wavefront you want saved with the ``save_intermediates_what`` argument to :py:meth:`~stpsf.JWInstrument.calc_psf`. This can be ``all``, ``parts``, ``amplitude``, ``phase`` or ``complex``, as defined as in :py:meth:`poppy.Wavefront.asFITS`. The default is to write ``all`` (intensity, amplitude, and phase as three 2D slices of a data cube).
 
 If you pass ``return_intermediates=True`` as well, the return value of calc_psf is then ``psf, intermediate_wavefronts_list`` rather than the usual ``psf``.
 
 .. warning::
 
-   The ``save_intermediates`` keyword argument does not work when using parallelized computation, and WebbPSF will fail with an exception if you attempt to pass ``save_intermediates=True`` when running in parallel. The ``return_intermediates`` option has this same restriction.
+   The ``save_intermediates`` keyword argument does not work when using parallelized computation, and STPSF will fail with an exception if you attempt to pass ``save_intermediates=True`` when running in parallel. The ``return_intermediates`` option has this same restriction.
 
 
 Providing your own OPDs or pupils from some other source
@@ -48,7 +48,7 @@ Providing your own OPDs or pupils from some other source
 
 It is straight forward to configure an Instrument object to use a pupil OPD file of your own devising, by setting the ``pupilopd`` attribute of the Instrument object:
 
-        >>> niriss = webbpsf.NIRISS()
+        >>> niriss = stpsf.NIRISS()
         >>> niriss.pupilopd = "/path/to/your/OPD_file.fits"
 
 If you have a pupil that is an array in memory but not saved on disk, you can pass it in as a fits.HDUList object :
@@ -83,14 +83,14 @@ subclassing it, which can let you add arbitrary new functionality.
 There's an easier way to add defocus specifically; see below.
 
 
-    >>> class FGS_with_defocus(webbpsf.FGS):
+    >>> class FGS_with_defocus(stpsf.FGS):
     >>>     def __init__(self, *args, **kwargs):
-    >>>         webbpsf.FGS.__init__(self, *args, **kwargs)
+    >>>         stpsf.FGS.__init__(self, *args, **kwargs)
     >>>         # modify the following as needed to get your desired defocus
     >>>         self.defocus_waves = 0
     >>>         self.defocus_lambda = 4e-6
     >>>     def _addAdditionalOptics(self, optsys, *args, **kwargs):
-    >>>         optsys = webbpsf.FGS._addAdditionalOptics(self, optsys, *args, **kwargs)
+    >>>         optsys = stpsf.FGS._addAdditionalOptics(self, optsys, *args, **kwargs)
     >>>         lens = poppy.ThinLens(
     >>>             name='FGS Defocus',
     >>>             nwaves=self.defocus_waves,
@@ -105,7 +105,7 @@ There's an easier way to add defocus specifically; see below.
     >>> # defined by FGS_with_defocus.defocus_lambda
     >>> fgs2.defocus_waves = 4
     >>> psf = fgs2.calc_psf()
-    >>> webbpsf.display_psf(psf)
+    >>> stpsf.display_psf(psf)
 
 
 Defocusing an instrument

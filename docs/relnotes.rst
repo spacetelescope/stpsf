@@ -7,7 +7,7 @@ Release Notes
 Known Issues
 --------------
 
-See https://github.com/spacetelescope/webbpsf/issues for currently open issues and enhancement suggestions.
+See https://github.com/spacetelescope/stpsf/issues for currently open issues and enhancement suggestions.
 
 * Calculations at large radii (> 500 lambda/D ~ 30 arcsec for 2 microns) will
   show numerical artifacts from Fourier aliasing and the implicit repetition of
@@ -27,45 +27,45 @@ Version History and Change Log
 Version 1.5.0
 =============
 *2024 December*
-WebbPSF IS BEING MIGRATED TO A NEW REPOSITORY: STPSF (Space Telescope PSF)
-To reflect its broader support for Roman as well as James Webb, WebbPSF is being migrated to a new repository: STPSF (Space Telescope PSF).
+STPSF IS BEING MIGRATED TO A NEW REPOSITORY: STPSF (Space Telescope PSF)
+To reflect its broader support for Roman as well as James Webb, STPSF is being migrated to a new repository: STPSF (Space Telescope PSF).
 This transition is being done in such a way as to maintain back-compatibility for existing code, and existing installations will continue to run as-is.
-This release will be among the final releases to WebbPSF and the initial release to STPSF.
+This release will be among the final releases to STPSF and the initial release to STPSF.
 
-This release requires new data webbpsf-data-1.5.0 https://stsci.box.com/s/oyoih9ibuaowksxzaia02ua4t6g1bbp1
-For more information on this new data please view https://github.com/spacetelescope/webbpsf/pull/937
+This release requires new data stpsf-data-1.5.0 https://stsci.box.com/s/oyoih9ibuaowksxzaia02ua4t6g1bbp1
+For more information on this new data please view https://github.com/spacetelescope/stpsf/pull/937
 
 **What's Changed**
-* Add IFU+datacubes docs page. by @mperrin in https://github.com/spacetelescope/webbpsf/pull/917
+* Add IFU+datacubes docs page. by @mperrin in https://github.com/spacetelescope/stpsf/pull/917
 
-* Update for Photutils 2.0 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/925
+* Update for Photutils 2.0 by @mperrin in https://github.com/spacetelescope/stpsf/pull/925
 
-* MNT: Use hash for Action workflow versions and update if needed by @pllim in https://github.com/spacetelescope/webbpsf/pull/916
+* MNT: Use hash for Action workflow versions and update if needed by @pllim in https://github.com/spacetelescope/stpsf/pull/916
 
-* Dependabot updates PLUS pyproject upper limit for photutils.  by @dependabot in https://github.com/spacetelescope/webbpsf/pull/926
+* Dependabot updates PLUS pyproject upper limit for photutils.  by @dependabot in https://github.com/spacetelescope/stpsf/pull/926
 
-* update ifu docs to describe about coord_system and pixel scale by @mperrin in https://github.com/spacetelescope/webbpsf/pull/923
+* update ifu docs to describe about coord_system and pixel scale by @mperrin in https://github.com/spacetelescope/stpsf/pull/923
 
-* update photutils upper bound by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/935
+* update photutils upper bound by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/935
 
-* Add automatic data download by @WilliamJamieson in https://github.com/spacetelescope/webbpsf/pull/932
+* Add automatic data download by @WilliamJamieson in https://github.com/spacetelescope/stpsf/pull/932
 
-* switch a test case float comparison to np.allclose for robustness by @mperrin in https://github.com/spacetelescope/webbpsf/pull/934
+* switch a test case float comparison to np.allclose for robustness by @mperrin in https://github.com/spacetelescope/stpsf/pull/934
 
-* Add support for new sensing point and target phase map by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull/937
+* Add support for new sensing point and target phase map by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/937
 
-* Minor update to docs about the WFI optical model by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/936
+* Minor update to docs about the WFI optical model by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/936
 
-* update monthly trending plot to allow shifted date ranges by @mperrin in https://github.com/spacetelescope/webbpsf/pull/943
+* update monthly trending plot to allow shifted date ranges by @mperrin in https://github.com/spacetelescope/stpsf/pull/943
 
-* Readme advise by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/944
+* Readme advise by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/944
 
-* update MAST query for OPDs to also retrieve OPDs from FP6 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/945
+* update MAST query for OPDs to also retrieve OPDs from FP6 by @mperrin in https://github.com/spacetelescope/stpsf/pull/945
 
 ## New Contributors
-* @WilliamJamieson made their first contribution in https://github.com/spacetelescope/webbpsf/pull/932
+* @WilliamJamieson made their first contribution in https://github.com/spacetelescope/stpsf/pull/932
 
-**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.4.0...1.5.0
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/v1.4.0...1.5.0
 
 
 Version 1.4.0
@@ -73,47 +73,47 @@ Version 1.4.0
 
 *2024 September*
 
-We are pleased to announce the release of the latest version of WebbPSF version 1.4.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
+We are pleased to announce the release of the latest version of STPSF version 1.4.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
 
 **What's Changed**
-* Improve trending plots, particularly wfe_histogram arrows display by @mperrin in https://github.com/spacetelescope/webbpsf/pull/870
+* Improve trending plots, particularly wfe_histogram arrows display by @mperrin in https://github.com/spacetelescope/stpsf/pull/870
 
-* build(deps): bump photutils from 1.12.0 to 1.13.0 by @dependabot in https://github.com/spacetelescope/webbpsf/pull/872
+* build(deps): bump photutils from 1.12.0 to 1.13.0 by @dependabot in https://github.com/spacetelescope/stpsf/pull/872
 
-* more strict units handling; fixes some issues for astropy 6.0.0 compatibility by @mperrin in https://github.com/spacetelescope/webbpsf/pull/879
+* more strict units handling; fixes some issues for astropy 6.0.0 compatibility by @mperrin in https://github.com/spacetelescope/stpsf/pull/879
 
-* add dedicated cache workflow that can be called by other projects by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/877
+* add dedicated cache workflow that can be called by other projects by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/877
 
-* fix syntax error in `.github/workflows/download_data.yml` by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/882
+* fix syntax error in `.github/workflows/download_data.yml` by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/882
 
-* use `pathlib` to handle a `WEBBPSF_PATH` with double slashes by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/886
+* use `pathlib` to handle a `STPSF_PATH` with double slashes by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/886
 
-* Fix #888, typo in NIRSpec disperser list by @mperrin in https://github.com/spacetelescope/webbpsf/pull/889
+* Fix #888, typo in NIRSpec disperser list by @mperrin in https://github.com/spacetelescope/stpsf/pull/889
 
-* Use MASK_NRM to match AMI data by @rcooper295 in https://github.com/spacetelescope/webbpsf/pull/893
+* Use MASK_NRM to match AMI data by @rcooper295 in https://github.com/spacetelescope/stpsf/pull/893
 
-* minor: trending function add cycle 3 routine WFS PIDs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/878
+* minor: trending function add cycle 3 routine WFS PIDs by @mperrin in https://github.com/spacetelescope/stpsf/pull/878
 
-* Update NIRSpec aperture PAs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/897
+* Update NIRSpec aperture PAs by @mperrin in https://github.com/spacetelescope/stpsf/pull/897
 
-* build(deps): bump scipy from 1.13.0 to 1.14.0 by @dependabot in https://github.com/spacetelescope/webbpsf/pull/874
+* build(deps): bump scipy from 1.13.0 to 1.14.0 by @dependabot in https://github.com/spacetelescope/stpsf/pull/874
 
-* Update citations by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/898
+* Update citations by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/898
 
-* using z range in requirements.txt by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/909
+* using z range in requirements.txt by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/909
 
-* Docs improvements, including for matching PSFs to data by @mperrin in https://github.com/spacetelescope/webbpsf/pull/899
+* Docs improvements, including for matching PSFs to data by @mperrin in https://github.com/spacetelescope/stpsf/pull/899
 
-* Enhance capabilities to simulate PSFs with larger JWST pupil  by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull/908
+* Enhance capabilities to simulate PSFs with larger JWST pupil  by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/908
 
-* IFU mode improvements, continued by @mperrin in https://github.com/spacetelescope/webbpsf/pull/890
+* IFU mode improvements, continued by @mperrin in https://github.com/spacetelescope/stpsf/pull/890
 
-* Roman docs & figures updates by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/910
+* Roman docs & figures updates by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/910
 
-* add CI tests for mast_wss, in test_mast_wss.py by @mperrin in https://github.com/spacetelescope/webbpsf/pull/911
+* add CI tests for mast_wss, in test_mast_wss.py by @mperrin in https://github.com/spacetelescope/stpsf/pull/911
 
 
-**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.3.0...v1.4.0
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/v1.3.0...v1.4.0
 
 Version 1.3.0
 =============
@@ -132,78 +132,78 @@ Please note, the minimum supported version of Python is increaed to Python 3.10,
 
 **What's Changed**
 
-* Add interpixel capacitance effects (IPC) for both distortion extension in the simulated PSF and adding some more per-instrument specializations in setup_sim_to_match_file by @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull#768
+* Add interpixel capacitance effects (IPC) for both distortion extension in the simulated PSF and adding some more per-instrument specializations in setup_sim_to_match_file by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull#768
 
-* setup_sim_to_match_file fix setting aperture name for SW/LW parallel coronagraphy  by @mperrin in https://github.com/spacetelescope/webbpsf/pull/752
+* setup_sim_to_match_file fix setting aperture name for SW/LW parallel coronagraphy  by @mperrin in https://github.com/spacetelescope/stpsf/pull/752
 
-* Trending: add option to plot OTE-only WFE in wfe_histogram_plot by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/750
+* Trending: add option to plot OTE-only WFE in wfe_histogram_plot by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/750
 
-* #727_RMS_Label fixed the issue that rms_label is not initialized. by @bchen2 in https://github.com/spacetelescope/webbpsf/pull/730
+* #727_RMS_Label fixed the issue that rms_label is not initialized. by @bchen2 in https://github.com/spacetelescope/stpsf/pull/730
 
-* use PyPI upload workflow from OpenAstronomy by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/749
+* use PyPI upload workflow from OpenAstronomy by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/749
 
-* import GriddedPSFModel from photutils.psf by @braingram in https://github.com/spacetelescope/webbpsf/pull/755
+* import GriddedPSFModel from photutils.psf by @braingram in https://github.com/spacetelescope/stpsf/pull/755
 
-* update NRC coron dispersion coeffs by @JarronL in https://github.com/spacetelescope/webbpsf/pull/766
+* update NRC coron dispersion coeffs by @JarronL in https://github.com/spacetelescope/stpsf/pull/766
 
-* Update trending plot to subtract piston before displaying proposed correction by @mperrin in https://github.com/spacetelescope/webbpsf/pull/756
+* Update trending plot to subtract piston before displaying proposed correction by @mperrin in https://github.com/spacetelescope/stpsf/pull/756
 
-* add aperture name support for NIRSpec slit and IFU apertures; also, 100x faster data cube calculations. by @mperrin in https://github.com/spacetelescope/webbpsf/pull/767
+* add aperture name support for NIRSpec slit and IFU apertures; also, 100x faster data cube calculations. by @mperrin in https://github.com/spacetelescope/stpsf/pull/767
 
-* Support MIRI LRS slit in aperturename and setup_sim_to_match_file functions by @mperrin in https://github.com/spacetelescope/webbpsf/pull/781
+* Support MIRI LRS slit in aperturename and setup_sim_to_match_file functions by @mperrin in https://github.com/spacetelescope/stpsf/pull/781
 
-* Coronagraph calcs: add 'coron_include_pre_lyot_plane' option for extra output plane by @mperrin in https://github.com/spacetelescope/webbpsf/pull/778
+* Coronagraph calcs: add 'coron_include_pre_lyot_plane' option for extra output plane by @mperrin in https://github.com/spacetelescope/stpsf/pull/778
 
-* Add `nrc_ta_image_comparison` function to trending tools by @mperrin in https://github.com/spacetelescope/webbpsf/pull/789
+* Add `nrc_ta_image_comparison` function to trending tools by @mperrin in https://github.com/spacetelescope/stpsf/pull/789
 
-* Support the slightly non-square dimensions of the MIRI detector (1024, 1032) pixels in size. Fixes #676 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/803
+* Support the slightly non-square dimensions of the MIRI detector (1024, 1032) pixels in size. Fixes #676 by @mperrin in https://github.com/spacetelescope/stpsf/pull/803
 
-* filter custom opbtable for month by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/802
+* filter custom opbtable for month by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/802
 
-* Allow setup_sim_to_match_data to select choice of WFS before or after by @mperrin in https://github.com/spacetelescope/webbpsf/pull/819
+* Allow setup_sim_to_match_data to select choice of WFS before or after by @mperrin in https://github.com/spacetelescope/stpsf/pull/819
 
-* [SCSB-145] require Python 3.10 by @zacharyburnett in https://github.com/spacetelescope/webbpsf/pull/817
+* [SCSB-145] require Python 3.10 by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/817
 
-* add show_wfs_during_program function by @mperrin in https://github.com/spacetelescope/webbpsf/pull/798
+* add show_wfs_during_program function by @mperrin in https://github.com/spacetelescope/stpsf/pull/798
 
-* add delta_wfe_around_time function by @mperrin in https://github.com/spacetelescope/webbpsf/pull/826
+* add delta_wfe_around_time function by @mperrin in https://github.com/spacetelescope/stpsf/pull/826
 
-* Performance enhancement: avoid repeated slow loads of the SIAF by @mperrin in https://github.com/spacetelescope/webbpsf/pull/825
+* Performance enhancement: avoid repeated slow loads of the SIAF by @mperrin in https://github.com/spacetelescope/stpsf/pull/825
 
-* NRC TA plot enhancements by @mperrin in https://github.com/spacetelescope/webbpsf/pull/794
+* NRC TA plot enhancements by @mperrin in https://github.com/spacetelescope/stpsf/pull/794
 
-* add functions to download WFSC WL image data by @mperrin in https://github.com/spacetelescope/webbpsf/pull/827
+* add functions to download WFSC WL image data by @mperrin in https://github.com/spacetelescope/stpsf/pull/827
 
-* improve MIRI LRS model details by @mperrin in https://github.com/spacetelescope/webbpsf/pull/787
+* improve MIRI LRS model details by @mperrin in https://github.com/spacetelescope/stpsf/pull/787
 
-* #839 Visit Id naming smarts in get_visit_nrc_ta_image by @kulpster85 in https://github.com/spacetelescope/webbpsf/pull/840
+* #839 Visit Id naming smarts in get_visit_nrc_ta_image by @kulpster85 in https://github.com/spacetelescope/stpsf/pull/840
 
-* #835 - Improvements to trending.plot_wfs_obs_delta & wfe_histogram_pl… by @kulpster85 in https://github.com/spacetelescope/webbpsf/pull/836
+* #835 - Improvements to trending.plot_wfs_obs_delta & wfe_histogram_pl… by @kulpster85 in https://github.com/spacetelescope/stpsf/pull/836
 
-* avoid linear interpolation between WFE values by @mperrin in https://github.com/spacetelescope/webbpsf/pull/834
+* avoid linear interpolation between WFE values by @mperrin in https://github.com/spacetelescope/stpsf/pull/834
 
-* Update for WFI to use pysiaf instead of soc_roman_tools by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/848
+* Update for WFI to use pysiaf instead of soc_roman_tools by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/848
 
-* Infrastructure improvements for improved IFU sims by @mperrin in https://github.com/spacetelescope/webbpsf/pull/770
+* Infrastructure improvements for improved IFU sims by @mperrin in https://github.com/spacetelescope/stpsf/pull/770
 
-* Allow specifying NIRCam LW detectors equivalently like 'NRCA5' or 'NRCALONG' by @mperrin in https://github.com/spacetelescope/webbpsf/pull/849
+* Allow specifying NIRCam LW detectors equivalently like 'NRCA5' or 'NRCALONG' by @mperrin in https://github.com/spacetelescope/stpsf/pull/849
 
-* Improved model for MIRI cruciform artifact, part 1 by @mperrin in https://github.com/spacetelescope/webbpsf/pull/837
+* Improved model for MIRI cruciform artifact, part 1 by @mperrin in https://github.com/spacetelescope/stpsf/pull/837
 
-* Manual lint by @BradleySappington in https://github.com/spacetelescope/webbpsf/pull/847
+* Manual lint by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/847
 
-* Implement support for NIRCam DHS sub apertures by @mperrin in https://github.com/spacetelescope/webbpsf/pull/845
+* Implement support for NIRCam DHS sub apertures by @mperrin in https://github.com/spacetelescope/stpsf/pull/845
 
 **New Contributors**
-* @braingram made their first contribution in https://github.com/spacetelescope/webbpsf/pull/740
+* @braingram made their first contribution in https://github.com/spacetelescope/stpsf/pull/740
 
-* @bchen2 made their first contribution in https://github.com/spacetelescope/webbpsf/pull/731
+* @bchen2 made their first contribution in https://github.com/spacetelescope/stpsf/pull/731
 
-* @eteq made their first contribution in https://github.com/spacetelescope/webbpsf/pull/807
+* @eteq made their first contribution in https://github.com/spacetelescope/stpsf/pull/807
 
-* @bryce-wedig made their first contribution in https://github.com/spacetelescope/webbpsf/pull/815
+* @bryce-wedig made their first contribution in https://github.com/spacetelescope/stpsf/pull/815
 
-**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.2.1...v1.3.0.rc1
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/v1.2.1...v1.3.0.rc1
 
 
 Version 1.2.1
@@ -215,11 +215,11 @@ Version 1.2.0
 
 *2023 August*
 
-We are pleased to announce the release of the latest version of WebbPSF version 1.2.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
+We are pleased to announce the release of the latest version of STPSF version 1.2.0, now available on PyPi and GitHub. This release comes with new features and improvements including but not limited to:
 
-1. The addition of detector effects for JWST simulations. H2RG detector effects are included in two flavors, a simple ad hoc Gaussian convolution to model charge diffusion effects and a set of convolution kernels to model interpixel capacitance (IPC) and post-pixel coupling effects. We have found that these effects greatly improve the agreement between observations and simulations. See `JWST Detector Effects for more details. <https://webbpsf.readthedocs.io/en/latest/jwst_detector_effects.html>`_
+1. The addition of detector effects for JWST simulations. H2RG detector effects are included in two flavors, a simple ad hoc Gaussian convolution to model charge diffusion effects and a set of convolution kernels to model interpixel capacitance (IPC) and post-pixel coupling effects. We have found that these effects greatly improve the agreement between observations and simulations. See `JWST Detector Effects for more details. <https://stpsf.readthedocs.io/en/latest/jwst_detector_effects.html>`_
 
-2. A new utility function for simulating matching PSFs to science data. See `Matching PSF sims to in-flight JWST data <https://webbpsf.readthedocs.io/en/latest/jwst_matching_psfs_to_data.html>`_.
+2. A new utility function for simulating matching PSFs to science data. See `Matching PSF sims to in-flight JWST data <https://stpsf.readthedocs.io/en/latest/jwst_matching_psfs_to_data.html>`_.
 
 3. Implement geometric distortion for Roman using the Roman SIAF.
 
@@ -227,35 +227,35 @@ We are pleased to announce the release of the latest version of WebbPSF version 
 
 **What's Changed**
 
-* Fixed trending histogram binning so that bars add up to 1.0 by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/634
+* Fixed trending histogram binning so that bars add up to 1.0 by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/634
 
-* Add phase retrieval crosscheck plot and wfs obs delta plot by @mperrin in https://github.com/spacetelescope/webbpsf/pull/650
+* Add phase retrieval crosscheck plot and wfs obs delta plot by @mperrin in https://github.com/spacetelescope/stpsf/pull/650
 
-* Add opdtable as positional param to monthly_trending_plot by @kulpster85 in https://github.com/spacetelescope/webbpsf/pull/600
+* Add opdtable as positional param to monthly_trending_plot by @kulpster85 in https://github.com/spacetelescope/stpsf/pull/600
 
-* Update to read SI pixelscales directly from pysiaf by @mperrin in https://github.com/spacetelescope/webbpsf/pull/626
+* Update to read SI pixelscales directly from pysiaf by @mperrin in https://github.com/spacetelescope/stpsf/pull/626
 
-* Update/enhance trending plot to show WSS proposed corrections by @mperrin in https://github.com/spacetelescope/webbpsf/pull/642
+* Update/enhance trending plot to show WSS proposed corrections by @mperrin in https://github.com/spacetelescope/stpsf/pull/642
 
-* Add notebooks for plotting JWST SI WFE, and JWST SI MIMF field points by @mperrin in https://github.com/spacetelescope/webbpsf/pull/652
+* Add notebooks for plotting JWST SI WFE, and JWST SI MIMF field points by @mperrin in https://github.com/spacetelescope/stpsf/pull/652
 
-* Add H2RG detector effects sim framework by @mperrin and @obi-wan76 in https://github.com/spacetelescope/webbpsf/pull/671
+* Add H2RG detector effects sim framework by @mperrin and @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/671
 
-* Tune detector effects model parameters to better match measured ePSFs by @mperrin in https://github.com/spacetelescope/webbpsf/pull/693
+* Tune detector effects model parameters to better match measured ePSFs by @mperrin in https://github.com/spacetelescope/stpsf/pull/693
 
-* Non-standard pixel sizes for distortion by @JarronL in https://github.com/spacetelescope/webbpsf/pull/669
+* Non-standard pixel sizes for distortion by @JarronL in https://github.com/spacetelescope/stpsf/pull/669
 
-* Add setup_sim_to_match_data function by @mperrin in https://github.com/spacetelescope/webbpsf/pull/706
+* Add setup_sim_to_match_data function by @mperrin in https://github.com/spacetelescope/stpsf/pull/706
 
-* Add trending plot function "show_wfs_around_obs" by @mperrin in https://github.com/spacetelescope/webbpsf/pull/705
+* Add trending plot function "show_wfs_around_obs" by @mperrin in https://github.com/spacetelescope/stpsf/pull/705
 
-* Additional fixes to trending.py by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/688
+* Additional fixes to trending.py by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/688
 
-* Implement distortion for Roman by @Skyhawk172 in https://github.com/spacetelescope/webbpsf/pull/668
+* Implement distortion for Roman by @Skyhawk172 in https://github.com/spacetelescope/stpsf/pull/668
 
-**Full Changelog**: https://github.com/spacetelescope/webbpsf/compare/v1.1.1...v1.2.0
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/v1.1.1...v1.2.0
 
-Note, this release requires updating your WebbPSF data files to version 1.2.0, `webbpsf-data-1.2.0.tar.gz <https://stsci.box.com/shared/static/34g3slaq4jidgccqj25qqo80tlk6tubl.gz>`_
+Note, this release requires updating your STPSF data files to version 1.2.0, `stpsf-data-1.2.0.tar.gz <https://stsci.box.com/shared/static/34g3slaq4jidgccqj25qqo80tlk6tubl.gz>`_
 
 
 Version 1.1.1
@@ -279,7 +279,7 @@ Version 1.1.0
 
 *First release with JWST in flight optical performance!*  Updates and tools added after completion of commissioning.
 
-Note, this release requires updating your WebbPSF data files to version 1.1.0. See :ref:`here <data_install>` .
+Note, this release requires updating your STPSF data files to version 1.1.0. See :ref:`here <data_install>` .
 
 This release's upgraded requirements drop support for Python 3.7, meaning conda installation is temporarily unavailable since the AstroConda channel is not equipped for newer Python versions. Installation with pip works as normal.
 
@@ -302,7 +302,7 @@ Version 1.0.0
 =============
 *2021 December 10*
 
-For JWST, this release includes updates to WebbPSF just prior to the launch. For Roman, it includes updates to use the Cycle 9 optical model results.
+For JWST, this release includes updates to STPSF just prior to the launch. For Roman, it includes updates to use the Cycle 9 optical model results.
 
 **James Webb Space Telescope OTE model improvements**:
 
@@ -312,7 +312,7 @@ For JWST, this release includes updates to WebbPSF just prior to the launch. For
 * Add an option to use a lookup table of field dependent OPDs from Ball's ITM tool (for JWST team internal use in
   pre-launch wavefront team practices and rehearsals). (:pr:`425` by :user:`Skyhawk172`, :pr:`474` by :user:`mperrin`)
 * Update the JWST OTE Linear Model to allow more flexible pupil sampling, in particular using higher sampling to reduce Fourier aliasing in certain FGS calculations (:pr:`440` by :user:`kjbrooks`)
-* New capability for visualizing the JWST optical budget terms as represented in WebbPSF. See :doc:`jwst_optical_budgets`.
+* New capability for visualizing the JWST optical budget terms as represented in STPSF. See :doc:`jwst_optical_budgets`.
 
 
 **James Webb Space Telescope instrument model improvements**:
@@ -328,15 +328,15 @@ For JWST, this release includes updates to WebbPSF just prior to the launch. For
 **Nancy Grace Roman Space Telescope and instrument model improvements**:
 
 * Use of Cycle 9 optical and integrated modeling results, including updated Zernike coefficients, pupil images, and filter throughputs.
-* Updated :py:obj:`~webbpsf.RomanInstrument` pointing stability to 12 milliarcseconds per axis, following new predictions [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
+* Updated :py:obj:`~stpsf.RomanInstrument` pointing stability to 12 milliarcseconds per axis, following new predictions [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * :py:obj:`WFI` wavelength range now covers 0.48 - 2.3 µm [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Added ``WFI``'s new F213 filter [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Renamed ``WFI``'s ``'P120'`` filter to ``'PRISM'`` [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Split ``WFI``'s ``'G150'`` filter into ``'GRISM0'`` and ``'GRISM1'`` components to represent the transmission for the grism's  undispersed zeroth order and dispersed first order, respectively [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Renamed WFI pupil masks to ``'SKINNY'`` (formerly ``'RIM_MASK'`` in version 0.9.2), ``'WIDE'`` (formerly ``'FULL_MASK'``), ``'GRISM'``, and ``'PRISM'`` (also formerly captured in ``'RIM_MASK'``) [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
-* Created new :py:meth:`~webbpsf.WFI.lock_pupil()` and :py:meth:`~webbpsf.WFI.lock_pupil_mask()` methods for advanced users who prefer to disable automated selections and instead stick with a specific pupil file or mask, respectively. The corresponding ``WFI.unlock_pupil()`` and ``WFI.unlock_pupil_mask()`` methods return the class to its normal behavior [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
+* Created new :py:meth:`~stpsf.WFI.lock_pupil()` and :py:meth:`~stpsf.WFI.lock_pupil_mask()` methods for advanced users who prefer to disable automated selections and instead stick with a specific pupil file or mask, respectively. The corresponding ``WFI.unlock_pupil()`` and ``WFI.unlock_pupil_mask()`` methods return the class to its normal behavior [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Locked ``WFI.pupil`` and ``WFI.pupil_mask`` attributes from direct assignment given the new lock/unlock schema [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
-* Renamed ``WFI.override_aberrations()`` to :py:meth:`~webbpsf.WFI.lock_aberrations()` and ``WFI.reset_override_aberrations()`` to :py:meth:`~webbpsf.WFI.unlock_aberrations()` to reinforce the new lock/unlock schema [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
+* Renamed ``WFI.override_aberrations()`` to :py:meth:`~stpsf.WFI.lock_aberrations()` and ``WFI.reset_override_aberrations()`` to :py:meth:`~stpsf.WFI.unlock_aberrations()` to reinforce the new lock/unlock schema [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Condensed and refactored existing tests [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * New algorithm for field point nearest approximation/extrapolation [:pr:`466` by :user:`ojustino` with :user:`robelgeda`]
 * Renamed ``CGI`` class to :py:obj:`RomanCoronagraph` [:pr:`516`, :pr:`517`, :user:`ojustino` with :user:`mperrin`]
@@ -345,7 +345,7 @@ For JWST, this release includes updates to WebbPSF just prior to the launch. For
 
 * Software engineering improvements to meet STScI INS-JWST Software Standards (:pr:`404` by :user:`shanosborne`)
 * Migrate optional dependency for synthetic photometry from pysynphot to synphot (:pr:`424` by :user:`shanosborne`)
-* Deprecated the ``jwxml`` package, and moved the SUR (Segment Update Request) parsing code from that package into WebbPSF (:pr:`390` by :user:`shanosborne`)
+* Deprecated the ``jwxml`` package, and moved the SUR (Segment Update Request) parsing code from that package into STPSF (:pr:`390` by :user:`shanosborne`)
 * Various minor bug fixes (:pr:`410`, :pr:`422`, :pr:`427`, :pr:`497` by :user:`mperrin`, :pr:`423` by :user:`kjbrooks`, :pr:`493` by :user:`JarronL`)
 * Updates to recommended (not minimum) dependency versions. Drop support for Python 3.6. (various PRs by :user:`shanosborne`)
 * Remove deprecated older code including the GUIs (:pr:`439` by :user:`mperrin`)
@@ -391,7 +391,7 @@ Version 0.9.1
 
 This minor release resolves several bugs and occasional installation issues and updates behind-the-scenes package infrastructure for consistency with current astropy and numpy releases. There are small improvements to a few aspects of JWST models as detailed below (in particular for wavelength dispersion in NIRCam LW coronagraphy and in tools for modeling time-dependent WFE) but the vast majority of JWST PSF calculations are not changed in any way.
 
-There are no changes in reference data, so the WebbPSF reference data files for 0.9.0 should continue to be used with this release.
+There are no changes in reference data, so the STPSF reference data files for 0.9.0 should continue to be used with this release.
 
 .. admonition:: Python version support: Python 3.6+ required
 
@@ -432,12 +432,12 @@ Version 0.9.0
 =============
 *2019 November 25*
 
-Note, when upgrading to this version you will need to update to the latest data files as well. This is handled automatically if you use `conda`, otherwise you will need to download and install the data from: `webbpsf-data-0.9.0.tar.gz <https://stsci.box.com/shared/static/qcptcokkbx7fgi3c00w2732yezkxzb99.gz>`_.
+Note, when upgrading to this version you will need to update to the latest data files as well. This is handled automatically if you use `conda`, otherwise you will need to download and install the data from: `stpsf-data-0.9.0.tar.gz <https://stsci.box.com/shared/static/qcptcokkbx7fgi3c00w2732yezkxzb99.gz>`_.
 
 
 **JWST Improvements**
 
-- *Added a new capability to model the impact of thermal variations*, from telescope slews relative to the sun, onto mirror alignments and therefore onto PSFs. This new ``thermal_slew`` method  can be used to create a delta OPD for some elapsed time after the slew at either the maximum slew angle, some specified angle, or with a scaling factor applied to maximum case. Once combined with an input OPD (requirements or predicted), the new shape of the mirrors can be used to simulate predicted PSFs some time after a slew. See this `Jupyter notebook (ex1) <https://github.com/spacetelescope/webbpsf/blob/stable/notebooks/Example%20Construction%20of%20OPDs%20from%20Delta%20Time%20After%20Slew.ipynb>`_ for examples. [:pr:`269`, :user:`kjbrooks`]
+- *Added a new capability to model the impact of thermal variations*, from telescope slews relative to the sun, onto mirror alignments and therefore onto PSFs. This new ``thermal_slew`` method  can be used to create a delta OPD for some elapsed time after the slew at either the maximum slew angle, some specified angle, or with a scaling factor applied to maximum case. Once combined with an input OPD (requirements or predicted), the new shape of the mirrors can be used to simulate predicted PSFs some time after a slew. See this `Jupyter notebook (ex1) <https://github.com/spacetelescope/stpsf/blob/stable/notebooks/Example%20Construction%20of%20OPDs%20from%20Delta%20Time%20After%20Slew.ipynb>`_ for examples. [:pr:`269`, :user:`kjbrooks`]
 - *Improved wavefront error extrapolation method for field points near FOV corners* that are outside the bounds of Zernike reference table data, in order to provide more seamless extrapolation.  [:pr:`283`, :user:`JarronL`]
 - *Improvements in NIRCam optical model*: Updated polynomial model for NIRCam defocus versus wavelength. Adds Zernike coefficients for the wavefront error at NIRCam coronagraphy field points. [:pr:`283`, :user:`JarronL`]
 - NIRISS NRM mask was flipped along the X axis to match the as-built instrument and measured PSFs [:pr:`275`, :user:`KevinVolkSTScI`, :user:`anand0xff`, :user:`mperrin`]
@@ -446,7 +446,7 @@ Note, when upgrading to this version you will need to update to the latest data 
 **WFIRST Improvements**
 
 - *The WFI optical model has been updated to use optical data from the Cycle 8 design revision.* These include updated Zernike coefficients for field-dependent wavefront error, and masked and unmasked pupil images for each SCA, and updated filter throughputs (consistent with values used in Pandeia 1.4.2). The correct pupil file will automatically be selected for each calculation based on the chosen detector position and filter.   The pupil files are consistent with those provided in the WFI cycle 8 reference information, but have been resampled onto a common pixel scale.  See `WFIRST instrument model details <roman.html>`_ for more.  [:pr:`309` :user:`robelgeda`]
-- Note, WFI's filters have been renamed so they all begin with “F”; `see the table here <https://github.com/spacetelescope/webbpsf/pull/309>`_ .
+- Note, WFI's filters have been renamed so they all begin with “F”; `see the table here <https://github.com/spacetelescope/stpsf/pull/309>`_ .
 - *The WFI wavelength range has now been extended to cover the 0.48 - 2.0 µm range.* [:pr:`309` :user:`robelgeda`]
 - *Expanded ``psf_grid`` method’s functionality so it can also be used to make grids of WFIRST PSFs.* Note that focal plane distortion is not yet implemented for WFIRST PSFs and so ``add_distortion`` keyword should not be used for this case. [:pr:`294`, :user:`shanosborne`]
 - *The WFIRST F062 filter bandpass red edge was corrected* from 8000A to 7600A, and associated unit tests were updated to include F062  [:pr:`288`, :user:`robelgeda`]
@@ -456,11 +456,11 @@ Note, when upgrading to this version you will need to update to the latest data 
 
 - *Many improvements in the PSF Grid functionality for generating photutils.GriddedPSFModels*:
 
-  - New options in ``psf_grid`` to specify both/either the output filename and output directory location. See this `Jupyter notebook (ex2) <https://github.com/spacetelescope/webbpsf/blob/stable/notebooks/Gridded_PSF_Library.ipynb>`_ for examples. [:pr:`294`, :user:`shanosborne`]
+  - New options in ``psf_grid`` to specify both/either the output filename and output directory location. See this `Jupyter notebook (ex2) <https://github.com/spacetelescope/stpsf/blob/stable/notebooks/Gridded_PSF_Library.ipynb>`_ for examples. [:pr:`294`, :user:`shanosborne`]
   - sFfilenames when saving out a ``psf_grid`` FITS object which has it’s ``filename`` parameter set will now end with ``_det.fits`` instead of the previous ``_det_filt.fits`` [:pr:`294`, :user:`shanosborne`]
   - Update added to ``utils.to_griddedpsfmodel`` where a 2-dimensional array input with a header containing only 1 ``DET_YX`` keyword can be turned into ``GriddedPSFModel`` object without error as it  implies the case of a PSF grid with num_psfs = 1. [:pr:`294`, :user:`shanosborne`]
   - Remove deletion of ``det_yx`` and ``oversamp`` keywords from ``psf_grid`` output to allow for easier implementation in certain cases. Normal case users will have extra keywords but will not change functionality [:pr:`291`, :user:`shanosborne`]
-  - Updated normalization of PSFs from ``psf_grid`` to be in surface brightness units, independent of oversampling in order to match the expectation of ``photutils.GriddedPSFModel``. This is different than webbpsf's default in which PSFs usually sum to 1 so the counts/pixel varies based on sampling. [:pr:`311`, :user:`mperrin`]
+  - Updated normalization of PSFs from ``psf_grid`` to be in surface brightness units, independent of oversampling in order to match the expectation of ``photutils.GriddedPSFModel``. This is different than stpsf's default in which PSFs usually sum to 1 so the counts/pixel varies based on sampling. [:pr:`311`, :user:`mperrin`]
   - Fix bug in how ``pupilopd`` keyword is saved and include extra keywords ``opd_file``, ``opdslice``, ``coronmsk``, and ``pupil`` in the ``psf_grid`` output, both the GriddedPSFModel meta data and FITS object's header [:pr:`284`, :pr:`293`, :pr:`299`, :user:`shanosborne`]
 
 - The ``set_position_from_aperture_name`` method now correctly sets the detector position parameter in the science frame [:pr:`281`, :user:`shanosborne`, :user:`JarronL`, :user:`mperrin`]
@@ -486,7 +486,7 @@ Version 0.8.0
 
 *2018 Dec 15*
 
-This release focused on software engineering improvements, rather than changes in any of the optical models or reference data. (In particular, there are NO changes in the reference data files; the contents of the WebbPSF version 0.8 data zip file are identical to the reference data as distributed for version 0.7.  This version of WebbPSF will work with either of those interchangeably.).
+This release focused on software engineering improvements, rather than changes in any of the optical models or reference data. (In particular, there are NO changes in the reference data files; the contents of the STPSF version 0.8 data zip file are identical to the reference data as distributed for version 0.7.  This version of STPSF will work with either of those interchangeably.).
 
 .. admonition:: Python version support: Python 3 required
 
@@ -494,12 +494,12 @@ This release focused on software engineering improvements, rather than changes i
 
 **New functionality:**
 
-- *Added new capability to create grids of fiducial, distorted PSFs* spanning a chosen instrument/detector. This new ``psf_grid`` method is meant to be used as the first step of using the ``photutils`` package to do PSF-fitting photometry on simulated JWST PSFs. This method will output a list of or single ``photutils`` ``GriddedPSFModel`` object(s) which can then be read into ``photutils`` to apply interpolation to the grid and simulate a spatially dependent PSF anywhere on the instrument. See this `Jupyter notebook (ex3) <https://github.com/spacetelescope/webbpsf/blob/stable/notebooks/Gridded_PSF_Library.ipynb>`_ for examples. This method requires ``photutils`` version 0.6 or higher. [`#241, <https://github.com/spacetelescope/webbpsf/pull/241>` _, @shanosborne with inputs from @mperrin, @larrybradley, @hcferguson, and @eteq]
+- *Added new capability to create grids of fiducial, distorted PSFs* spanning a chosen instrument/detector. This new ``psf_grid`` method is meant to be used as the first step of using the ``photutils`` package to do PSF-fitting photometry on simulated JWST PSFs. This method will output a list of or single ``photutils`` ``GriddedPSFModel`` object(s) which can then be read into ``photutils`` to apply interpolation to the grid and simulate a spatially dependent PSF anywhere on the instrument. See this `Jupyter notebook (ex3) <https://github.com/spacetelescope/stpsf/blob/stable/notebooks/Gridded_PSF_Library.ipynb>`_ for examples. This method requires ``photutils`` version 0.6 or higher. [`#241, <https://github.com/spacetelescope/stpsf/pull/241>` _, @shanosborne with inputs from @mperrin, @larrybradley, @hcferguson, and @eteq]
 
 **Bug fixes and small changes:**
 
-- *Improved the application of distortion to PSFs* to allow distorted PSFs to be created when the output mode is set to only “oversampled” or only “detector-sampled.”  When either of these modes is set in the options dictionary, the output will be an HDUList object with two extensions, where the 1st extension is the same PSF as in the 0th extension but with distortion applied. [`#229, <https://github.com/spacetelescope/webbpsf/pull/229>` _, @shanosborne]
-- Also fixed distorted PSFs which were shifted off-center compared to their undistorted counterparts. These distorted PSFs had always been created in the correct detector location, but the values in the array returned by ``calc_psf`` were shifted off from the center. This bug was particularly apparent when the PSFs were set with a location near the edge of the detector. [`#219, <https://github.com/spacetelescope/webbpsf/pull/219>` _, @shanosborne]
+- *Improved the application of distortion to PSFs* to allow distorted PSFs to be created when the output mode is set to only “oversampled” or only “detector-sampled.”  When either of these modes is set in the options dictionary, the output will be an HDUList object with two extensions, where the 1st extension is the same PSF as in the 0th extension but with distortion applied. [`#229, <https://github.com/spacetelescope/stpsf/pull/229>` _, @shanosborne]
+- Also fixed distorted PSFs which were shifted off-center compared to their undistorted counterparts. These distorted PSFs had always been created in the correct detector location, but the values in the array returned by ``calc_psf`` were shifted off from the center. This bug was particularly apparent when the PSFs were set with a location near the edge of the detector. [`#219, <https://github.com/spacetelescope/stpsf/pull/219>` _, @shanosborne]
 - Fix FITS output from JWST OTE linear model, plus typo fixes and PEP8 improvements [#232, @laurenmarietta]
 - Display code added for the PSF grid functionality mentioned above [#247, @mperrin]
 
@@ -529,16 +529,16 @@ Version 0.7.0
 
 Note, when upgrading to this version you will need to update to the latest data files as well. This is
 handled automatically if you use `conda`, otherwise you will need to download and install the data from:
-`webbpsf-data-0.7.0.tar.gz <http://www.stsci.edu/~mperrin/software/webbpsf/webbpsf-data-0.7.0.tar.gz>`_.
+`stpsf-data-0.7.0.tar.gz <http://www.stsci.edu/~mperrin/software/stpsf/stpsf-data-0.7.0.tar.gz>`_.
 
 .. admonition:: Python version support: Future releases will require Python 3.
 
-    Please note, this is the *final* release of WebbPSF to support Python 2.7. All
+    Please note, this is the *final* release of STPSF to support Python 2.7. All
     future releases will require Python 3.5+. `See here <https://python3statement.org>`_ for more information on migrating to Python 3.
 
 .. admonition:: Deprecated function names will go away in next release.
 
-    This is also the *final* release of WebbPSF to support the older, deprecated
+    This is also the *final* release of STPSF to support the older, deprecated
     function names with mixed case that are not compatible with the Python PEP8
     style guide (e.g. ``calcPSF`` instead of ``calc_psf``, etc). Future versions will
     require the use of the newer syntax.
@@ -574,8 +574,8 @@ handled automatically if you use `conda`, otherwise you will need to download an
   substantially between instruments.  [@mperrin, with contributions from
   @josephoenix in prior releases, and from @robelgeda and @JarronL for the
   interpolation between field points. [`#121
-  <https://github.com/mperrin/webbpsf/pull/121>`_, `#187
-  <https://github.com/mperrin/webbpsf/pull/187>`_]
+  <https://github.com/mperrin/stpsf/pull/121>`_, `#187
+  <https://github.com/mperrin/stpsf/pull/187>`_]
 - *Added new capabilities for modeling distortions of the image planes*, which
   cause slight deflections in the angles of diffractive features.  The result
   of geometric distortion is that detector pixels are not ideal square sections
@@ -583,14 +583,14 @@ handled automatically if you use `conda`, otherwise you will need to download an
   <http://www.stsci.edu/hst/acs/documents/handbooks/current/c05_imaging7.html#357374>`_
   for examples of what this looks like for Hubble PSFs) For the JWST
   instruments, this effect is largest for FGS, and fairly small but noticeable
-  for the other SIs. See this `Jupyter notebook (ex4) <https://github.com/mperrin/webbpsf/blob/stable/notebooks/Distortion_examples.ipynb>`_ for
+  for the other SIs. See this `Jupyter notebook (ex4) <https://github.com/mperrin/stpsf/blob/stable/notebooks/Distortion_examples.ipynb>`_ for
   examples of the effect on JWST PSFs. Note that the distorted PSFs are added as *additional extensions*
   in the output FITS file, so you will need to read from extension 2 or 3 if you want the
   PSF with the distortion included; extensions 0 and 1 remain consistent with prior versions.  The distortion information is taken from the Science
   Instrument Aperture file (SIAF) reference data maintained at STScI. As a
   result the ``pysiaf`` package is a new dependency required for using
-  ``webbpsf``.  The distortion calculations can add 1-3 seconds to each PSF calculation, and double the size of the output FITS files;
-  if modeling distortion is not needed for your use case, you can deactivate this by setting ``add_distortion=False`` in calls to ``calc_psf``.  [ `#209 <https://github.com/mperrin/webbpsf/pull/209>`_,
+  ``stpsf``.  The distortion calculations can add 1-3 seconds to each PSF calculation, and double the size of the output FITS files;
+  if modeling distortion is not needed for your use case, you can deactivate this by setting ``add_distortion=False`` in calls to ``calc_psf``.  [ `#209 <https://github.com/mperrin/stpsf/pull/209>`_,
   @shanosborne]
 - *Added small nonzero pupil shears* for most instruments, based on measurements
   from the ISIM CV3 and OTIS cryo tests, adjusted for gravity release to produce
@@ -603,25 +603,25 @@ handled automatically if you use `conda`, otherwise you will need to download an
   expected shift.  Note that for NIRCam, the expected pupil shear is set to precisely
   zero, given the expectation that NIRCam's steerable pickoff mirror will be used in flight
   to achieve precise pupil alignment.
-  [`#212, <https://github.com/mperrin/webbpsf/pull/212>`_, @shanosborne, with inputs from
+  [`#212, <https://github.com/mperrin/stpsf/pull/212>`_, @shanosborne, with inputs from
   Melendez, Telfer, and Hartig]
 - *For MIRI only*, added new capability for modeling blurring due to
   *scattering of light within the MIRI imager detector substrate itself*. This
   acts as a cross-shaped convolution kernel, strongest at the shortest
   wavelengths. See MIRI document MIRI-TN-00076-ATC for details on the relevant
   physics and detector calibration.   This is implemented as part of the distortion framework, though
-  it is different physics. See this `Jupyter notebook (ex5) <https://github.com/mperrin/webbpsf/blob/stable/notebooks/Distortion_examples.ipynb>`_ for
+  it is different physics. See this `Jupyter notebook (ex5) <https://github.com/mperrin/stpsf/blob/stable/notebooks/Distortion_examples.ipynb>`_ for
   example output. For F560W through F1000W this is a much more obvious effect than the subtle distortions. [`#209,
-  <https://github.com/mperrin/webbpsf/pull/209>`_, @shanosborne]
+  <https://github.com/mperrin/stpsf/pull/209>`_, @shanosborne]
 - *Added new capabilities for modeling mirror moves of the JWST primary
   segments and secondary mirror*, using a linear optical model to adjust OPDs.
   Added a new `notebook demonstrating these capabilities
-  <https://github.com/mperrin/webbpsf/blob/stable/notebooks/Simulated%20OTE%20Mirror%20Move%20Demo.ipynb>`_.
+  <https://github.com/mperrin/stpsf/blob/stable/notebooks/Simulated%20OTE%20Mirror%20Move%20Demo.ipynb>`_.
   Note this code allows simulation of arbitrary mirror motions within a
   simplified linear range, and relies on user judgement what those mirror
   motions should be; it is not a detailed rigorous optomechanical model of the
   observatory.  [Code by @mperrin, with some fixes by Geda in <`#185
-  <https://github.com/mperrin/webbpsf/pull/185>`_]
+  <https://github.com/mperrin/stpsf/pull/185>`_]
 - All the instrument+filter relative spectral response functions have been
   updated to values derived from the official validated JWST ETC reference
   data, using the Pandeia ETC release version 1.2.2. [@mperrin]
@@ -632,29 +632,29 @@ handled automatically if you use `conda`, otherwise you will need to download an
 - *The WFI optical model has been updated to use optical data from the Cycle 7
   design revision for WFI*. This includes a change in the instrument field of
   view layout relative to the axes, as shown `here
-  <https://github.com/mperrin/webbpsf/pull/184>`_. [`#184
-  <https://github.com/mperrin/webbpsf/pull/184>`_, @robelgeda]
+  <https://github.com/mperrin/stpsf/pull/184>`_. [`#184
+  <https://github.com/mperrin/stpsf/pull/184>`_, @robelgeda]
 - Added R062 filter.
 - Updated ``pupil_mask`` attribute for toggling between the masked and
   non-masked pupils now works the same way as that attribute does for the JWST
   instrument classes. Note, most users will not need to deal with this manually
   as the WFI class will by default automatically select the correct pupil based
   on the selected filter. [`#203
-  <https://github.com/mperrin/webbpsf/issue/203>`_, @robelgeda]
+  <https://github.com/mperrin/stpsf/issue/203>`_, @robelgeda]
 
 
 **Bug fixes and minor changes:**
 
-- All JWST instruments: Added new feature for importing OPD files produced with the JWST Wavefront Analysis System software [`#208 <https://github.com/mperrin/webbpsf/pull/208>`_, @skyhawk172]
-- All JWST instruments: Fix to generalize OPD loading code to handle either compressed or uncompressed OPDs [`#173 <https://github.com/mperrin/webbpsf/pull/173>`_, @JarronL]
+- All JWST instruments: Added new feature for importing OPD files produced with the JWST Wavefront Analysis System software [`#208 <https://github.com/mperrin/stpsf/pull/208>`_, @skyhawk172]
+- All JWST instruments: Fix to generalize OPD loading code to handle either compressed or uncompressed OPDs [`#173 <https://github.com/mperrin/stpsf/pull/173>`_, @JarronL]
 - All JWST instruments: Fix to properly load the default number of wavelengths per calculation from the filters.tsv file, rather than defaulting to 10 wavelengths regardless. [@shanosborne])
-- All JWST instrument: Fix to more correctly handle non-integer-pixel positions of the PSF when writing DET_X and DET_Y header keywords (`#205 <https://github.com/mperrin/webbpsf/pull/205>`_, @shanosborne]
-- NIRCam and MIRI coronagraphy: Automatically set the detector coordinates and SI WFE maps based on the location of a selected coronagraph occulter. [`#181 <https://github.com/mperrin/webbpsf/pull/181>`_, @mperrin]
-- NIRCam coronagraphy: Fix a sign error in offsets for the NIRCam coronagraph SWB occulters [`#172 <https://github.com/mperrin/webbpsf/issue/172>`_, @mperrin].
-- NIRCam coronagraphy: Fix a half-percent throughput error in the round occulter masks [`#206  <https://github.com/mperrin/webbpsf/issue/206>`_, @mperrin]
-- NIRCam coronagraphy: Fix an issue with transmission of the coronagraph bars precisely along the y axis, due to a typo [`#190  <https://github.com/mperrin/webbpsf/issue/190>`_, @JarronL]
-- NIRCam coronagraphy: New option for shifting the coronagraph masks relative to the source, rather than vice versa. This is mostly of use for edge cases such as PSF library generation for the ETC, and is probably not of widespread utility. [`#191 <https://github.com/mperrin/webbpsf/issue/191>`_, @mperrin]
-- NIRISS: Fix the `pupil_rotation` option so it works for NIRISS too, in particular for NRM/AMI. [`#118  <https://github.com/mperrin/webbpsf/issue/118>`_, @mperrin]
+- All JWST instrument: Fix to more correctly handle non-integer-pixel positions of the PSF when writing DET_X and DET_Y header keywords (`#205 <https://github.com/mperrin/stpsf/pull/205>`_, @shanosborne]
+- NIRCam and MIRI coronagraphy: Automatically set the detector coordinates and SI WFE maps based on the location of a selected coronagraph occulter. [`#181 <https://github.com/mperrin/stpsf/pull/181>`_, @mperrin]
+- NIRCam coronagraphy: Fix a sign error in offsets for the NIRCam coronagraph SWB occulters [`#172 <https://github.com/mperrin/stpsf/issue/172>`_, @mperrin].
+- NIRCam coronagraphy: Fix a half-percent throughput error in the round occulter masks [`#206  <https://github.com/mperrin/stpsf/issue/206>`_, @mperrin]
+- NIRCam coronagraphy: Fix an issue with transmission of the coronagraph bars precisely along the y axis, due to a typo [`#190  <https://github.com/mperrin/stpsf/issue/190>`_, @JarronL]
+- NIRCam coronagraphy: New option for shifting the coronagraph masks relative to the source, rather than vice versa. This is mostly of use for edge cases such as PSF library generation for the ETC, and is probably not of widespread utility. [`#191 <https://github.com/mperrin/stpsf/issue/191>`_, @mperrin]
+- NIRISS: Fix the `pupil_rotation` option so it works for NIRISS too, in particular for NRM/AMI. [`#118  <https://github.com/mperrin/stpsf/issue/118>`_, @mperrin]
 - NIRSpec: Very incomplete initial rudimentary support for the NIRSpec IFU, specifically just implementing the field stop for the IFU aperture. [@mperrin]
 - Updated to newer version of the astropy_helpers package infrastructure [@sosey]
 - Various smaller code cleanup and doc improvements, including code cleanup for better Python PEP8 style guide compliance [@mperrin, @shanosborne, @robelgeda, @douglase]
@@ -686,7 +686,7 @@ Version 0.6.0
   statistical part.
 - The NIRISS ``auto_pupil`` feature now recognizes that the ``CLEAR`` filter is used with the ``GR700XD`` pupil mask  [#151]
 - Correctly convert wavelengths to microns when computing NIRISS ZnS index of refraction [#149]
-- Aperture definitions now come from a copy of the SIAF bundled in ``jwxml`` rather than in the WebbPSF reference data.
+- Aperture definitions now come from a copy of the SIAF bundled in ``jwxml`` rather than in the STPSF reference data.
 - An alpha version of a linear optical model for adjusting OPDs is now provided for power-users, but currently unsupported and not documented.
 
 **WFIRST optical models:**
@@ -742,7 +742,7 @@ JWST updates:
    entrance pupil.
 
    * As a consequence of this, many optical planes displayed will now look
-     "upside down" relative to prior versions of WebbPSF. This affects all
+     "upside down" relative to prior versions of STPSF. This affects all
      coronagraphic Lyot masks for instance, the NIRISS CLEARP and NRM pupils, etc.
      This is as intended, and reflects the actual orientation of those optics in the
      internal pupil planes relative to a detector image that has been oriented to have
@@ -784,19 +784,19 @@ Version 0.4.1
 
 Released 2016 April 04. Mostly minor bug fixes, plus some updates to better match orientations of output files.
 
- * Fix an bug that ignored the rotation of the MIRI coronagraph occulters, introduced by changes in ``poppy`` 0.4.0; (`#91 <https://github.com/mperrin/webbpsf/issue/91>`__; @kvangorkom, @josephoenix, @mperrin)
-   and also flip the sign of that rotation from 4.5 degrees counterclockwise to 4.5 clockwise, to match the actual hardware (`#90 <https://github.com/mperrin/webbpsf/issue/90>`__; @kvangorkom, @josephoenix, @mperrin)
- * Also flip orientations of some NIRCam coronagraphic masks and improve modeling of NIRCam coronagraph ND squares and occulter bar mounting hardware (`#85 <https://github.com/mperrin/webbpsf/issue/85>`__; @mperrin);
+ * Fix an bug that ignored the rotation of the MIRI coronagraph occulters, introduced by changes in ``poppy`` 0.4.0; (`#91 <https://github.com/mperrin/stpsf/issue/91>`__; @kvangorkom, @josephoenix, @mperrin)
+   and also flip the sign of that rotation from 4.5 degrees counterclockwise to 4.5 clockwise, to match the actual hardware (`#90 <https://github.com/mperrin/stpsf/issue/90>`__; @kvangorkom, @josephoenix, @mperrin)
+ * Also flip orientations of some NIRCam coronagraphic masks and improve modeling of NIRCam coronagraph ND squares and occulter bar mounting hardware (`#85 <https://github.com/mperrin/stpsf/issue/85>`__; @mperrin);
    and remove two obsolete filter data files that don't correspond to any actual filters in NIRCam.
- * Relocate ``measure_strehl`` function code into ``webbpsf`` (`#88 <https://github.com/mperrin/webbpsf/issue/88>`__; Kathryn St.Laurent, @josephoenix, @mperrin)
+ * Relocate ``measure_strehl`` function code into ``stpsf`` (`#88 <https://github.com/mperrin/stpsf/issue/88>`__; Kathryn St.Laurent, @josephoenix, @mperrin)
  * Other minor bug fixes and improved error catching
-   (`#87 <https://github.com/mperrin/webbpsf/issue/87>`__; @mperrin)
-   (`#95 <https://github.com/mperrin/webbpsf/issue/95>`__; @mperrin)
-   (`#98 <https://github.com/mperrin/webbpsf/pull/98>`__; @josephoenix)
-   (`#99 <https://github.com/mperrin/webbpsf/issue/99>`__; @mperrin)
+   (`#87 <https://github.com/mperrin/stpsf/issue/87>`__; @mperrin)
+   (`#95 <https://github.com/mperrin/stpsf/issue/95>`__; @mperrin)
+   (`#98 <https://github.com/mperrin/stpsf/pull/98>`__; @josephoenix)
+   (`#99 <https://github.com/mperrin/stpsf/issue/99>`__; @mperrin)
  * Better document how to make monochromatic PSFs (`#92
-   <https://github.com/mperrin/webbpsf/issue/92>`__; @mperrin) and fix broken
-   link in docs (`#96 <https://github.com/mperrin/webbpsf/pull/96>`__;
+   <https://github.com/mperrin/stpsf/issue/92>`__; @mperrin) and fix broken
+   link in docs (`#96 <https://github.com/mperrin/stpsf/pull/96>`__;
    @josephoenix).
 
 .. _rel0.4.0:
@@ -809,18 +809,18 @@ Released 2015 November 20
 * **WFIRST WFI support added**:
 
   * including all WFI filters and filter-dependent pupil masks.
-  * including field dependence based on GSFC Cycle 5 modeling (`#75 <https://github.com/mperrin/webbpsf/pull/75>`__, @josephoenix)
-  * including initial/prototype GUI interface based on Jupyter/IPython notebook widgets (`#79 <https://github.com/mperrin/webbpsf/pull/79>`__, @josephoenix)
+  * including field dependence based on GSFC Cycle 5 modeling (`#75 <https://github.com/mperrin/stpsf/pull/75>`__, @josephoenix)
+  * including initial/prototype GUI interface based on Jupyter/IPython notebook widgets (`#79 <https://github.com/mperrin/stpsf/pull/79>`__, @josephoenix)
 
 * Updated filter transmission files for MIRI (based on Glasse et al. 2015 PASP) and NIRISS (based on flight filter measurement data provided by Loic Albert).
-  (`#66 <https://github.com/mperrin/webbpsf/issues/66>`_, `#78 <https://github.com/mperrin/webbpsf/issues/78>`_; @mperrin)
-* Added utility to check for appropriate version of the data files and request an update if necessary  (`#76 <https://github.com/mperrin/webbpsf/pull/76>`__, @josephoenix)
+  (`#66 <https://github.com/mperrin/stpsf/issues/66>`_, `#78 <https://github.com/mperrin/stpsf/issues/78>`_; @mperrin)
+* Added utility to check for appropriate version of the data files and request an update if necessary  (`#76 <https://github.com/mperrin/stpsf/pull/76>`__, @josephoenix)
 * Some documentation updates, including new documentation for the WFIRST functionality (@josephoenix, @mperrin)
-* Bug fixes for minor issues involving OPD file units (`#74 <https://github.com/mperrin/webbpsf/pull/74>`__, @josephoenix), cleaner logging output, and some Python 3 compatibility issues.
+* Bug fixes for minor issues involving OPD file units (`#74 <https://github.com/mperrin/stpsf/pull/74>`__, @josephoenix), cleaner logging output, and some Python 3 compatibility issues.
 
 .. note::
 
-    When updating to version 0.4 you will need to also update your WebbPSF data files
+    When updating to version 0.4 you will need to also update your STPSF data files
     to the latest version as well.
 
 
@@ -832,11 +832,11 @@ Version 0.3.3
 
 Released July 1, 2015
 
-* **Python 3 compatibility added.** All tests pass on Python 3.4. (`#2 <https://github.com/mperrin/webbpsf/issues/2>`_)
+* **Python 3 compatibility added.** All tests pass on Python 3.4. (`#2 <https://github.com/mperrin/stpsf/issues/2>`_)
 * Fixed an issue that would prevent users from adding defocus to PSF calculations
-* WebbPSF no longer attempts to display a welcome message on new installs; that idea proved to be less helpful than originally expected.
-* Added a ``CLEAR`` filter option for NIRISS, since the corresponding clear position is actually in the filter wheel rather than the pupil mask wheel. Rather than an actual filter, the profile for ``CLEAR`` is 1.0 between 0.6 microns and 5.0 microns per the stated limits of the detector, and 0.0 everywhere else. (`#64 <https://github.com/mperrin/webbpsf/issues/64>`_)
-* Multi-wavelength calculations across a filter were not choosing a sensible number of wavelengths from the tables included in ``webbpsf-data``. (`#68 <https://github.com/mperrin/webbpsf/issues/68>`_)
+* STPSF no longer attempts to display a welcome message on new installs; that idea proved to be less helpful than originally expected.
+* Added a ``CLEAR`` filter option for NIRISS, since the corresponding clear position is actually in the filter wheel rather than the pupil mask wheel. Rather than an actual filter, the profile for ``CLEAR`` is 1.0 between 0.6 microns and 5.0 microns per the stated limits of the detector, and 0.0 everywhere else. (`#64 <https://github.com/mperrin/stpsf/issues/64>`_)
+* Multi-wavelength calculations across a filter were not choosing a sensible number of wavelengths from the tables included in ``stpsf-data``. (`#68 <https://github.com/mperrin/stpsf/issues/68>`_)
 
 .. _rel0.3.2:
 
@@ -846,7 +846,7 @@ Version 0.3.2
 Released February 23, 2015
 
 This is a bug-fix release to address an issue that rendered the GUI unusable.
-(See `#55 <https://github.com/mperrin/webbpsf/pull/55>`_.) API usage was unaffected.
+(See `#55 <https://github.com/mperrin/stpsf/pull/55>`_.) API usage was unaffected.
 
 (Ask not what happened to 0.3.1.)
 
@@ -857,7 +857,7 @@ Version 0.3.0
 
 Released 2015 February
 
-This is a major release of WebbPSF, with several additions to the optical
+This is a major release of STPSF, with several additions to the optical
 models (particularly for slit and slitless spectroscopy), and extensive software
 improvements and under-the-hood infrastructure code updates. Many
 default settings can now be customized by a text configuration file in your home
@@ -871,7 +871,7 @@ directory.
    LRS spectroscopy* (for both slit and slitless modes), and *NIRISS
    single-object slitless spectroscopy*.   To model one of these modes,
    select the desired image plane stop (if any) plus the pupil plane stop for the
-   grating. WebbPSF does not yet include any model for the spectral dispersion
+   grating. STPSF does not yet include any model for the spectral dispersion
    of the prisms, so you will want to perform monochromatic calculations for
    the desired wavelengths, and coadd the results together yourself into a
    spectrum appropriately. For example::
@@ -909,7 +909,7 @@ directory.
 
  * Added NIRISS CLEARP pupil mask; this includes the obscuration from the pupil alignment reference.
    Given the pupil wheel layout, this unavoidably must be in the beam for any NIRISS
-   long-wave PSFs, and WebbPSF will automatically configure it in the necessary cases. Thanks to Anand Sivaramakrishnan.
+   long-wave PSFs, and STPSF will automatically configure it in the necessary cases. Thanks to Anand Sivaramakrishnan.
 
  * Minor bug fix to weak lens code for NIRCam, which previously had an incorrect scaling factor.
    Weak lens defocus values updated to the as-built rather than ideal values (which differ by 3%, but the as built values are very well calibrated).
@@ -932,7 +932,7 @@ directory.
  * Added support for rectangular subarray calculations. You can invoke these by
    setting fov_pixels or fov_arcsec with a 2-element iterable::
 
-    >> nc = webbpsf.NIRCam()
+    >> nc = stpsf.NIRCam()
     >> nc.calcPSF('F212N', fov_arcsec=[3,6])
     >> nc.calcPSF('F187N', fov_pixels=(300,100) )
 
@@ -975,34 +975,34 @@ directory.
     * Log messages giving details of calculations are now displayed in a window as part of the GUI as well.
     * The wx gui supports rectangular fields of view. Simply enter 2 elements separated by a comma in the 'Field of view' text box. As a convenience, these
       are interpreted as (X,Y) sizes. (Note that this is opposite of the convention used in the programming interface noted above; this is potentially confusing but
-      seems a reasonable compromise for users of the webbpsf GUI who do not care to think about Python conventions in axis ordering. Comments on this topic are welcome.)
+      seems a reasonable compromise for users of the stpsf GUI who do not care to think about Python conventions in axis ordering. Comments on this topic are welcome.)
 
 * Improved configuration settings system. Many settings such as default
   oversampling, default field of view size, and output file format can now be
   set in a configuration file for persistence between sessions. So if you
   always want e.g. 8x oversampling, you can now make that the default. An
   example configuration file with default values will be created automatically the first
-  time you run webbpsf now, including informative comments describing possible settings.
+  time you run stpsf now, including informative comments describing possible settings.
   This file will be in your astropy config directory, typically something like "~/.astropy/config".
 
     * New 'Preferences' dialog allows changing these persistent defaults through the GUI.
 
-* New function webbpsf.setup_logging() adds some more user-friendliness to the
+* New function stpsf.setup_logging() adds some more user-friendliness to the
   underlying python logging system. This includes persistent log settings
-  between sessions. See updated documentation in the :py:mod:`webbpsf` page.
+  between sessions. See updated documentation in the :py:mod:`stpsf` page.
 
-* The first time it is invoked on a computer, WebbPSF will display a welcome
+* The first time it is invoked on a computer, STPSF will display a welcome
   message providing some information of use to new users. This includes checking
   whether the requisite data files have been installed properly, and alerting users
   to the location of the configuration file, among other things.
 
-* Refactoring of instrument class and rebalancing where the lines between WebbPSF and POPPY had been blurry.
+* Refactoring of instrument class and rebalancing where the lines between STPSF and POPPY had been blurry.
 
 * Some bugfixes in the example code. Thanks to Diane Karakla, Anand Sivaramakrishnan, Schuyler Wolff.
 
 * Various updates & enhancements to this documentation. More extensive documentation for POPPY now available as well. Doc theme derived from astropy.
 
-* Improved unit test suite and test coverage. Integration with Travis CI for continuous testing: https://travis-ci.org/mperrin/webbpsf
+* Improved unit test suite and test coverage. Integration with Travis CI for continuous testing: https://travis-ci.org/mperrin/stpsf
 
 * Updated to astropy package helpers framework 0.4.4
 
@@ -1041,11 +1041,11 @@ Released December 6, 2011
   * "PUPIL" keyword now is used for pupil mechanisms instead of OTE pupil intensity filename; the filename is available in "PUPILINT" now, for consistency with the OPD filename in "PUPILOPD" now.
   * "CORONMSK" instead of CORON
   * Some minor instrument-specific FITS keywords added via new _instrument_fits_header() functions for each instrument object.
-  * For instance, NIRCam PSFs now have "MODULE" and "CHANNEL" keywords (eg. "MODULE = A", "CHANNEL = Short"). Note that there is no optical difference between modules A and B in this version of webbpsf.
+  * For instance, NIRCam PSFs now have "MODULE" and "CHANNEL" keywords (eg. "MODULE = A", "CHANNEL = Short"). Note that there is no optical difference between modules A and B in this version of stpsf.
 
 * Added support for weak lenses in NIRCam. Note that the +4 lens is in the filter wheel and is coated with a narrowband interference filter similar to but wider than F212N.
-  WebbPSF currently does not model this, and will let you simulate weak lens observations with any filter you want. As always, it's up to the user to determine whether
-  a given webbpsf configuration corresponds to an actual physically realizable instrument mode.
+  STPSF currently does not model this, and will let you simulate weak lens observations with any filter you want. As always, it's up to the user to determine whether
+  a given stpsf configuration corresponds to an actual physically realizable instrument mode.
 
 
 
@@ -1062,7 +1062,7 @@ Released November 7, 2011
   * Slitless spectroscopy not yet supported; check back in a future version.
   * Fix to FITS header comments for NIRISS NRM mask file for correct provenance information.
 
-  * TFI class still exists for back compatibility but will no longer be maintained, and may be removed in a future version of webbpsf.
+  * TFI class still exists for back compatibility but will no longer be maintained, and may be removed in a future version of stpsf.
 
 * Strehl measurement code caches computed perfect PSFs for improved speed when measuring many files.
 * Added GUI options for flat spectra in F_nu and F_lambda. (Thanks to Christopher Willmer at Steward Observatory for this suggestion)

@@ -4,7 +4,7 @@ Mirror Move related classes originally from jwxml/mirrors.py
 
 import logging
 
-_log = logging.getLogger('webbpsf')
+_log = logging.getLogger('stpsf')
 
 try:
     from lxml import etree
@@ -141,7 +141,7 @@ class SUR(object):
             # Blank empty SUR
             self.correction_id = None
             self.configuration_name = None
-            self.creator = 'WebbPSF'
+            self.creator = 'STPSF'
             self.date = None
             self.time = None
             self.version = None

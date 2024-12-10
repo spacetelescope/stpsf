@@ -1,11 +1,11 @@
 # Note: meant to just copy/paste into ipython command line
 
-# Import WebbPSF and setup multiprocessing
+# Import STPSF and setup multiprocessing
 import stpsf
-stpsf.webbpsf_core.poppy.conf.use_fftw = False
-stpsf.webbpsf_core.poppy.conf.use_multiprocessing = True
+stpsf.stpsf_core.poppy.conf.use_fftw = False
+stpsf.stpsf_core.poppy.conf.use_multiprocessing = True
 ncores = 8
-stpsf.webbpsf_core.poppy.conf.n_processes = ncores
+stpsf.stpsf_core.poppy.conf.n_processes = ncores
 
 inst = stpsf.NIRCam()
 inst.filter = "F430M"

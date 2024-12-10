@@ -4,10 +4,10 @@ import os
 import numpy as np
 import poppy
 
-from .. import webbpsf_core
+from .. import stpsf_core
 from .test_errorhandling import _exception_message_starts_with
 
-_log = logging.getLogger('test_webbpsf')
+_log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())
 
 
@@ -20,7 +20,7 @@ def generic_output_test(iname):
     """
 
     _log.info('Testing image output sizes for %s ' % iname)
-    inst = webbpsf_core.instrument(iname)
+    inst = stpsf_core.instrument(iname)
     pxscale = inst.pixelscale
     fov_arcsec = 5.0
 
@@ -71,7 +71,7 @@ def do_test_source_offset(iname, distance=0.5, nsteps=1, theta=0.0, tolerance=0.
     """
     _log.info('Calculating shifted image PSFs for ' + iname)
 
-    si = webbpsf_core.instrument(iname)
+    si = stpsf_core.instrument(iname)
     si.pupilopd = None
 
     if iname == 'NIRSpec':
@@ -131,16 +131,16 @@ def do_test_source_offset(iname, distance=0.5, nsteps=1, theta=0.0, tolerance=0.
 
 def test_opd_selected_by_default():
     """
-    Regression test for https://github.com/mperrin/webbpsf/issues/73
+    Regression test for https://github.com/mperrin/stpsf/issues/73
 
     Ensure an OPD map is set by default when instantiating an instrument
     """
     instruments = [
-        webbpsf_core.NIRCam,
-        webbpsf_core.MIRI,
-        webbpsf_core.NIRSpec,
-        webbpsf_core.NIRISS,
-        webbpsf_core.FGS
+        stpsf_core.NIRCam,
+        stpsf_core.MIRI,
+        stpsf_core.NIRSpec,
+        stpsf_core.NIRISS,
+        stpsf_core.FGS
     ]
     for InstrumentClass in instruments:
         ins = InstrumentClass()
@@ -149,7 +149,7 @@ def test_opd_selected_by_default():
 
 def test_calc_psf_rectangular_FOV():
     """Test that we can create rectangular FOVs"""
-    nc = webbpsf_core.instrument('NIRCam')
+    nc = stpsf_core.instrument('NIRCam')
     nc.pupilopd = None
     nc.filter = 'F212N'
 
@@ -165,7 +165,7 @@ def test_calc_psf_rectangular_FOV():
 
 
 def test_cast_to_str():
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     assert str(nc) == '<JWST: NIRCam>'
 
@@ -174,7 +174,7 @@ def test_return_intermediates():
     import astropy.io.fits
     import poppy
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
     nc.image_mask = 'maskswb'
     nc.pupil_mask = 'wedgelyot'
 
@@ -190,7 +190,7 @@ def do_test_set_position_from_siaf(iname, more_apertures=[]):   # TODO have test
     """Test that we can use the mapping from image mask names to
     aperture names to set detector positions automatically when
     image masks are selected."""
-    inst = webbpsf_core.instrument(iname)
+    inst = stpsf_core.instrument(iname)
     for im in inst.image_mask_list:
         inst.image_mask = im
     for apname in more_apertures:
@@ -201,7 +201,7 @@ def test_calc_psf_format_output():
     """Test that requesting only the detector sampled
     PSF returns the correct number of extensions
     """
-    nir = webbpsf_core.NIRCam()
+    nir = stpsf_core.NIRCam()
     nir.options['output_mode'] = 'Detector sampled Image'
 
     psf = nir.calc_psf(add_distortion=False)
@@ -215,7 +215,7 @@ def test_calc_psf_format_output():
 
 
 def test_instrument():
-    webbpsf_core.instrument('NIRCam')  # TODO - assert success
+    stpsf_core.instrument('NIRCam')  # TODO - assert success
 
     try:
         import pytest
@@ -224,7 +224,7 @@ def test_instrument():
         return  # We can't do this next test if we don't have the pytest.raises function.
 
     with pytest.raises(ValueError) as excinfo:
-        webbpsf_core.instrument('ACS')
+        stpsf_core.instrument('ACS')
     assert _exception_message_starts_with(excinfo, 'Incorrect instrument name')
 
 
@@ -234,24 +234,24 @@ def test_calc_or_load_PSF(outputdir=None):
 
         outputdir = tempfile.gettempdir()
 
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     filename = os.path.join(outputdir, 'test_calc_or_load_output.fits')
     if os.path.exists(filename):
         os.unlink(filename)
 
-    f0 = webbpsf_core.calc_or_load_PSF(filename, nc, monochromatic=2e-6)
+    f0 = stpsf_core.calc_or_load_PSF(filename, nc, monochromatic=2e-6)
     f0.close()
     assert os.path.exists(filename)
 
     # this one should not re-calc since the file already exists:
     # TODO - add some checking here of file modification date/times
-    f1 = webbpsf_core.calc_or_load_PSF(filename, nc, monochromatic=2e-6)
+    f1 = stpsf_core.calc_or_load_PSF(filename, nc, monochromatic=2e-6)
     assert os.path.exists(filename)
     f1.close()
 
     # this one should recalc since we explicitly ask it to
-    f2 = webbpsf_core.calc_or_load_PSF(filename, nc, monochromatic=2e-6, clobber=True)
+    f2 = stpsf_core.calc_or_load_PSF(filename, nc, monochromatic=2e-6, clobber=True)
     assert os.path.exists(filename)
     f2.close()
 

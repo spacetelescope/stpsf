@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to make a distributable version of WebbPSF, with various packaging tweaks
+# Script to make a distributable version of STPSF, with various packaging tweaks
 set -e
 
 if ! [[ $1 ]]; then
@@ -9,7 +9,7 @@ if ! [[ $1 ]]; then
 fi
 
 if ! [[ $DATAROOT ]]; then
-  DATAROOT="/grp/jwst/ote/webbpsf-data-source/"
+  DATAROOT="/grp/jwst/ote/stpsf-data-source/"
 fi
 echo "Using data from $DATAROOT"
 
@@ -20,7 +20,7 @@ export COPYFILE_DISABLE=1
 # Prepare to create the data tarfile
 # Also exclude various things we don't want to distribute, like .svn, the old OPDs, and the data source directories
 
-TMPDIR="/tmp/webbpsf-data"
+TMPDIR="/tmp/stpsf-data"
 
 mkdir -p "$TMPDIR"
 rsync -avz --delete --exclude '._*' --exclude '_Obsolete' \
@@ -42,8 +42,8 @@ echo "Saving version number $VER to version.txt"
 
 # create distributable tar file
 tar -cvz -C "$TMPDIR/.." \
-    -f "webbpsf-data-$VER.tar.gz" webbpsf-data
+    -f "stpsf-data-$VER.tar.gz" stpsf-data
 
-echo "File output to:    $PWD/webbpsf-data-$VER.tar.gz"
+echo "File output to:    $PWD/stpsf-data-$VER.tar.gz"
 echo
 echo "If that works, remove $TMPDIR"

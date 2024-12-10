@@ -6,10 +6,10 @@ More Examples for JWST
 =============================
 
 
-Any user of Webbpsf is invited to submit snippets of example code for sharing here.
+Any user of STPSF is invited to submit snippets of example code for sharing here.
 
 This code is also available as a
-`Jupyter notebook <http://nbviewer.jupyter.org/github/spacetelescope/webbpsf/blob/stable/notebooks/more_examples.ipynb>`_. This version
+`Jupyter notebook <http://nbviewer.jupyter.org/github/spacetelescope/stpsf/blob/stable/notebooks/more_examples.ipynb>`_. This version
 of the page is kept for convenience but may be slightly out of date in a few places.
 
 Examples are organized by topic:
@@ -19,7 +19,7 @@ Examples are organized by topic:
  * :ref:`more_examples_coronagraphy`
 
 The
-`notebook version of this page <http://nbviewer.jupyter.org/github/spacetelescope/webbpsf/blob/stable/notebooks/more_examples.ipynb>`_
+`notebook version of this page <http://nbviewer.jupyter.org/github/spacetelescope/stpsf/blob/stable/notebooks/more_examples.ipynb>`_
 includes a fourth section providing examples of all the
 major SI modes for each of the JWST instruments.
 
@@ -35,15 +35,15 @@ Displaying a PSF as an image and as an encircled energy plot
 .. code-block:: python
 
     #create a NIRCam instance and calculate a PSF for F210M
-    nircam = webbpsf.NIRCam()
+    nircam = stpsf.NIRCam()
     nircam.filter = 'F210M'
     psf210 = nircam.calc_psf(oversample=2)
 
     # display the PSF and plot the encircled energy
     plt.subplot(1,2,1)
-    webbpsf.display_psf(psf210, colorbar_orientation='horizontal')
+    stpsf.display_psf(psf210, colorbar_orientation='horizontal')
     axis2 = plt.subplot(1,2,2)
-    webbpsf.display_ee(psf210, ax=axis2)
+    stpsf.display_ee(psf210, ax=axis2)
 
     psf210.writeto('nircam_F210M.fits')
     plt.savefig('plot_nircam_f210m.pdf')
@@ -65,7 +65,7 @@ Perhaps you want to calculate PSFs for all filters of a given instrument, using 
 .. code-block:: python
 
     def niriss_psfs():
-        niriss = webbpsf.NIRISS()
+        niriss = stpsf.NIRISS()
 
         opdname = niriss.pupilopd
 
@@ -85,9 +85,9 @@ Monochromatic PSFs with steps of 0.1 micron from 5-28.3 micron.
 
 .. code-block:: python
 
-    m = webbpsf.MIRI()
+    m = stpsf.MIRI()
     m.pupilopd = 'OPD_RevW_ote_for_MIRI_requirements.fits.gz'       # select an OPD
-                                                # looks inside $WEBBPSF_DATA/MIRI/OPD by default
+                                                # looks inside $STPSF_DATA/MIRI/OPD by default
                                                  # or you can specify a full path name.
     m.options['parity'] = 'odd'                 # please make an output PSF with its center
                                                  # aligned to the center of a single pixel
@@ -100,7 +100,7 @@ Monochromatic PSFs with steps of 0.1 micron from 5-28.3 micron.
         psf = m.calc_psf(fov_arcsec=30, oversample=4, monochromatic=wavelength, display=False,
                    outfile=psffile)
         ax = plt.subplot(16,16,iw+1)
-        webbpsf.display_psf(psffile, ext='DET_SAMP', colorbar=False, imagecrop=8)
+        stpsf.display_psf(psffile, ext='DET_SAMP', colorbar=False, imagecrop=8)
         ax.set_title('')
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
@@ -119,7 +119,7 @@ Click to enlarge:
 Spectroscopic PSFs, Slit and Slitless
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Note that WebbPSF does not yet compute *dispersed* spectroscopic PSFs, but you can compute monochromatic
+Note that STPSF does not yet compute *dispersed* spectroscopic PSFs, but you can compute monochromatic
 PSFs and combine them yourself with an appropriate dispersion model.
 
 
@@ -130,7 +130,7 @@ NIRSpec fixed slits
 .. code-block:: python
 
     plt.figure(figsize=(8, 12))
-    nspec = webbpsf.NIRSpec()
+    nspec = stpsf.NIRSpec()
     nspec.image_mask = 'S200A1' # 0.2 arcsec slit
 
     psfs = {}
@@ -139,7 +139,7 @@ NIRSpec fixed slits
 
     for i, wave in enumerate([0.6e-6, 1e-6, 2e-6, 3e-6]):
         plt.subplot(1, 4, i+1)
-        webbpsf.display_psf(psfs[wave], colorbar=False, imagecrop=2, title='NIRSpec S200A1 at {0:.1f} $\mu m$'.format(wave*1e6))
+        stpsf.display_psf(psfs[wave], colorbar=False, imagecrop=2, title='NIRSpec S200A1 at {0:.1f} $\mu m$'.format(wave*1e6))
     plt.savefig('example_nirspec_slitpsf.png')
 
 .. image:: ./fig_example_nirspec_slitpsf.png
@@ -155,12 +155,12 @@ NIRSpec MSA
 .. code-block:: python
 
     plt.figure(figsize=(8, 12))
-    ns = webbpsf.NIRSpec()
+    ns = stpsf.NIRSpec()
     ns.image_mask='MSA all open'
     ns.display()
     plt.savefig('example_nirspec_msa_optics.png')
     msapsf = ns.calc_psf(monochromatic=2e-6, oversample=8)
-    webbpsf.display_psf(msapsf, ext='DET_SAMP')
+    stpsf.display_psf(msapsf, ext='DET_SAMP')
 
 .. image:: ./fig_example_nirspec_msa_optics.png
    :scale: 75%
@@ -181,7 +181,7 @@ MIRI LRS
 
 .. code-block:: python
 
-    miri = webbpsf.MIRI()
+    miri = stpsf.MIRI()
     miri.image_mask = 'LRS slit'
     miri.pupil_mask = 'P750L'
     psf = miri.calc_psf(monochromatic=6.0e-6, display=True)
@@ -207,7 +207,7 @@ NIRCam coronagraphy with an offset source
 
 .. code-block:: python
 
-    nc = webbpsf.NIRCam()
+    nc = stpsf.NIRCam()
     nc.filter='F430M'
     nc.image_mask='MASK430R'
     nc.pupil_mask='CIRCLYOT'
@@ -220,10 +220,10 @@ NIRCam coronagraphy with an offset source
 
     plt.figure(figsize=(12,4))
     plt.subplot(1,2,1)
-    webbpsf.display_psf('coronagraphic.fits', vmin=1e-10, vmax=1e-5,
+    stpsf.display_psf('coronagraphic.fits', vmin=1e-10, vmax=1e-5,
         ext='OVERSAMP', title='NIRCam F430M+MASK430R, 4x oversampled', crosshairs=True)
     plt.subplot(1,2,2)
-    webbpsf.display_psf('coronagraphic.fits', vmin=1e-10, vmax=1e-5,
+    stpsf.display_psf('coronagraphic.fits', vmin=1e-10, vmax=1e-5,
         ext='DET_SAMP', title='NIRCam F430M+MASK430R, detector oversampled', crosshairs=True)
 
     plt.savefig('example_nircam_coron_resampling.png')
@@ -245,7 +245,7 @@ Simulate NIRCam coronagraphic acquisition images
 .. code-block:: python
 
     def compute_psfs():
-        nc = webbpsf.NIRCam()
+        nc = stpsf.NIRCam()
 
         # acq filter, occulting mask, lyot, coords of acq ND square
         sets = [('F182M', 'MASKSWB', 'WEDGELYOT', -10,  7.5),
@@ -287,7 +287,7 @@ Iterate a calculation over all MIRI coronagraphic modes
 .. code-block:: python
 
     def miri_psfs_coron():
-        miri = webbpsf.MIRI()
+        miri = stpsf.MIRI()
 
         for filtwave in [1065, 1140, 1550, 2300]:
 
@@ -320,7 +320,7 @@ Make plots of encircled energy in PSFs at various wavelengths
 .. code-block:: python
 
     def miri_psfs_for_ee():
-        miri = webbpsf.MIRI()
+        miri = stpsf.MIRI()
 
         opdname = miri.pupilopd
 
@@ -345,9 +345,9 @@ Make plots of encircled energy in PSFs at various wavelengths
             ax = plt.subplot(2,2,iw+1)
             for i in range(10):
                 name = "PSF_MIRI_%.1fum_wfe%d.fits" % (wave, i)
-                webbpsf.display_ee(name, ax=ax, mark_levels=False)
+                stpsf.display_ee(name, ax=ax, mark_levels=False)
 
-                eefn = webbpsf.measure_ee(name)
+                eefn = stpsf.measure_ee(name)
                 ees60.append(eefn(0.60))
                 ees51.append(eefn(0.51))
 
@@ -384,7 +384,7 @@ There are two functions here, one that creates a simulated PSF for a given amoun
             i.e. shearx=3 means the coronagraph pupil is sheared by 3% of the primary.
 
         """
-        miri = webbpsf.MIRI()
+        miri = stpsf.MIRI()
 
         miri.options['pupil_shift_x'] = shearx/100 # convert shear amount to float between 0-1
         miri.options['pupil_shift_y'] = sheary/100
@@ -481,11 +481,11 @@ There are two functions here, one that creates a simulated PSF for a given amoun
             # Radial profile plot
             plt.subplot(233)
 
-            radius, profperf = webbpsf.radial_profile(perfectname, ext=1)
-            radius2, profshear = webbpsf.radial_profile(outname, ext=1)
+            radius, profperf = stpsf.radial_profile(perfectname, ext=1)
+            radius2, profshear = stpsf.radial_profile(outname, ext=1)
 
             # normalize all radial profiles to peak=1 for an unocculted source
-            radiusu, profunocc = webbpsf.radial_profile('PSF_MIRI_F1065C_wfe0_noshear_unocculted.fits',
+            radiusu, profunocc = stpsf.radial_profile('PSF_MIRI_F1065C_wfe0_noshear_unocculted.fits',
                 ext=1, center=(43.3, 68.6)) # center is in pixel coords
 
             peakunocc = profunocc.max()
@@ -507,17 +507,17 @@ There are two functions here, one that creates a simulated PSF for a given amoun
 
             # plot comparison perfect case PSF - detector sampled
             plt.subplot(232)
-            webbpsf.display_psf(perfectname, ext=1, vmax=psfmax)
+            stpsf.display_psf(perfectname, ext=1, vmax=psfmax)
             plt.title("PSF, no shear")
 
             # plot shifted pupil PSF - detector sampled
             plt.subplot(235)
-            webbpsf.display_psf(outname, ext=1, vmax=psfmax)
+            stpsf.display_psf(outname, ext=1, vmax=psfmax)
             plt.title("PSF, shear (%.1f, %1.f)" % (shearx, sheary))
             plt.xlabel("Separation [arcsec]")
             # difference PSf
             plt.subplot(236)
-            webbpsf.display_psf_difference(outname, perfectname, ext1=1,
+            stpsf.display_psf_difference(outname, perfectname, ext1=1,
                 ext2=1, vmax=diffmax, vmin=-0.1, normalize_to_second=True)
             plt.title('Relative PSF increase')
             plt.xlabel("Separation [arcsec]")
@@ -529,6 +529,6 @@ There are two functions here, one that creates a simulated PSF for a given amoun
 
 
 ..
-  Copy in some examples here from test_webbpsf and validate_webbpsf ?
+  Copy in some examples here from test_stpsf and validate_stpsf ?
 
 

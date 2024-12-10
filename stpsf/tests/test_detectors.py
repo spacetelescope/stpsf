@@ -4,7 +4,7 @@ from astropy.io import fits
 
 import poppy
 import stpsf.detectors as detectors
-import stpsf.webbpsf_core as webbpsf_core
+import stpsf.stpsf_core as stpsf_core
 
 
 # @pytest.mark.skip()
@@ -12,7 +12,7 @@ def test_apply_miri_scattering_error():
     """Test that the apply_miri_scattering function raises an error for non-MIRI PSFs"""
 
     # Create a PSF
-    nir = webbpsf_core.NIRCam()
+    nir = stpsf_core.NIRCam()
     psf = nir.calc_psf(nlambda=1, fov_pixels=5)
 
     # Test that running this function will raise a ValueError
@@ -31,12 +31,12 @@ def test_apply_miri_scattering():
     """
 
     # Create a baseline PSF to have shape/header keywords correct
-    mir = webbpsf_core.MIRI()
+    mir = stpsf_core.MIRI()
     mir.filter = 'F560W'  # this filter has a strong cross added
     mir.options['output_mode'] = 'Oversampled image'
     psf = mir.calc_psf(add_distortion=False, nlambda=1)
 
-    # Set up new extensions (from webbpsf_core.JWInstrument._calc_psf_format_output)
+    # Set up new extensions (from stpsf_core.JWInstrument._calc_psf_format_output)
     n_exts = len(psf)
     for ext in np.arange(n_exts):
         hdu_new = fits.ImageHDU(psf[ext].data, psf[ext].header)  # these will be the PSFs that are edited
@@ -50,7 +50,7 @@ def test_apply_miri_scattering():
     # Rebin data to get 3rd extension
     mir.options['output_mode'] = 'Both extensions'
     mir.options['detector_oversample'] = 1
-    webbpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(mir, result=psf_cross, options=mir.options)
+    stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(mir, result=psf_cross, options=mir.options)
 
     # Test distortion function
     for ext in [2, 3]:
@@ -123,12 +123,12 @@ def test_miri_conservation_energy():
     """
 
     # Create a baseline PSF to have shape/header keywords correct
-    mir = webbpsf_core.MIRI()
+    mir = stpsf_core.MIRI()
     mir.filter = 'F1000W'
     mir.options['output_mode'] = 'Oversampled image'
     psf = mir.calc_psf(add_distortion=False, nlambda=1)
 
-    # Set up new extensions (from webbpsf_core.JWInstrument._calc_psf_format_output)
+    # Set up new extensions (from stpsf_core.JWInstrument._calc_psf_format_output)
     n_exts = len(psf)
     for ext in np.arange(n_exts):
         hdu_new = fits.ImageHDU(psf[ext].data, psf[ext].header)  # these will be the PSFs that are edited
@@ -142,7 +142,7 @@ def test_miri_conservation_energy():
     # Rebin data to get 3rd extension
     mir.options['output_mode'] = 'Both extensions'
     mir.options['detector_oversample'] = 1
-    webbpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(mir, result=psf_cross, options=mir.options)
+    stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(mir, result=psf_cross, options=mir.options)
 
     # Test distortion function
     for ext in [2, 3]:
@@ -163,7 +163,7 @@ def test_ipc_oversampling_equivalence(oversamp=2):
     This is necessary to verify the "intuitive" way of applying IPC to detector-sampled data,
     and the alternative way to apply it to higher resolution oversampled data, are equivalent.
     """
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
 
     testpsf = nrc.calc_psf(nlambda=1, oversample=oversamp, fov_pixels=5)
 
@@ -187,7 +187,7 @@ def test_ipc_basic_effect_on_psf_fwhm():
     Tests that (a) there is no change to the first two extensions, which are 'pure optical PSF'
                (b) that the FWHM increases for the other two extensions, which are distortion+detector effects
     """
-    nrc = webbpsf_core.NIRCam()
+    nrc = stpsf_core.NIRCam()
     psf_withipc = nrc.calc_psf(nlambda=1, fov_pixels=101)
     nrc.options['add_ipc'] = False
     psf_noipc = nrc.calc_psf(nlambda=1, fov_pixels=101)

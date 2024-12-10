@@ -14,8 +14,8 @@ if not os.environ.get('PYSYN_CDBS'):
     os.environ['PYSYN_CDBS'] = '/grp/hst/cdbs'
 assert exists(os.environ['PYSYN_CDBS']), "Can't load synthetic photometry files!"
 
-if not os.environ.get('WEBBPSF_PATH'):
-    os.environ['WEBBPSF_PATH'] = '/grp/jwst/ote/webbpsf-data'
+if not os.environ.get('STPSF_PATH'):
+    os.environ['STPSF_PATH'] = '/grp/jwst/ote/stpsf-data'
 import stpsf  # noqa
 
 N_PROCESSES = 16
@@ -158,7 +158,7 @@ def _validate(opd, filter_name, image_mask, pupil_mask, instrument_name):
             # Even a target acq PSF should use the MSA pupil mask
             return False
         if filter_name == 'IFU':
-            return False  # not yet implemented in WebbPSF
+            return False  # not yet implemented in STPSF
     elif instrument_name == 'FGS':
         return True
     elif instrument_name == 'NIRISS':

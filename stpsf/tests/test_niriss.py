@@ -1,7 +1,7 @@
 import numpy as np
 
-from .. import webbpsf_core
-from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
+from .. import stpsf_core
+from .test_stpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
 # ------------------    NIRISS Tests    ----------------------------
 
@@ -30,7 +30,7 @@ def test_niriss_auto_pupil():
     depending on selected filter or wavelengths
     """
 
-    niriss = webbpsf_core.NIRISS()
+    niriss = stpsf_core.NIRISS()
     assert niriss.pupil_mask is None
 
     niriss.filter = 'F277W'
@@ -54,9 +54,9 @@ def test_niriss_gr700xd():
     """
     Smoke-test calculations with the GR700XD custom optic
     present in the system. This is a regression test for
-    https://github.com/mperrin/webbpsf/issues/148
+    https://github.com/mperrin/stpsf/issues/148
     """
-    niriss = webbpsf_core.NIRISS()
+    niriss = stpsf_core.NIRISS()
     niriss.filter = 'CLEAR'
     niriss.pupil_mask = 'GR700XD'
     niriss.calc_psf(monochromatic=1e-6, fov_pixels=2)
@@ -64,7 +64,7 @@ def test_niriss_gr700xd():
 
 def test_niriss_aperturename():
     """Not a lot of options here"""
-    niriss = webbpsf_core.NIRISS()
+    niriss = stpsf_core.NIRISS()
     assert niriss.aperturename == niriss._detectors[niriss.detector], 'Default SIAF aperture is not as expected'
 
     ref_tel_coords = niriss._tel_coords()

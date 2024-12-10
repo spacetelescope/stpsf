@@ -3,7 +3,7 @@ import numpy as np
 from astropy.io import fits
 
 from .. import distortion
-from .. import webbpsf_core
+from .. import stpsf_core
 
 
 # @pytest.mark.skip()
@@ -18,12 +18,12 @@ def test_apply_distortion_skew():
     """
 
     # Create a baseline PSF to have shape/header keywords correct
-    fgs = webbpsf_core.FGS()
+    fgs = stpsf_core.FGS()
     fgs.detector = 'FGS1'
     fgs.options['output_mode'] = 'Oversampled image'
     psf = fgs.calc_psf(add_distortion=False)
 
-    # Set up new extensions (from webbpsf_core.JWInstrument._calc_psf_format_output)
+    # Set up new extensions (from stpsf_core.JWInstrument._calc_psf_format_output)
     n_exts = len(psf)
     for ext in np.arange(n_exts):
         hdu_new = fits.ImageHDU(psf[ext].data, psf[ext].header)  # these will be the PSFs that are edited
@@ -37,7 +37,7 @@ def test_apply_distortion_skew():
     # Rebin data to get 3rd extension
     fgs.options['output_mode'] = 'Both extensions'
     fgs.options['detector_oversample'] = psf[0].header['DET_SAMP']
-    webbpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(fgs, result=psf_siaf, options=fgs.options)
+    stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(fgs, result=psf_siaf, options=fgs.options)
 
     # Test the slope of the rectangle
     for ext in [2, 3]:
@@ -73,7 +73,7 @@ def test_apply_distortion_pixel_scale():
     """
 
     # Create a baseline PSF to have shape/header keywords correct
-    fgs = webbpsf_core.FGS()
+    fgs = stpsf_core.FGS()
     fgs.detector = 'FGS1'
     fgs.options['output_mode'] = 'Oversampled image'
     psf = fgs.calc_psf(add_distortion=False)
@@ -87,7 +87,7 @@ def test_apply_distortion_pixel_scale():
     # Replace the data in the PSF with the fake image
     psf[0].data = data
 
-    # Set up new extensions (from webbpsf_core.JWInstrument._calc_psf_format_output)
+    # Set up new extensions (from stpsf_core.JWInstrument._calc_psf_format_output)
     n_exts = len(psf)
     for ext in np.arange(n_exts):
         hdu_new = fits.ImageHDU(psf[ext].data, psf[ext].header)  # these will be the PSFs that are edited
@@ -101,7 +101,7 @@ def test_apply_distortion_pixel_scale():
     # Rebin data to get 3rd extension (DET_DIST)
     fgs.options['output_mode'] = 'Both extensions'
     fgs.options['detector_oversample'] = psf[0].header['DET_SAMP']
-    webbpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(fgs, result=psf_siaf, options=fgs.options)
+    stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(fgs, result=psf_siaf, options=fgs.options)
 
     # Test that the change caused by the pixel distortion is approximately constant along the row
     # Choosing to check the 20th row.
@@ -135,7 +135,7 @@ def test_apply_rotation_error():
     """Test that the apply_rotation function raises an error for NIRSpec and MIRI PSFs"""
 
     # Create a PSF
-    for inst in [webbpsf_core.NIRSpec(), webbpsf_core.MIRI()]:
+    for inst in [stpsf_core.NIRSpec(), stpsf_core.MIRI()]:
         psf = inst.calc_psf(nlambda=1)  # done for speed
 
         # Test that running this function will raise a ValueError
@@ -147,10 +147,10 @@ def test_apply_rotation_error():
 def test_distortion_with_custom_pixscale():
     """Verifies the distortion model works properly even if the pixel scale is changed to
     a nonstandard value for the calculation. This tests/verifies the fix in PR 669:
-        https://github.com/spacetelescope/webbpsf/pull/669
+        https://github.com/spacetelescope/stpsf/pull/669
     """
 
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     miri.pixelscale = 0.061
     psf = miri.calc_psf(fov_arcsec=2)
 

@@ -7,7 +7,7 @@ import stpsf
 
 
 def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest'):
-    """Setup a webbpsf Instrument instance matched to a given dataset
+    """Setup a stpsf Instrument instance matched to a given dataset
 
     Parameters
     ----------
@@ -36,8 +36,8 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
         inst.mode = 'IFU'
         # There is no FILTER keyword for MRS, so don't set filter to anything.
     elif inst.name == 'MIRI' and header['FILTER'] == 'P750L':
-        # webbpsf doesn't model the MIRI LRS prism spectral response
-        print('Please note, webbpsf does not currently model the LRS spectral response. Setting filter to F770W instead.')
+        # stpsf doesn't model the MIRI LRS prism spectral response
+        print('Please note, stpsf does not currently model the LRS spectral response. Setting filter to F770W instead.')
         inst.filter = 'F770W'
     elif (inst.name == 'NIRCam') and (header['PUPIL'][0] == 'F') and (header['PUPIL'][-1] in ['N', 'M']):
         # These NIRCam filters are physically in the pupil wheel, but still act as filters.
@@ -54,14 +54,14 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
     if inst.name == 'NIRCam':
         if header['PUPIL'].startswith('MASK'):
             if header['PUPIL'] == 'MASKBAR':
-                # the FITS header is just 'BAR' but the value needed in webbpsf is either
+                # the FITS header is just 'BAR' but the value needed in stpsf is either
                 # 'MASKLWB' or "MASKSWB' depending on channel.
                 inst.pupil_mask = 'MASKLWB' if header['CHANNEL'] == 'LONG' else 'MASKSWB'
             else:
                 inst.pupil_mask = header['PUPIL']
             if 'CORONMSK' in header:
                 inst.image_mask = header['CORONMSK'].replace('MASKA', 'MASK')  # note, have to modify the value slightly for
-                # consistency with the labels used in webbpsf
+                # consistency with the labels used in stpsf
             # The apername keyword is not always correct for cases with dual-channel coronagraphy
             # in some such cases, APERNAME != PPS_APER. Let's ensure we have the proper apername for this channel:
             apername = get_nrc_coron_apname(header)
@@ -115,7 +115,7 @@ def get_nrc_coron_apname(input):
 
     Handles edge cases for dual-channel coronagraphy.
 
-    By Jarron Leisenring originally in webbpsf_ext, copied here by permission
+    By Jarron Leisenring originally in stpsf_ext, copied here by permission
 
     Parameters
     ==========

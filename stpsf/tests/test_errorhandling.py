@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from .. import conf, utils, webbpsf_core
+from .. import conf, utils, stpsf_core
 
-_log = logging.getLogger('test_webbpsf')
+_log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())
 
 
@@ -20,7 +20,7 @@ def _exception_message_starts_with(excinfo, message_body):
 
 def test_calc_psf_catch_incompatible_oversampling():
     """Test that supplying all three oversampling arguments raises a ValueError"""
-    nc = webbpsf_core.instrument('NIRCam')
+    nc = stpsf_core.instrument('NIRCam')
     nc.pupilopd = None
     nc.filter = 'F212N'
 
@@ -30,7 +30,7 @@ def test_calc_psf_catch_incompatible_oversampling():
 
 
 def test_invalid_masks():
-    nc = webbpsf_core.NIRCam()
+    nc = stpsf_core.NIRCam()
 
     # first, test case independence. These are all converted to upper case internally & automatically
     nc.image_mask = 'maskswb'
@@ -49,15 +49,15 @@ def test_invalid_masks():
     assert _exception_message_starts_with(excinfo, "Instrument NIRCam doesn't have a pupil mask called 'JUNK'.")
 
 
-def test_get_webbpsf_data_path_invalid(monkeypatch, tmp_path):
-    real_env_webbpsf_path = os.getenv('WEBBPSF_PATH')
-    real_conf_webbpsf_path = conf.WEBBPSF_PATH
-    real_webbpsf_path = real_env_webbpsf_path or real_conf_webbpsf_path
+def test_get_stpsf_data_path_invalid(monkeypatch, tmp_path):
+    real_env_stpsf_path = os.getenv('STPSF_PATH')
+    real_conf_stpsf_path = conf.STPSF_PATH
+    real_stpsf_path = real_env_stpsf_path or real_conf_stpsf_path
 
-    # Ensure get_webbpsf_data_path tests for environment variable when
+    # Ensure get_stpsf_data_path tests for environment variable when
     # config says to (and env var has been unset)
-    monkeypatch.delenv('WEBBPSF_PATH')
-    monkeypatch.setattr(conf, 'WEBBPSF_PATH', 'from_environment_variable')
+    monkeypatch.delenv('STPSF_PATH')
+    monkeypatch.setattr(conf, 'STPSF_PATH', 'from_environment_variable')
 
     # Patch the function that gets the home directory so we don't overwrite the
     # what is on the system
@@ -66,23 +66,23 @@ def test_get_webbpsf_data_path_invalid(monkeypatch, tmp_path):
 
     monkeypatch.setattr(Path, "home", mockreturn)
 
-    with pytest.warns(UserWarning, match=r"Environment variable \$WEBBPSF_PATH is not set!\n.*") as excinfo:
-        _ = utils.get_webbpsf_data_path()
+    with pytest.warns(UserWarning, match=r"Environment variable \$STPSF_PATH is not set!\n.*") as excinfo:
+        _ = utils.get_stpsf_data_path()
 
     # Check that the data was downloaded
-    assert any((tmp_path / "data" / "webbpsf-data").iterdir())
+    assert any((tmp_path / "data" / "stpsf-data").iterdir())
 
-    # Test that we can override the WEBBPSF_PATH setting here through
+    # Test that we can override the STPSF_PATH setting here through
     # the config object even though the environment var is deleted
-    # (n.b. get_webbpsf_data_path *does* ensure that the path is a
+    # (n.b. get_stpsf_data_path *does* ensure that the path is a
     # valid directory path, so we just use the parent of the real path)
-    parent_of_webbpsf_path = os.path.abspath(os.path.join(real_webbpsf_path, '..'))
-    monkeypatch.setattr(conf, 'WEBBPSF_PATH', parent_of_webbpsf_path)
+    parent_of_stpsf_path = os.path.abspath(os.path.join(real_stpsf_path, '..'))
+    monkeypatch.setattr(conf, 'STPSF_PATH', parent_of_stpsf_path)
 
-    assert utils.get_webbpsf_data_path() == parent_of_webbpsf_path
+    assert utils.get_stpsf_data_path() == parent_of_stpsf_path
 
     # Test that we get an error if we make the path invalid
-    monkeypatch.setattr(conf, 'WEBBPSF_PATH', 'some junk')
+    monkeypatch.setattr(conf, 'STPSF_PATH', 'some junk')
     with pytest.raises(IOError) as excinfo:
-        _ = utils.get_webbpsf_data_path()
-    assert 'WEBBPSF_PATH ({}) is not a valid directory path!'.format('some junk') in str(excinfo)
+        _ = utils.get_stpsf_data_path()
+    assert 'STPSF_PATH ({}) is not a valid directory path!'.format('some junk') in str(excinfo)

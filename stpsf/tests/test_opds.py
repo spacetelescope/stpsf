@@ -164,7 +164,7 @@ def test_thermal_slew_partial_angle():
 
 
 def test_thermal_slew_update_opd():
-    """Test that running webbpsf.opds.OTE_Linear_Model_WSS.thermal_slew() will
+    """Test that running stpsf.opds.OTE_Linear_Model_WSS.thermal_slew() will
     give the expected output
 
     """
@@ -181,7 +181,7 @@ def test_thermal_slew_update_opd():
     else:
         # rev W pupil segment mask file, labeled as VERSION=3 in jwpupil_segments.fits
         # Values here are by mperrin based on evaluation of the same exact linear model code as above
-        # changing only the data file $WEBBPSF_DATA/jwpupil_segments.fits to the newer version
+        # changing only the data file $STPSF_DATA/jwpupil_segments.fits to the newer version
         expected_max = 40.7763  # nanometers, expected value for peak
         expected_rms = 11.24  # nm
     assert np.isclose(
@@ -314,7 +314,7 @@ def test_single_seg_psf(segmentid=1):
 
     ote.move_seg_local(segname, xtilt=1, piston=-1)
 
-    pupil = stpsf.webbpsf_core.one_segment_pupil(segmentid)
+    pupil = stpsf.stpsf_core.one_segment_pupil(segmentid)
     ote.amplitude = pupil[0].data
 
     psf = nrc.calc_psf(nlambda=1)
@@ -399,7 +399,7 @@ def test_apply_field_dependence_model():
         rms3, 36.0e-9, atol=1e-9
     ), assert_message
 
-    # Now test as usd in a webbpsf calculation, implicitly, and with the defocus backout ON
+    # Now test as usd in a stpsf calculation, implicitly, and with the defocus backout ON
     # The WFE here is slightly less, due to the focus optimization
     nis = stpsf.NIRISS()
     nis.pupilopd = None  # disable any global WFE, so we just look at the field dependent part
@@ -514,7 +514,7 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
     for i, iseg in enumerate(['A1', 'B1', 'C1']):
         ote.zero()
 
-        pupil = stpsf.webbpsf_core.one_segment_pupil(iseg, npix=npix)
+        pupil = stpsf.stpsf_core.one_segment_pupil(iseg, npix=npix)
 
         ote.amplitude = pupil[0].data
         nrc.pupil = ote
@@ -597,7 +597,7 @@ def test_changing_npix():
     # Create a NIRCam instance using npix=2048
     npix = 2048
     nircam_2048 = stpsf.NIRCam()
-    nircam_2048.pupil = os.path.join(stpsf.utils.get_webbpsf_data_path(), f'jwst_pupil_RevW_npix{npix}.fits.gz')
+    nircam_2048.pupil = os.path.join(stpsf.utils.get_stpsf_data_path(), f'jwst_pupil_RevW_npix{npix}.fits.gz')
     nircam_2048.pupilopd = None  # Set to none so I don't have to worry about making new OPDs
     psf_2048 = nircam_2048.calc_psf(oversample=2, nlambda=1, add_distortion=False)
 

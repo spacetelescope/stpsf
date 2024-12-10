@@ -6,10 +6,10 @@ import numpy as np
 import pysiaf
 
 import stpsf
-from .. import webbpsf_core
-from .test_webbpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
+from .. import stpsf_core
+from .test_stpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
-_log = logging.getLogger('test_webbpsf')
+_log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())
 
 
@@ -43,7 +43,7 @@ def test_miri_set_siaf():
 def do_test_miri_fqpm(
     nlambda=1, clobber=True, angle=0.0, offset=0.0, oversample=2, outputdir=None, display=False, save=False
 ):
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     miri.pupilopd = None
     miri.filter = 'F1065C'
     miri.image_mask = 'FQPM1065'
@@ -83,7 +83,7 @@ def test_miri_fqpm_offset_45(*args, **kwargs):
 
 def test_miri_aperturename():
     """Test aperture name functionality"""
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     assert miri.aperturename == miri._detectors[miri.detector], 'Default SIAF aperture is not as expected'
 
     ref_tel_coords = miri._tel_coords()
@@ -101,7 +101,7 @@ def test_miri_slit_apertures():
     """Test that we can use slit and aperture names that don't map to a specific detector
     Verify that the V2 and V3 coordinates are reported as expected.
     """
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
 
     apname = 'MIRIM_SLIT'  # this is the only slit aperture on the MIRI imager
     miri.set_position_from_aperture_name(apname)
@@ -121,7 +121,7 @@ def test_lrs_psf():
 
     This is not yet a very good test; does not test the correctness of the output at all.
     """
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     miri.set_position_from_aperture_name('MIRIM_SLIT')
     miri.image_mask = 'LRS slit'
     miri.pupil_mask = 'P750L'
@@ -133,7 +133,7 @@ def test_lrs_psf():
 def test_miri_nonsquare_detector():
     """Test that we can handle the slightly different
     dimenssions in X and Y of the MIRI detector"""
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     miri.detector_position = (1023, 1031)  # recall this is X, Y order
     assert miri.detector_position == (1023, 1031)
 
@@ -143,7 +143,7 @@ def test_mode_switch():
     Also checks this works to switch aperturenane, and conversely setting aperturename switches mode if needed.
     Also checks that this automatically changes the rotation and pixelscale properties, as expected.
     """
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     imager_rotation = miri._rotation
     imager_pixelscale = miri.pixelscale
 
@@ -214,7 +214,7 @@ def test_mode_switch():
 
 def test_IFU_wavelengths():
     """Test computing the wqvelength sampling for a sim IFU cube"""
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     # check mode swith to IFU
     miri.mode = 'IFU'
     miri.band = '2A'
@@ -231,7 +231,7 @@ def test_miri_ifu_broadening():
     """ Basic functional test for the code that adjusts PSF outputs to better match empirical IFU PSFs
     """
 
-    miri = webbpsf_core.MIRI()
+    miri = stpsf_core.MIRI()
     miri.mode = 'IFU'
     psf = miri.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
 

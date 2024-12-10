@@ -50,17 +50,17 @@ html:
 
 htmlstsci:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	rsync -av $(BUILDDIR)/html/ science1.stsci.edu:web/software/webbpsf/
+	rsync -av $(BUILDDIR)/html/ science1.stsci.edu:web/software/stpsf/
 	@echo "Software built and copied to STScI"
 	@echo "try :"
-	@echo "   open http://www.stsci.edu/~mperrin/software/webbpsf/"
+	@echo "   open http://www.stsci.edu/~mperrin/software/stpsf/"
 
 htmlprerelease:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	rsync -av $(BUILDDIR)/html/ science1.stsci.edu:web/software/webbpsf_prerelease/
+	rsync -av $(BUILDDIR)/html/ science1.stsci.edu:web/software/stpsf_prerelease/
 	@echo "Software built and copied to STScI prerelease"
 	@echo "try :"
-	@echo "   open http://www.stsci.edu/~mperrin/software/webbpsf_prerelease/"
+	@echo "   open http://www.stsci.edu/~mperrin/software/stpsf_prerelease/"
 
 
 dirhtml:

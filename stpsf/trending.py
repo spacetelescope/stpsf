@@ -20,7 +20,7 @@ import stpsf
 def _read_opd(filename, auto_download=True):
     """Trivial utilty function to read OPD from a WSS-output FITS file
     If the file does not exist locally, try to retrieve it from MAST automatically."""
-    full_file_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', filename)
+    full_file_path = os.path.join(stpsf.utils.get_stpsf_data_path(), 'MAST_JWST_WSS_OPDs', filename)
     if not os.path.exists(full_file_path) and auto_download:
         stpsf.mast_wss.mast_retrieve_opd(filename)
     opdhdu = fits.open(full_file_path)
@@ -75,7 +75,7 @@ def wavefront_time_series_plot(
 
     for row in opdtable:
         if os.path.isfile(row['fileName']) is False:
-            full_file_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
+            full_file_path = os.path.join(stpsf.utils.get_stpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
         else:
             full_file_path = row['fileName']
         if 'rms_wfe' not in opdtable.colnames:
@@ -304,7 +304,7 @@ def wfe_histogram_plot(
     pre_or_post = []
     for row in opdtable1:
         if download_opds:
-            full_file_path = os.path.join(stpsf.utils.get_webbpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
+            full_file_path = os.path.join(stpsf.utils.get_stpsf_data_path(), 'MAST_JWST_WSS_OPDs', row['fileName'])
         else:
             full_file_path = row['fileName']
         if 'rms_wfe' not in opdtable1.colnames:
@@ -1671,7 +1671,7 @@ def plot_wfs_obs_delta(fn1, fn2, vmax_fraction=1.0, download_opds=True):
     ----------
     fn1, fn2 : string
         Filenames of two OPD files retrieved from MAST.
-        (Does not need to include full path, if files were downloaded by webbpsf)
+        (Does not need to include full path, if files were downloaded by stpsf)
     vmax_fraction : float
         Scale factor for setting the plot log scale vmax relative to the
         image peak pixel. vmax_fraction = 1.0 sets the scale vmax to the
@@ -2218,14 +2218,14 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
         except ImportError:
             oss_centroid_text = ''
 
-        # WEBBPSF CENTROIDS ###
+        # STPSF CENTROIDS ###
         cen = stpsf.fwcentroid.fwcentroid(im_obs_clean)
         axes[0].scatter(cen[1], cen[0], color='red', marker='+', s=50)
-        axes[0].text(cen[1], cen[0], '  webbpsf', color='red', verticalalignment='center')
+        axes[0].text(cen[1], cen[0], '  stpsf', color='red', verticalalignment='center')
         axes[0].text(
             0.95,
             0.05,
-            f' webbpsf Centroid: {cen[1]:.2f}, {cen[0]:.2f}' + oss_centroid_text,
+            f' stpsf Centroid: {cen[1]:.2f}, {cen[0]:.2f}' + oss_centroid_text,
             horizontalalignment='right',
             verticalalignment='bottom',
             transform=axes[0].transAxes,
