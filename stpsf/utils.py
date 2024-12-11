@@ -188,7 +188,7 @@ def auto_download_stpsf_data():
     from urllib.request import urlretrieve
 
     # Create a default directory for the data files
-    default_path = Path.home() / "data" / "stpsf-data"
+    default_path = Path.home() / "data" / "webbpsf-data" # TODO - change this to stpsf-data once box data has that folder name
     default_path.mkdir(parents=True, exist_ok=True)
 
     os.environ["STPSF_PATH"] = str(default_path)
