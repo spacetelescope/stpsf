@@ -23,6 +23,11 @@ See https://github.com/spacetelescope/stpsf/issues for currently open issues and
 Version History and Change Log
 -------------------------------
 
+Version 1.5.1
+=============
+*2024 December*
+Initial STPSF pre-release with code renamed from WEBBPsf to STPSF, not production ready
+
 
 Version 1.5.0
 =============
