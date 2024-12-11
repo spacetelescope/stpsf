@@ -68,7 +68,7 @@ jobs:
         key: ${{ needs.retrieve_cache.outputs.cache_key }}
 
     - name: Set STPSF data path
-      run: echo "STPSF_PATH=${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/" >> $GITHUB_ENV
+      run: echo "STPSF_PATH=${{ needs.retrieve_cache.outputs.cache_path }}/webbpsf-data/" >> $GITHUB_ENV # TODO rename this path to be /stpsf-data/
 
     - name: Check conda info
       run: conda info
