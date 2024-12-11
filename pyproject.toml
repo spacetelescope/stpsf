@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stpsf"
-description = "Creates simulated point spread functions for the James Webb Space Telescope"
+description = "Creates simulated point spread functions for Space Telescopes (James Webb, Roman)"
 authors = [
     { name = "Association of Universities for Research in Astronomy", email = "help@stsci.edu" },
 ]
@@ -63,6 +63,7 @@ namespaces = false
 ]
 
 [tool.setuptools_scm]
+local_scheme = "no-local-version"
 write_to = "stpsf/version.py"
 
 [tool.pytest.ini_options]
