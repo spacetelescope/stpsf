@@ -15,7 +15,7 @@ if not os.environ.get('PYSYN_CDBS'):
 assert exists(os.environ['PYSYN_CDBS']), "Can't load synthetic photometry files!"
 
 if not os.environ.get('STPSF_PATH'):
-    os.environ['STPSF_PATH'] = '/grp/jwst/ote/stpsf-data'
+    os.environ['STPSF_PATH'] = '/grp/jwst/ote/webbpsf-data'   # TODO should this folder location exist outside of jwst, change to stpsf when ready
 import stpsf  # noqa
 
 N_PROCESSES = 16

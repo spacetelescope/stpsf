@@ -7,8 +7,8 @@ from scipy.io import loadmat
 from scipy import ndimage
 import stpsf
 
-
-matfile = '/itar/jwst/tel/share/stpsf/stpsf-data-source/JWST_thermal_response_data05_31_2017.mat'
+# TODO - this should transition to stpsf
+matfile = '/itar/jwst/tel/share/webbpsf/webbpsf-data-source/JWST_thermal_response_data05_31_2017.mat'
 
 
 def load_matfile(matfile):
