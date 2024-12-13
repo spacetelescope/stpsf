@@ -81,7 +81,7 @@ jobs:
         run: echo "version=$(cat ${{ steps.cache_path.outputs.cache_path }}/stpsf-data/version.txt)" >> $GITHUB_OUTPUT
       - id: cache_key
         run: echo "cache_key=stpsf-data-${{ (github.event_name == 'schedule' || github.event_name == 'release') && 'mini' || inputs.minimal && 'mini' || 'full' }}-${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9  # v4.0.2  # TODO UPDATE THIS
+      - uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9  # v4.0.2
         with:
           path: ${{ runner.temp }}/data/
           key: ${{ steps.cache_key.outputs.cache_key }}
