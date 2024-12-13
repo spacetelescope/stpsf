@@ -7,8 +7,8 @@ from scipy.io import loadmat
 from scipy import ndimage
 import stpsf
 
-# TODO - this should transition to stpsf
-matfile = '/itar/jwst/tel/share/webbpsf/webbpsf-data-source/JWST_thermal_response_data05_31_2017.mat'
+# TODO SAPP  - this should transition to stpsf location after new mount
+matfile = '/grp/jwst/ote/stpsf-data-source/OTE_source/JWST_thermal_response_data05_31_2017.mat'
 
 
 def load_matfile(matfile):

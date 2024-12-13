@@ -1,7 +1,7 @@
 #!/bin/bash
 # Top-level script to make a distributable version of the data files
 
-# See /grp/stpsf/stpsf-data-source/README_DEVEL.txt  # TODO VERIFY THIS IS CREATED
+# See /grp/stpsf/stpsf-data-source/README_DEVEL.txt  # TODO SAPP  VERIFY THIS IS CREATED
 
 if ! [[ $1 ]]; then
   echo "Provide a version string, e.g.:"
@@ -16,7 +16,7 @@ TMPDIR="/tmp/stpsf-data"
 
 echo
 echo "Copying latest data to /grp/jwst/ote for internal stsci use..."
-main_directory="/grp/jwst/ote"  # TODO - update when STARS ticket is fulfilled
+main_directory="/grp/jwst/ote"  # TODO SAPP  - update when stpsf new data mount
 new_directory="$main_directory/stpsf-data-$VER"
 symlink_directory="/grp/jwst/ote/stpsf-data"
 legacy_webbpsf_symlink_directory="/grp/jwst/ote/webbpsf-data"

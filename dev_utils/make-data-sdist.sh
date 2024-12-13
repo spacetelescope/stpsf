@@ -7,9 +7,9 @@ if ! [[ $1 ]]; then
   echo "    ./make-data-sdist.sh 0.3.3"
   exit 1
 fi
-# TODO move this to proper location stpsf
+# TODO SAPP  move this to proper location stpsf after new mount
 if ! [[ $DATAROOT ]]; then
-  DATAROOT="/grp/jwst/ote/webbpsf-data-source/"
+  DATAROOT="/grp/jwst/ote/stpsf-data-source/"
 fi
 echo "Using data from $DATAROOT"
 
