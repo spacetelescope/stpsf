@@ -69,7 +69,7 @@ Installing the Required Data Files
 
 Files containing such information as the JWST pupil shape, instrument throughputs, and aperture positions are distributed separately from STPSF. To run STPSF, you must download these files and tell STPSF where to find them using the ``STPSF_PATH`` environment variable.
 
-1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz>`_  [approx. 70 MB]
+1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz>`_  [approx. 70 MB]
 2. Untar ``stpsf-data-LATEST.tar.gz`` into a directory of your choosing.
 3. Set the environment variable ``STPSF_PATH`` to point to that directory. e.g. ::
 

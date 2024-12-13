@@ -199,7 +199,7 @@ def auto_download_stpsf_data():
 
         with TemporaryDirectory() as tmpdir:
             # Download the data files to a temporary directory
-            url = "https://stsci.box.com/shared/static/qxpiaxsjwo15ml6m4pkhtk36c9jgj70k.gz"
+            url = "https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz"
             filename = Path(tmpdir) / "stpsf-data-LATEST.tar.gz"
             urlretrieve(url, filename)
 
