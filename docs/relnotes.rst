@@ -23,6 +23,12 @@ See https://github.com/spacetelescope/stpsf/issues for currently open issues and
 Version History and Change Log
 -------------------------------
 
+Version 1.5.2
+=============
+*2024 December*
+Continuing setting up migration and automated tasks, not production ready
+
+
 Version 1.5.1
 =============
 *2024 December*

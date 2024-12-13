@@ -70,7 +70,7 @@ def test_get_stpsf_data_path_invalid(monkeypatch, tmp_path):
         _ = utils.get_stpsf_data_path()
 
     # Check that the data was downloaded
-    assert any((tmp_path / "data" / "webbpsf-data").iterdir())  # TODO - when box changes switch this to stpsf-data
+    assert any((tmp_path / "data" / "stpsf-data").iterdir())
 
     # Test that we can override the STPSF_PATH setting here through
     # the config object even though the environment var is deleted
