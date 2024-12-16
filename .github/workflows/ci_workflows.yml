@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   retrieve_cache:
-    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@develop        # 2090d50be6b75f2c241c07ae0538bff16e5be25e  # v1.4.0 # TODO SAPP change to initial release
+    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@098e3d3515d906bbfa12680d2282ec8d6726527b  # v1.5.2
     with:
       minimal: true
   tests:
