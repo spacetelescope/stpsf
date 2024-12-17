@@ -28,6 +28,12 @@ Version 2.0.0
 *2024 December*
 Ready for Production Release
 All versions before 1.5.1 were part of the WebbPSF repository
+**What's Changed**
+* Final migration before version 2.0.0 by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/46
+* Test readthedocs by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/47
+
+
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/v1.5.2...2.0.0
 
 Version 1.5.2
 =============

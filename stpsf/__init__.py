@@ -40,7 +40,7 @@ if sys.version_info < tuple(
 # required. If changes to the code and data mean STPSF won't work
 # properly with an old data package, increment this version number.
 # (It's checked against $STPSF_DATA/version.txt)
-DATA_VERSION_MIN = (1, 5, 2)
+DATA_VERSION_MIN = (2, 0, 0)
 
 
 class Conf(_config.ConfigNamespace):
