@@ -59,17 +59,14 @@ Releasing new data packages
     #. Go to https://github.com/spacetelescope/stpsf/actions/workflows/download_data.yml
     #. Open "Run Workflow" box, change it to point to your pre-release-xxx branch (or whatever your pre release branch is named), run it
     #. It should then make a cache for you of the new version data
-    #.	If you look at https://github.com/spacetelescope/stpsf/actions/caches, you will see what is available that the CI can pick from
-    #.	THIS may still not solve the problem, as the cache is only in your branch, not the actual PR.  so if the branch passes, the PR should
+    #. If you look at https://github.com/spacetelescope/stpsf/actions/caches, you will see what is available that the CI can pick from
+    #. THIS may still not solve the problem, as the cache is only in your branch, not the actual PR.  so if the branch passes, the PR should
     #. Theoretically be fine (despite its failure).  You can merge, and then re-run the "dowload data" action for develop, and then re-run your failed jobs in develop.
     #. Do not release unless develop is passing all tests
 #. Update the test_readthedocs branch.  Force development there.  Test it on readthedocs (it should be hidden on the actual site).
-    #. Checkout the branch you want to overwrite (test_readthedocs)
-        #. ``$git checkout test_readthedocs``
-    #. Reset the target branch to match the source branch (develop)
-        #. ``$git reset --hard develop``
-    #. Push to the github repo (probably upstream, may be origin, just dont do your personal one)
-        #. ``$git push upstream test_readthedocs --force``
+    #. Checkout the branch you want to overwrite (test_readthedocs) ``$git checkout test_readthedocs``
+    #. Reset the target branch to match the source branch (develop) ``$git reset --hard develop``
+    #. Push to the github repo (probably upstream, may be origin, just dont do your personal one) ``$git push upstream test_readthedocs --force``
 #. Once readthe docs looks all good test your release on test pypi.
     #. Create new env and install STPSF
     #. ``$ pip install build twine``
