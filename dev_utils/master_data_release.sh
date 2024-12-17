@@ -1,7 +1,7 @@
 #!/bin/bash
 # Top-level script to make a distributable version of the data files
 
-# See /grp/stpsf/stpsf-data-source/README_DEVEL.txt  # TODO SAPP  VERIFY THIS IS CREATED
+# See /grp/stpsf/stpsf-data-source/README_DEVEL.txt
 
 if ! [[ $1 ]]; then
   echo "Provide a version string, e.g.:"
@@ -15,10 +15,10 @@ TMPDIR="/tmp/stpsf-data"
 ./make-data-sdist.sh $VER
 
 echo
-echo "Copying latest data to /grp/jwst/ote for internal stsci use..."
-main_directory="/grp/jwst/ote"  # TODO SAPP  - update when stpsf new data mount
+echo "Copying latest data to /grp/stpsf for internal stsci use..."
+main_directory="/grp/stpsf"
 new_directory="$main_directory/stpsf-data-$VER"
-symlink_directory="/grp/jwst/ote/stpsf-data"
+symlink_directory="/grp/stpsf/stpsf-data"
 legacy_webbpsf_symlink_directory="/grp/jwst/ote/webbpsf-data"
 
 cp "$PWD/stpsf-data-$VER.tar.gz" "$main_directory"

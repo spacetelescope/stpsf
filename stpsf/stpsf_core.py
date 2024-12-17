@@ -1638,7 +1638,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         output_path : str
             Downloaded OPD are saved in this location.
-            This option is convinient for STScI users using /grp/jwst/ote/stpsf-data/.
+            This option is convinient for STScI users using /grp/stpsf/stpsf-data/.
             Default is $STPSF_PATH/MAST_JWST_WSS_OPDs
 
         backout_si_wfe : bool

@@ -87,7 +87,7 @@ You should now be able to successfully ``import stpsf`` in a Python session.
 .. Note::
 
    **For STScI Users Only:** Users at STScI may access the required data files from the Central Storage network. Set the following environment variables in your ``bash`` shell. (You will probably want to add this to your ``.bashrc``.) ::
-      export STPSF_PATH="/grp/jwst/ote/stpsf-data"
+      export STPSF_PATH="/grp/stpsf/stpsf-data"
       export PYSYN_CDBS="/grp/hst/cdbs"
 
 Software Requirements

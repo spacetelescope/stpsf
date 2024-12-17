@@ -22,7 +22,7 @@ STPSF: Simulated Point Spread Functions for the James Webb and Nancy Grace Roman
    :target: http://ascl.net/1504.007
 
 
-**ADVISORY:  STPSF IS CURRENTLY BEING MIGRATED FROM WEBBPSF - THIS REPOSITORY IS NOT READY FOR USE**
+**STPSF HAS BEEN MIGRATED FROM WEBBPSF**
 
 STPSF produces simulated PSFs for the James Webb Space Telescope, NASA's
 flagship infrared space telescope. STPSF can simulate images for any of the
