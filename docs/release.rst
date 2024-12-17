@@ -8,11 +8,11 @@ Prerequisites
 * Is the `develop` build `passing on Github Actions? <https://github.com/spacetelescope/stpsf/actions>`_ with all desired release items included?
 * Does the latest release install properly?
     * ``$ conda env remove --name ENV_NAME``
-	* ``$ conda create -n ENV_NAME python=3.xx``
-	* ``$ conda activate ENV_NAME``
-	* ``$ pip install -e .``
-	* ``$ pip uninstall tox``
-	* ``$ pip install tox tox-conda``
+    * ``$ conda create -n ENV_NAME python=3.xx``
+    * ``$ conda activate ENV_NAME``
+    * ``$ pip install -e .``
+    * ``$ pip uninstall tox``
+    * ``$ pip install tox tox-conda``
 
 Releasing new data packages
 ===========================
@@ -55,7 +55,7 @@ Releasing new data packages
     #. ``$ make clean`` (not needed for initial run, just to reset everything)
     #. ``$ make html``
 #. Merge in any changes you've made including release notes
-    #. NOTE: If the builds fail, this may be because we dont have the data cache fetched yet if so:
+  * NOTE: If the builds fail, this may be because we dont have the data cache fetched yet if so:
     #. Go to https://github.com/spacetelescope/stpsf/actions/workflows/download_data.yml
     #. Open "Run Workflow" box, change it to point to your pre-release-xxx branch (or whatever your pre release branch is named), run it
     #. It should then make a cache for you of the new version data
