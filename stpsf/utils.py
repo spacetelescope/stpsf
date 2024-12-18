@@ -21,13 +21,6 @@ _DISABLE_FILE_LOGGING_VALUE = 'none'
 
 _Strehl_perfect_cache = {}  # dict for caching perfect images used in Strehl calcs.
 
-# import deprecation decorator. This is in the standard library as of python 3.13,
-# or available from typing_extensions backported to earlier versions
-if sys.version_info >= (3, 13):
-    from warnings import deprecated
-else:
-    from typing_extensions import deprecated
-
 
 # Helper routines for logging: ###
 
@@ -293,11 +286,6 @@ def get_stpsf_data_path(data_version_min=None, return_version=False):
 
     return str(path)
 
-
-@deprecated("Use get_stpsf_data_path instead.")
-def get_webbpsf_data_path(**kwargs):
-    """ Back compatibility alias, to support existing code that calls get_webbpsf_data_path"""
-    return get_stpsf_data_path()
 
 DIAGNOSTIC_REPORT = """
 OS: {os}
