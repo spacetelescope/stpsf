@@ -1147,6 +1147,12 @@ class JWInstrument(SpaceTelescopeInstrument):
         # The slight departures from this are handled in the distortion model; see distortion.py
         return (ap.XSciScale + ap.YSciScale) / 2
 
+    @property
+    def mode(self):
+        # This exists just for API consistency with the subclasses that have an imaging vs IFU mode toggle,
+        # so that all JWST instrument classes have a mode attribute, consistently, whether used or not
+        return "imaging"
+
     def _get_fits_header(self, result, options):
         """populate FITS Header keywords"""
         super(JWInstrument, self)._get_fits_header(result, options)
@@ -1252,7 +1258,9 @@ class JWInstrument(SpaceTelescopeInstrument):
         add_distortion = options.get('add_distortion', True)
         crop_psf = options.get('crop_psf', True)
         # you can turn on/off IPC corrections via the add_ipc option, default True.
-        add_ipc = options.get('add_ipc', True)
+        # except for IFU mode simulations, it doesn't make sense to add the regular detector IPC
+        # instead the more complex IFU broadening models should be applied
+        add_ipc = options.get('add_ipc', True if self.mode != 'IFU' else False)
 
         # Add distortion if set in calc_psf
         if add_distortion:
@@ -1278,33 +1286,36 @@ class JWInstrument(SpaceTelescopeInstrument):
                 )  # apply detector charge transfer model
             elif self.name == 'MIRI':
                 # Apply distortion effects to MIRI psf: Distortion and MIRI Scattering
-                _log.debug('MIRI: Adding optical distortion and Si:As detector internal scattering')
                 if self.mode != 'IFU':
+                    _log.debug('MIRI imager: Adding optical distortion and Si:As detector internal scattering')
                     if self._detector_geom_info.aperture.AperType != 'SLIT':
                         psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion
+                        _log.debug('MIRI: Applied optical distortion based on SIAF parameters')
                     else:
                         # slit type aperture, specifically LRS SLIT, does not have distortion polynomials
                         # therefore omit apply_distortion if a SLIT aperture is selected.
                         psf_siaf = result
-                    psf_siaf_rot = detectors.apply_miri_scattering(psf_siaf)  # apply scattering effect
+                    psf_siaf_rot = detectors.apply_miri_imager_cruciform(psf_siaf)  # apply scattering effect
                     psf_distorted = detectors.apply_detector_charge_diffusion(
                         psf_siaf_rot, options
                     )  # apply detector charge transfer model
                 else:
+                    _log.debug('MIRI MRS: Adding IFU PSF broadening effects.')
                     # there is not yet any distortion calibration for the IFU, and
                     # we don't want to apply charge diffusion directly here
                     psf_distorted = detectors.apply_miri_ifu_broadening(result, options, slice_width=self._ifu_slice_width)
             elif self.name == 'NIRSpec':
                 # Apply distortion effects to NIRSpec psf: Distortion only
                 # (because applying detector effects would only make sense after simulating spectral dispersion)
-                _log.debug('NIRSpec: Adding optical distortion')
                 if self.mode != 'IFU':
+                    _log.debug('NIRSpec: Adding optical distortion and detector charge transfer')
                     psf_siaf = distortion.apply_distortion(result)  # apply siaf distortion model
                     psf_distorted = detectors.apply_detector_charge_diffusion(
                         psf_siaf, options
                     )  # apply detector charge transfer model
 
                 else:
+                    _log.debug('NIRSpec IFU: Adding IFU PSF broadening')
                     # there is not yet any distortion calibration for the IFU.
                     psf_distorted = detectors.apply_nirspec_ifu_broadening(result, options)
 

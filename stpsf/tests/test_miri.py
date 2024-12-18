@@ -233,7 +233,7 @@ def test_miri_ifu_broadening():
 
     miri = stpsf_core.MIRI()
     miri.mode = 'IFU'
-    psf = miri.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
+    psf = miri.calc_psf(monochromatic=6.8e-6, fov_pixels=20)
 
     fwhm_oversamp = stpsf.measure_fwhm(psf, ext='OVERSAMP')
     fwhm_overdist = stpsf.measure_fwhm(psf, ext='OVERDIST')
@@ -243,11 +243,21 @@ def test_miri_ifu_broadening():
     fwhm_detdist = stpsf.measure_fwhm(psf, ext='DET_DIST')
     assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
 
+    # test flux conservation. THis is close but not exact, due to the optical distortion part which is distinct from but
+    # happens at same point in the calculation as the IFU broadening effect.
+    assert np.isclose(psf['DET_SAMP'].data.sum(), psf['DET_DIST'].data.sum()), "IFU broadening should not change total flux much"
+
+
     # Now test that we can also optionally turn off that effect
     miri.options['ifu_broadening'] = None
-    psf_nb = miri.calc_psf(monochromatic=2.8e-6, fov_pixels=10)
+    psf_nb = miri.calc_psf(monochromatic=6.8e-6, fov_pixels=20)
 
     fwhm_oversamp = stpsf.measure_fwhm(psf_nb, ext='OVERSAMP')
     fwhm_overdist = stpsf.measure_fwhm(psf_nb, ext='OVERDIST')
     # The PSF will still be a little broader in this case due to the IPC model, but not by a lot..
-    assert fwhm_oversamp < fwhm_overdist <= 1.1 * fwhm_oversamp, "IFU broadening model should be disabled for this test case"
+    assert fwhm_overdist == fwhm_oversamp, "IFU broadening model should be disabled for this test case"
+
+    # test flux conservation with and without the IFU broadening. This should be a more exact match
+    assert np.isclose(psf_nb['DET_DIST'].data.sum(), psf['DET_DIST'].data.sum() ), "IFU broadening should not change total flux much"
+
+

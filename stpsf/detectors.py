@@ -289,7 +289,7 @@ def oversample_ipc_model(kernel, oversample):
     return kernel_oversample
 
 
-# Functions for applying MIRI Detector Scattering Effect
+# Functions for applying MIRI Cruciform Detector "Scattering" Diffraction Effect
 
 # Lookup tables of shifts of the cruciform
 # Estimated roughly from F560W ePSFs (ePSFs by Libralatto, shift estimate by Perrin)
@@ -297,7 +297,7 @@ cruciform_xshifts = scipy.interpolate.interp1d([0, 357, 1031], [1.5, 0.5, -0.9],
 cruciform_yshifts = scipy.interpolate.interp1d([0, 511, 1031], [1.6, 0, -1.6], kind='linear', fill_value='extrapolate')
 
 
-def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength=5.5, detector_position=(0, 0)):
+def _make_miri_cruciform_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength=5.5, detector_position=(0, 0)):
     """Improved / more complex model of the MIRI cruciform, with parameterization to model
     additional features as seen in the GimMIRI models of Gaspar et al. 2021, PASP 133
     See in particular their Figure 12.
@@ -362,9 +362,9 @@ def _make_miri_scattering_kernel_2d(in_psf, kernel_amp, oversample=1, wavelength
     return kernel_2d
 
 
-def _apply_miri_scattering_kernel_2d(in_psf, kernel_2d, oversample):
+def _apply_miri_cruciform_kernel_2d(in_psf, kernel_2d, oversample):
     """
-    Applies the detector scattering kernel created in _make_miri_scattering_kernel
+    Applies the detector scattering kernel created in _make_miri_cruciform_kernel_2d
     function to an input image. Code is adapted from
     MIRI-TN-00076-ATC_Imager_PSF_Issue_4.pdf
 
@@ -372,9 +372,8 @@ def _apply_miri_scattering_kernel_2d(in_psf, kernel_2d, oversample):
     ----------
     in_psf : ndarray
         PSF array upon which to apply the kernel
-    kernel_x : ndarray
-        The 1D kernel in the x direction, output from _make_miri_scattering_kernel.
-        This will be transposed to create the kernel in the y direction.
+    kernel_2d : ndarray
+        The 2D kernel, output from _make_miri_cruciform_kernel_2d.
     oversample : int
         Amount by which the input PSF is oversampled
 
@@ -443,7 +442,7 @@ def get_miri_cruciform_amplitude(filt):
     return kernel_amp
 
 
-def apply_miri_scattering(hdulist_or_filename=None, kernel_amp=None, old_method=False):
+def apply_miri_imager_cruciform(hdulist_or_filename=None, kernel_amp=None, old_method=False):
     """
     Apply a distortion caused by the MIRI scattering cross artifact effect.
     In short we convolve a 2D exponentially decaying cross to the PSF where
@@ -455,6 +454,9 @@ def apply_miri_scattering(hdulist_or_filename=None, kernel_amp=None, old_method=
     input PSF is calculated as Extension 0, the calling function must put a copy of that into Extension 1
     which this will then modify. This happens in stpsf_core.py/JWInstrument._calc_psf_format_output,
     which is where this is called from in the usual course of operation.
+
+    Note - this function is called only for **MIRI IMAGER** simulations.
+    For MRS, see instead the apply_miri_ifu_broadening function, below.
 
     Parameters
     ----------
@@ -502,14 +504,14 @@ def apply_miri_scattering(hdulist_or_filename=None, kernel_amp=None, old_method=
     in_psf = psf[ext].data
 
     # create cruciform model using improved method using a 2d convolution kernel, attempting to model more physics.
-    kernel_2d = _make_miri_scattering_kernel_2d(
+    kernel_2d = _make_miri_cruciform_kernel_2d(
         in_psf,
         kernel_amp,
         oversample,
         detector_position=(hdu_list[0].header['DET_X'], hdu_list[0].header['DET_Y']),
         wavelength=hdu_list[0].header['WAVELEN'] * 1e6,
     )
-    im_conv_both = _apply_miri_scattering_kernel_2d(in_psf, kernel_2d, oversample)
+    im_conv_both = _apply_miri_cruciform_kernel_2d(in_psf, kernel_2d, oversample)
 
     # Add this 2D scattered light output to the PSF
     psf_new = in_psf + im_conv_both
@@ -529,14 +531,16 @@ def apply_miri_scattering(hdulist_or_filename=None, kernel_amp=None, old_method=
 
 
 def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=(512, 512), ax=None):
-    """utility function for viewing/visualizing the cruciform kernel"""
+    """utility function for viewing/visualizing the cruciform kernel.
+    This displays a plot on screen, as a user convenience.
+    This display function is Not used as part of PSF calculations."""
     import matplotlib
 
     placeholder = np.zeros((npix * oversample, npix * oversample))
     kernel_amp = get_miri_cruciform_amplitude(filt)
     extent = [-npix / 2, npix / 2, -npix / 2, npix / 2]
 
-    kernel_2d = _make_miri_scattering_kernel_2d(placeholder, kernel_amp, oversample, detector_position=detector_position)
+    kernel_2d = _make_miri_cruciform_kernel_2d(placeholder, kernel_amp, oversample, detector_position=detector_position)
     norm = matplotlib.colors.LogNorm(1e-6, 1)
     cmap = matplotlib.cm.viridis
     cmap.set_bad(cmap(0))
@@ -548,6 +552,7 @@ def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=
 
     matplotlib.pyplot.colorbar(mappable=ax.images[0])
 
+
 # Functions for applying IFU optics systematics models
 #
 # Note, this is not actually a "Detector" effect, but this file is a
@@ -557,6 +562,9 @@ def _show_miri_cruciform_kernel(filt, npix=101, oversample=4, detector_position=
 
 def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
     """ Apply a simple empirical model of MIRI IFU broadening to better match observed PSFs
+
+    Note - this function is called only for **MIRI MRS** simulations.
+    For MRS, see instead the apply_miri_imager_cruciform function, above.
 
     Parameters
     -----------
@@ -570,10 +578,12 @@ def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
     """
     # First, check an optional flag to see whether or not to include this effect.
     # User can set the option to None to disable this step.
-    model_type = options.get('ifu_broadening', 'empirical')
+    model_type = options.get('ifu_broadening', 'empirical_cruciform')
 
     if model_type is None or model_type.lower() == 'none':
+        webbpsf.webbpsf_core._log.debug('MIRI MRS: IFU broadening option is set to None, skipping IFU PSF broadening effects.')
         return hdulist
+    webbpsf.webbpsf_core._log.debug('MIRI MRS: Adding IFU PSF broadening effects.')
 
     ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
@@ -596,6 +606,25 @@ def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
         beta_width = slice_width / pixelscl
         alpha_width = _miri_mrs_analytical_sigma_alpha_broadening(wavelen * 1e6) / pixelscl
         out = _miri_mrs_empirical_broadening(psf_model=hdulist[ext].data, alpha_width=alpha_width, beta_width=beta_width)
+    elif model_type.lower() == 'empirical_cruciform':
+        # The above empirical mode, plus an additional cruciform effect at < 7.5 microns
+        # Model based on empirical PSF properties, Argryiou et al.
+        pixelscl = float(hdulist[ext].header['PIXELSCL'])
+        wavelen = float(hdulist[ext].header['WAVELEN'])
+
+        beta_width = slice_width / pixelscl
+        alpha_width = _miri_mrs_analytical_sigma_alpha_broadening(wavelen * 1e6) / pixelscl
+        out = _miri_mrs_empirical_broadening(psf_model=hdulist[ext].data, alpha_width=alpha_width, beta_width=beta_width)
+
+        if wavelen * 1e6 <= 7.5:
+            amplitude_cruciform = get_mrs_cruciform_amplitude(wavelen * 1e6)
+            oversample_factor = hdulist[ext].header['DET_SAMP'] / 7  # optimised parameters with oversampling = 7
+            fwhm_cruciform = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS["MIRI"]["fwhm_cruciform"] * oversample_factor
+            offset_cruciform = constants.INSTRUMENT_IFU_BROADENING_PARAMETERS["MIRI"]["offset_cruciform"] * oversample_factor
+            out = _miri_mrs_empirical_cruciform(psf_model=out, amp=amplitude_cruciform,
+                                                fwhm=fwhm_cruciform, x_0=offset_cruciform)
+    # enforce strict flux conservation
+    out *= hdulist[ext].data.sum() / out.sum()
 
     hdulist[ext].data = out
 
@@ -631,10 +660,12 @@ def apply_nirspec_ifu_broadening(hdulist, options):
     return hdulist
 
 
+# Functions for modeling MIRI MRS effects, including both the cruciform (as seen in the MRS) and other IFU broadening.
+# Invoked from apply_miri_ifu_broadening, above.
+
 def _miri_mrs_analytical_sigma_alpha_broadening(wavelength):
-    """
-    Calculate the Gaussian scale of the kernel that broadens the diffraction limited
-    FWHM to the empirically measured FWHM.
+    """ Calculate the Gaussian scale of the kernel that broadens the MRS IFU PSF,
+    from the diffraction limited FWHM to the empirically measured FWHM.
 
     Parameters
     ----------
@@ -650,26 +681,94 @@ def _miri_mrs_analytical_sigma_alpha_broadening(wavelength):
 
 
 def _miri_mrs_empirical_broadening(psf_model, alpha_width, beta_width):
-     """
-     Perform the broadening of a psf model in alpha and beta
+    """ Perform the broadening of a MRS PSF model in alpha and beta.
+    This only includes the IFU broadening. See also _miri_mrs_empirical_cruciform
 
-     Parameters
-     -----------
-     psf_model : ndarray
+    The beta (across-slice) convolution is implemented as a Box1D kernel
+    The alpha (along-slice) convolution is implemented as a Gaussian kernel
+
+    Parameters
+    -----------
+    psf_model : ndarray
         stpsf output results, eitehr monochromatic model or datacube
-     alpha_width : float
+    alpha_width : float
         gaussian convolution kernel in pixels, None if no broadening should be performed
-     beta_width : float
+    beta_width : float
         slice width in pixels
-     """
-     kernel_beta = astropy.convolution.Box1DKernel(beta_width)
+    """
+    kernel_beta = astropy.convolution.Box1DKernel(beta_width)
+    webbpsf.webbpsf_core._log.info(f'  MRS empirical broadening: alpha width {alpha_width}, beta width {beta_width}')
 
     # TODO: extend algorithm to handle the datacube case
 
-     if alpha_width is None:
-         psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model)
-     else:
-         kernel_alpha = astropy.convolution.Gaussian1DKernel(stddev=alpha_width)
-         psf_model_alpha = np.apply_along_axis(lambda m: convolve(m, kernel_alpha), axis=1, arr=psf_model)
-         psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model_alpha)
-     return psf_model_alpha_beta
+    if alpha_width is None:
+        psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model)
+    else:
+        kernel_alpha = astropy.convolution.Gaussian1DKernel(stddev=alpha_width)
+        psf_model_alpha = np.apply_along_axis(lambda m: convolve(m, kernel_alpha), axis=1, arr=psf_model)
+        psf_model_alpha_beta = np.apply_along_axis(lambda m: convolve(m, kernel_beta), axis=0, arr=psf_model_alpha)
+
+    return psf_model_alpha_beta
+
+
+def get_mrs_cruciform_amplitude(wavelen):
+    """ Calculate empirical amplitude of additional cruciform component in MIRI IFU data
+    See Patapis et al. 2025
+
+    Parameters
+    ----------
+    wavelen : float
+        wavelength (only applicable if wavelength < 7.5 um - see apply_miri_ifu_broadening)
+    """
+    return -0.16765378 * wavelen + 1.23632423  # Patapis 2025 PSF paper
+
+
+def _round_up_to_odd_integer(value):
+    """ ensure an integer is odd.
+    Minor utility function used by convolution kernel creation"""
+    i = np.ceil(value)
+    if i % 2 == 0:
+        return i + 1
+    else:
+        return i
+
+
+def _Lorentz1DKernel(amp, fwhm, x_0):
+    """ 1D Lorentz model as an astropy convolution kernel
+
+    x_size : size of kernel, should be odd
+    """
+    if amp is None:
+        amp = 2 / (np.pi * fwhm)
+
+    fwhm_int = _round_up_to_odd_integer(fwhm)
+    return astropy.convolution.Model1DKernel(astropy.modeling.models.Lorentz1D(amplitude=amp, fwhm=fwhm, x_0=x_0),
+                                             x_size=int(8 * fwhm_int + 1))
+
+
+def _miri_mrs_empirical_cruciform(psf_model, amp, fwhm, x_0):
+    """ Perform the broadening of a psf model in alpha and beta for the cruciform.
+     This implements the additional effect of the cruciform on MRS data.
+     See also _miri_mrs_empirical_broadening
+
+    Parameters
+    -----------
+    psf_model : ndarray
+       webbpsf output results, either monochromatic model or datacube
+    amp : float
+       amplitude of Lorentzian in pixels
+    fwhm : float
+       Full Width Half Max of Lorentzian in pixels
+    x_0 : float
+       offset of Lorentzian in pixels
+    """
+    kernel_cruciform = _Lorentz1DKernel(1.0, fwhm, x_0)
+    webbpsf.webbpsf_core._log.info(f'  MRS empirical cruciform: amp {amp} fwhm {fwhm} x_0 {x_0}')
+
+    # Flux conservation: the integral of the Lorentz kernel is the same as the amplitude
+    # therefore the following will keep the total flux conserved in the summed output PSF.
+    flux_conv_factor = 1 / (1 + amp)
+
+    # TODO: extend algorithm to handle the datacube case
+    psf_model_cruciform = np.apply_along_axis(lambda m: convolve(m, kernel_cruciform), axis=1, arr=psf_model)
+    return flux_conv_factor * (psf_model + amp * psf_model_cruciform)
