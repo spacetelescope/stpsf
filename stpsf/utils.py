@@ -3,6 +3,7 @@ import os
 import sys
 import warnings
 from collections import OrderedDict
+from pathlib import Path
 
 import astropy.io.fits as fits
 import astropy.units as u
@@ -179,16 +180,18 @@ MISSING_STPSF_DATA_MESSAGE = """
  ****************************************************************************
 """
 
+def get_default_data_path():
+    return Path.home() / "data" / "stpsf-data"
+
 
 def auto_download_stpsf_data():
-    import os
     import tarfile
     from pathlib import Path
     from tempfile import TemporaryDirectory
     from urllib.request import urlretrieve
 
     # Create a default directory for the data files
-    default_path = Path.home() / "data" / "stpsf-data"
+    default_path = get_default_data_path()
     default_path.mkdir(parents=True, exist_ok=True)
 
     os.environ["STPSF_PATH"] = str(default_path)
@@ -206,6 +209,7 @@ def auto_download_stpsf_data():
             # Extract the tarball
             with tarfile.open(filename, "r:gz") as tar:
                 tar.extractall(default_path.parent, filter="fully_trusted")
+            warnings.warn(f"STPSF data files downloaded and installed to {default_path}.")
 
         if not any(default_path.iterdir()):
             raise IOError(f"Failed to get and extract STPSF data files to {default_path}")
@@ -216,30 +220,32 @@ def auto_download_stpsf_data():
 def get_stpsf_data_path(data_version_min=None, return_version=False):
     """Get the STPSF data path
 
-    Simply checking an environment variable is not always enough, since
-    for packaging this code as a Mac .app bundle, environment variables are
-    not available since .apps run outside the Terminal or X11 environments.
-
-    Therefore, check first the environment variable STPSF_PATH, and secondly
+    Check first the environment variable STPSF_PATH, and secondly
     check the configuration file in the user's home directory.
 
     If data_version_min is supplied (as a 3-tuple of integers), it will be
     compared with the version number from version.txt in the STPSF data
     package.
     """
-    import os
-    from pathlib import Path
 
     path_from_config = conf.STPSF_PATH  # read from astropy configuration
     if path_from_config == 'from_environment_variable':
         path = os.getenv('STPSF_PATH')
         if path is None:
-            message = (
-                'Environment variable $STPSF_PATH is not set!\n'
-                f'{MISSING_STPSF_DATA_MESSAGE} searching default location..s'
-            )
-            warnings.warn(message)
-            path = auto_download_stpsf_data()
+
+            # Check if the data were already downloaded to the default path
+            default_path = get_default_data_path()
+            if os.path.exists(default_path):
+                # If so, let's look there
+                path = default_path
+            else:
+                # If not, let's try to download the data
+                message = (
+                    'Environment variable $STPSF_PATH is not set!\n'
+                    f'{MISSING_STPSF_DATA_MESSAGE} searching default location.'
+                )
+                warnings.warn(message)
+                path = auto_download_stpsf_data()
     else:
         path = path_from_config
 
