@@ -355,7 +355,10 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         result[0].header['VERSION'] = (version, 'STPSF software version')
         result[0].header['DATAVERS'] = (self._data_version, 'STPSF reference data files version')
 
-        result[0].header['DET_NAME'] = (self.detector, 'Name of detector on this instrument')
+        if self.telescope == 'Roman':
+            result[0].header['DET_NAME'] = (self.detector.replace("SCA", "WFI"), 'Name of detector on this instrument')
+        else:
+            result[0].header['DET_NAME'] = (self.detector, 'Name of detector on this instrument')
 
         # Correct detector pixel coordinates to allow for even arrays to be centered on half pixel boundary
         dpos = np.asarray(self.detector_position, dtype=float)

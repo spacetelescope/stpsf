@@ -374,7 +374,11 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         super()._get_fits_header(result, options)
         result[0].header['DETXPIXL'] = (self.detector_position[0], 'X pixel position (for field dependent aberrations)')
         result[0].header['DETYPIXL'] = (self.detector_position[1], 'Y pixel position (for field dependent aberrations)')
-        result[0].header['DETECTOR'] = (self.detector, 'Detector selected')
+
+        if self.telescope == 'Roman':
+            result[0].header['DETECTOR'] = (self.detector.replace("SCA", "WFI"), 'Detector selected')
+        else:
+            result[0].header['DETECTOR'] = (self.detector, 'Detector selected')
 
     def _calc_psf_format_output(self, result, options):
         """
@@ -739,6 +743,11 @@ class WFI(RomanInstrument):
         """
         The current WFI detector. See WFI.detector_list for valid values.
         """
+
+        
+        if value.startswith("WFI"):
+            # Allow users to input detector names as WFIxy; this is then changed to SCAxy for backward compatibility.
+            value = "SCA" + value[-2:]
         if value.upper() not in self.detector_list:
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
 
