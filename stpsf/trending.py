@@ -2125,7 +2125,8 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
 
     # Make a matching sim
     nrc = stpsf.setup_sim_to_match_file(hdul, verbose=False)
-    opdname = nrc.pupilopd[0].header['CORR_ID'] + '-NRCA3_FP1-1.fits'
+    opdname = '{}-{}-{}.fits'.format(nrc.pupilopd[0].header['CORR_ID'], 
+                                 nrc.pupilopd[0].header['APERNAME'],nrc.pupilopd[0].header['GROUP_ID'] )
     if verbose:
         print('Calculating PSF to match that TA image...')
     psf = nrc.calc_psf(fov_pixels=im_obs.shape[0])
