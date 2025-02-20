@@ -308,7 +308,8 @@ class CreatePSFLibrary:
         model_list = []
         for k, det in enumerate(self.detector_list):
             if self.verbose is True:
-                print('  Running detector: {}'.format(det))
+                print_det = det.replace("SCA", "WFI") if self.instr.upper() == "WFI" else det
+                print('  Running detector: {}'.format(print_det))
 
             # Create an array to fill ([i, y, x])
             psf_size = self.fov_pixels * self.oversample
@@ -359,7 +360,10 @@ class CreatePSFLibrary:
             meta = OrderedDict()
 
             meta['INSTRUME'] = (self.instr, 'Instrument name')
-            meta['DETECTOR'] = (det, 'Detector name')
+            if self.instr.upper() == 'WFI':
+                meta['DETECTOR'] = (det.replace("SCA", "WFI"), 'Detector name')
+            else:
+                meta['DETECTOR'] = (det, 'Detector name')
             meta['FILTER'] = (self.filter, 'Filter name')
             meta['PUPILOPD'] = (psf[ext].header['PUPILOPD'], 'Pupil OPD source name')
             meta['OPD_FILE'] = (psf[ext].header['OPD_FILE'], 'Pupil OPD file name')
