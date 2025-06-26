@@ -388,6 +388,8 @@ INSTRUMENT_DETECTOR_CHARGE_DIFFUSION_DEFAULT_PARAMETERS = {
     'NIRSPEC': 0.036,
     'MIRI': 0.001,  # Fit by Marshall + Marcio to ePSFs, after adding IPC
     #  0.070 Based on user reports, see issue #674. However, this was before adding IPC effects
+    'WFI': 0.0,  # Placeholder variable. Needs value update. Edit log message when sigma == 0 in detectors.apply_detector_charge_diffusion() after update.
+    'ROMANCORONAGRAPH': 0.0
 }
 # add Interpixel capacitance (IPC) effects. These are the parameters for each detector kernel
 # For NIRCam we  use CV3/Flight convolution kernels from Jarron Leisenring, see detectors.apply_detector_ipc for details

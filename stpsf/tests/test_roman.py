@@ -11,25 +11,16 @@ GRISM_FILTERS = roman.GRISM_FILTERS
 PRISM_FILTERS = roman.PRISM_FILTERS
 
 
-def detector_substr(detector):
-    """
-    change detector string to match file format
-    (e.g., "SCA01" -> "SCA_1")
-    """
-    return f'{detector[:3]}_{str(int((detector[3:])))}'
-
-
 def pupil_path(wfi, mask=None):
     """
     dynamically generate current pupil path for a given WFI instance
     """
-    mask = wfi._pupil_controller._get_filter_mask(wfi.filter) if mask is None else mask
-    detector = detector_substr(wfi.detector)
+    mask = wfi._pupil_controller._get_pupil_mask(wfi.filter) if mask is None else mask
 
     base = wfi._pupil_controller._pupil_basepath
-    file = wfi._pupil_controller.pupil_file_formatters[mask]
+    file = wfi._pupil_controller.pupil_file_formatter(mask, wfi.detector)
 
-    return os.path.join(base, file).format(detector)
+    return os.path.join(base, file)
 
 
 def test_WFI_psf():
@@ -45,8 +36,8 @@ def test_WFI_filters():
     wfi = roman.WFI()
     filter_list = wfi.filter_list
 
-    for filter in filter_list:
-        wfi.filter = filter
+    for fltr in filter_list:
+        wfi.filter = fltr
         wfi.calc_psf(fov_pixels=4, oversample=1, nlambda=3)
 
 
@@ -139,10 +130,10 @@ def test_WFI_pupil_controller():
         assert wfi._pupil_controller._auto_pupil_mask, 'Pupil mask is locked and should not be'
 
         # Test effect of changing the filter on pupil path
-        for filter in wfi.filter_list:
-            wfi.filter = filter
+        for fltr in wfi.filter_list:
+            wfi.filter = fltr
 
-            assert wfi.pupil == pupil_path(wfi), f'Pupil was not set to correct value for filter {filter}'
+            assert wfi.pupil == pupil_path(wfi), f'Pupil was not set to correct value for filter {fltr}'
 
     # Test persistence of pupil and pupil mask locks through a PSF calculation
     wfi2 = roman.WFI()
@@ -162,7 +153,7 @@ def test_WFI_pupil_controller():
 
 def test_WFI_detector_position_setter():
     wfi = roman.WFI()
-    wfi.detector = 'SCA01'
+    wfi.detector = 'WFI01'
     valid_pos = (4000, 1000)
     wfi.detector_position = valid_pos
     assert wfi._detectors[wfi._detector].field_position == valid_pos, (
@@ -174,7 +165,7 @@ def test_WFI_detector_position_setter():
 
 def test_WFI_includes_aberrations():
     wfi = roman.WFI()
-    wfi.detector = 'SCA01'
+    wfi.detector = 'WFI01'
     osys = wfi.get_optical_system()
     assert isinstance(osys[2], roman.FieldDependentAberration), (
         'Third plane of Roman WFI optical system should be the ' 'field dependent aberration virtual optic'
@@ -187,10 +178,10 @@ def test_swapping_modes(wfi=None):
 
     tests = [
         # [filter, mode, pupil_file]
-        ['F146', 'imaging', pupil_path],
-        ['F213', 'imaging', pupil_path],
-        [PRISM_FILTERS[0], 'prism', pupil_path],
-        [GRISM_FILTERS[0], 'grism', pupil_path],
+        ['F146', 'F146', pupil_path],
+        ['F213', 'F213', pupil_path],
+        [PRISM_FILTERS[0], PRISM_FILTERS[0], pupil_path],
+        [GRISM_FILTERS[0], GRISM_FILTERS[0], pupil_path],
     ]
 
     for test_filter, test_mode, test_pupil in tests:
@@ -207,15 +198,15 @@ def test_swapping_modes(wfi=None):
 def test_custom_aberrations():
     wfi = roman.WFI()
 
-    # Use grism aberration_file for testing
-    test_aberration_file = wfi._aberration_files['grism']
+    # Use GRISM0 aberration_file for testing
+    test_aberration_file = wfi._aberration_files['GRISM0']
 
     # Test override
     # -------------
     wfi.lock_aberrations(test_aberration_file)
 
-    for filter in wfi.filter_list:
-        wfi.filter = filter
+    for fltr in wfi.filter_list:
+        wfi.filter = fltr
         assert wfi._current_aberration_file == test_aberration_file, 'Filter change caused override to fail'
 
     # Test Release Override
@@ -227,7 +218,7 @@ def test_custom_aberrations():
 
 def test_WFI_limits_interpolation_range():
     wfi = roman.WFI()
-    det = wfi._detectors['SCA01']
+    det = wfi._detectors['WFI01']
     det.get_aberration_terms(1.29e-6)
     det.field_position = (0, 0)
     det.get_aberration_terms(1.29e-6)
@@ -277,17 +268,31 @@ def test_WFI_limits_interpolation_range():
         det.get_aberration_terms(max_wv), det.get_aberration_terms(too_hi_wv)
     ), 'Aberration above wavelength range did not return closest value.'
 
-    # Test border pixels outside the ref data. In Cycle 9, (0, 37) is the first
+    # Test border pixels outside the ref data. In Cycle 10, (32, 0) is the first
     # pixel, so we check if (0, 0) is approximated to it as the nearest point.
     det.field_position = (0, 0)
     coefficients_outlier = det.get_aberration_terms(valid_wv)
 
-    det.field_position = (0, 37)
+    det.field_position = (32, 0)
     coefficients_data = det.get_aberration_terms(valid_wv)
 
     assert np.allclose(coefficients_outlier, coefficients_data), (
         'nearest point extrapolation ' 'failed for outlier field point'
     )
+
+
+def test_WFI_auto_aperturename_and_pixelscale():
+    wfi = roman.WFI()
+    assert wfi.aperturename == "WFI01_FULL", "Aperture name should match detector"
+    wfi.detector = 'WFI12'
+    assert wfi.aperturename == "WFI12_FULL", "Aperture name should match detector"
+
+
+    aperture = wfi.siaf[wfi.aperturename]
+    assert wfi.pixelscale == (aperture.XSciScale + aperture.YSciScale)/2, "Pixel scale should match the SIAF for that aperturename"
+
+
+# -------- Test functions for the (very limited) Roman Coronagraph implementation below here
 
 
 def test_coronagraph_detector_position():

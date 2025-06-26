@@ -800,6 +800,7 @@ def _query_program_visit_times_by_inst(program, instrument, verbose=False):
         'NIRCAM': 'Mast.Jwst.Filtered.NIRCam',
         'NIRSPEC': 'Mast.Jwst.Filtered.NIRSpec',
         'NIRISS': 'Mast.Jwst.Filtered.NIRISS',
+        'FGS': 'Mast.Jwst.Filtered.FGS'
     }
 
     service = svc_table[instrument.upper()]

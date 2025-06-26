@@ -21,6 +21,7 @@ Releasing new data packages
     #. If you are on the Institute network
         #. ``$ cd stpsf/dev_utils/``
         #. ``$ ./master_data_release.sh 0.X.Y``
+        #. Verify that the stpsf data in central store has correct permissions (rwxrwxr-x)
     #. If you're working from a local data root
         #. ``$ cd stpsf/dev_utils/``
         #. ``$ DATAROOT="/Users/you/stpsf-data-sources/" ./make-data-sdist.sh 0.X.Y``
@@ -35,12 +36,19 @@ Releasing new data packages
     #. This will change the name of ``minimal-stpsf-data-LATEST.tar.gz`` to be what you just uploaded, rename the file back to ``minimal-stpsf-data-LATEST.tar.gz``
     #. Upload to Box a separate version of ``minimal-stpsf-data-#.#.#.tar.gz`` shared data folder for future storage.
     #. Verify the shared link of ``stpsf-data-latest.tar.gz`` is the same that exists in ``docs/installation.rst`` ("copy shared link" then "link settings")
+#. IF STILL SUPPORTING WEBBPSF do this step for both ``stpsf-data-#.#.#.tar.gz`` and ``minimal-stpsf-data-#.#.#.tar.gz``
+    #. Locally extract the ``tar.gz``
+    #. Rename ``/stpsf-data/`` to ``/webbpsf-data/``
+    #. Compress the ``/webbpsf-data/`` folder - ``TAR -cvz -f minimal-webbpsf-data-#.#.#.tar.gz webbpsf-data``
+    #. Follow the previous step for uploading this to box using the WEBBPSF naming convention.
+    #. If WebbPSF is no longer supported and has been sunset, delete this entire step.
 #. A shared copy will be automatically configured in STScI Central Store with updated symlink ``/grp/stpsf/stpsf-data``
 #. Verify code base is still up to date with box links and version names (they should be)
     #. Verify ``installation.rst`` with link to box data (this shouldn't need to change the box link, but verify it hasn't changed)
     #. update minimal in the ci setup (``stpsf/.github/workflows/download_data.yml``) (this also shouldn't need to change as the box link is for latest)
     #. update ``stpsf/stpsf/__init__.py`` with version number  (DATA_VERSION_MIN)
     #. CITATIONS.cff with new version
+#. Add box link for new version numbers to installation.rst under `Using Specific Data Versions`
 #. Generate the release notes
     #. You can do a draft release on github to autogenerate the relnotes
     #. In github set new release to be pre-release and make a release candidate tag -  1.3.0.rc1
@@ -76,10 +84,10 @@ Releasing new data packages
     #. test that you can download and install in fresh env (have pypi as backup for libraries that aren't on testpypi):
         #. ``$ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ stpsf==<VERSION>``
 #. Tag a version in develop and push it to git (do it through local terminal, not through website)
-    #. ``$ git tag -a <release-tag> -m “webbpsf v1.4.0”`` (<release-tag> is just the version number --> 1.4.0)
+    #. ``$ git tag -a <release-tag> -m “stpsf v1.4.0”`` (<release-tag> is just the version number --> 1.4.0)
     #. ``$ git push upstream <release-tag>``
 #. Go to stable branch, and look at where it says how many commits behind it is from develop. Click that to generate a pull request (do not squash when you merge here)
-#. When tests pass merge them to stable
+#. When tests pass merge them to stable and to a new branch named `V<Version Number>`
 #. Release on Github:
     #. On Github, click on ``[N] Releases``
     #. Select ``Draft a new release``.

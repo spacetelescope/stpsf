@@ -30,10 +30,10 @@ See the instructions below for how to contribute to this repository using a fork
 9. Once the pull request has been accepted and merged, you can delete your local branch with `git branch -d <branchname>`.
 
 #### Keeping your fork updated
-If you wish to, you can keep a personal fork up-to-date with the `stpsf` repository by fetching and rebasing with the `upstream` remote. Do this for both the `master` branch (shown below) and the `develop` branch:
-1. `git checkout master`
-2. `git fetch upstream master`
-3. `git rebase upstream/master`
+If you wish to, you can keep a personal fork up-to-date with the `stpsf` repository by fetching and rebasing with the `upstream` remote. Do this for both the `develop` branch (shown below):
+1. `git checkout develop`
+2. `git fetch upstream develop`
+3. `git rebase upstream/develop`
 
 #### Collaborating on someone else's fork
 Users can contribute to another user's personal fork by adding a `remote` that points to their fork and using the nominal forking workflow, e.g.:

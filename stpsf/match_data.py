@@ -43,6 +43,10 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
         # These NIRCam filters are physically in the pupil wheel, but still act as filters.
         # Grab the filter name from the PUPIL keyword in this case.
         inst.filter = header['PUPIL']
+    elif (inst.name == 'NIRISS') and (header['FILTER'] == 'CLEAR'):
+        # For NIRISS, 6 out of 12 filters are in the pupil wheel, which mean if FILTER=CLEAR,
+        # PUPIL keyword will point to the actual filter. [S. T. Sohn Feb 13, 2025]
+        inst.filter = header['PUPIL']
     else:
         inst.filter = header['filter']
     inst.set_position_from_aperture_name(header['APERNAME'])

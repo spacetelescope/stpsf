@@ -321,8 +321,8 @@ def test_nircam_coron_unocculted(plot=False):
     if plot:
         nc.display()
 
-    psf = nc.calc_psf(monochromatic=2.12e-6)
-    return psf
+    # This test just verifies that calc_psf() runs without error
+    nc.calc_psf(monochromatic=2.12e-6)
 
 
 def test_defocus(fov_arcsec=1, display=False):

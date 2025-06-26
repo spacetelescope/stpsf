@@ -1,7 +1,6 @@
 Documentation for STPSF
 ===============================
-
-**(Formerly WebbPSF, for versions < 2.0)**
+`(Formerly WebbPSF, for versions < 2.0) <webbpsf_to_stpsf.ipynb>`_
 
 STPSF is a Python package that computes simulated point spread functions (PSFs) for NASA's James Webb Space Telescope (JWST) and Nancy Grace Roman Space Telescope. STPSF transforms models of telescope and instrument optical state into PSFs, taking into account detector pixel scales, rotations, filter profiles, and point source spectra. It is rather a tool for transforming optical path difference (OPD) maps, created with observatory systems engineering models, into the resulting PSFs as observed with JWST's or Roman's instruments.
 
@@ -12,12 +11,12 @@ STPSF is a Python package that computes simulated point spread functions (PSFs) 
 
    Sample PSFs for JWST's instrument suite, all on the same angular scale and display stretch.
 
-.. figure:: ./roman_figures/stpsf-roman_page_header.png
+.. figure:: ./roman_figures/stpsf_roman_page_header.png
    :scale: 70 %
    :align: center
    :alt: Sample PSFs for the filters in the Roman WFI.
 
-   Sample PSFs for the filters in the Roman WFI on SCA01. Note that
+   Sample PSFs for the filters in the Roman WFI on detector WFI01. Note that
    the prism and grism PSFs shown here are monochromatic.
 
 
@@ -31,7 +30,7 @@ See `Using STPSF <usage.html>`_.
 
 .. admonition:: Quickstart Jupyter Notebook
 
-   This documentation is complemented by an `Jupyter Notebook format quickstart tutorial <http://nbviewer.jupyter.org/github/spacetelescope/stpsf/blob/stable/notebooks/STPSF_tutorial.ipynb>`_. Downloading and running that notebook is a great way to get started using STPSF.
+   This documentation is complemented by a `Jupyter Notebook format quickstart tutorial <http://nbviewer.jupyter.org/github/spacetelescope/stpsf/blob/develop/notebooks/STPSF_tutorial.ipynb>`_. Downloading and running that notebook is a great way to get started using STPSF.
 
 
 .. admonition:: Getting Help
@@ -81,6 +80,7 @@ Contents
    :caption: Package Documentation
 
    api_reference.rst
+   webbpsf_to_stpsf.ipynb
    help.rst
    sampling.rst
    fft_optimization.rst

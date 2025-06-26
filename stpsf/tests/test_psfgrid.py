@@ -276,7 +276,6 @@ def test_wfi():
     wfi = roman.WFI()
     grid = wfi.psf_grid(
         all_detectors=False,
-        add_distortion=False,
         num_psfs=4,
         fov_pixels=fov_pixels,
         oversample=oversample,

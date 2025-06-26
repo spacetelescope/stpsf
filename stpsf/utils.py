@@ -1,8 +1,10 @@
 import logging
 import os
+import re
 import sys
 import warnings
 from collections import OrderedDict
+from pathlib import Path
 
 import astropy.io.fits as fits
 import astropy.units as u
@@ -179,16 +181,18 @@ MISSING_STPSF_DATA_MESSAGE = """
  ****************************************************************************
 """
 
+def get_default_data_path():
+    return Path.home() / "data" / "stpsf-data"
+
 
 def auto_download_stpsf_data():
-    import os
     import tarfile
     from pathlib import Path
     from tempfile import TemporaryDirectory
     from urllib.request import urlretrieve
 
     # Create a default directory for the data files
-    default_path = Path.home() / "data" / "stpsf-data"
+    default_path = get_default_data_path()
     default_path.mkdir(parents=True, exist_ok=True)
 
     os.environ["STPSF_PATH"] = str(default_path)
@@ -205,7 +209,10 @@ def auto_download_stpsf_data():
 
             # Extract the tarball
             with tarfile.open(filename, "r:gz") as tar:
-                tar.extractall(default_path.parent, filter="fully_trusted")
+                tar.extractall(default_path.parent)
+                # TODO filter="fully_trusted" will need to be added as a parameter once python 3.14
+                # is adopted due to advertised changing defaults in python.
+                warnings.warn(f"STPSF data files downloaded and installed to {default_path}.")
 
         if not any(default_path.iterdir()):
             raise IOError(f"Failed to get and extract STPSF data files to {default_path}")
@@ -216,30 +223,32 @@ def auto_download_stpsf_data():
 def get_stpsf_data_path(data_version_min=None, return_version=False):
     """Get the STPSF data path
 
-    Simply checking an environment variable is not always enough, since
-    for packaging this code as a Mac .app bundle, environment variables are
-    not available since .apps run outside the Terminal or X11 environments.
-
-    Therefore, check first the environment variable STPSF_PATH, and secondly
+    Check first the environment variable STPSF_PATH, and secondly
     check the configuration file in the user's home directory.
 
     If data_version_min is supplied (as a 3-tuple of integers), it will be
     compared with the version number from version.txt in the STPSF data
     package.
     """
-    import os
-    from pathlib import Path
 
     path_from_config = conf.STPSF_PATH  # read from astropy configuration
     if path_from_config == 'from_environment_variable':
         path = os.getenv('STPSF_PATH')
         if path is None:
-            message = (
-                'Environment variable $STPSF_PATH is not set!\n'
-                f'{MISSING_STPSF_DATA_MESSAGE} searching default location..s'
-            )
-            warnings.warn(message)
-            path = auto_download_stpsf_data()
+
+            # Check if the data were already downloaded to the default path
+            default_path = get_default_data_path()
+            if os.path.exists(default_path):
+                # If so, let's look there
+                path = default_path
+            else:
+                # If not, let's try to download the data
+                message = (
+                    'Environment variable $STPSF_PATH is not set!\n'
+                    f'{MISSING_STPSF_DATA_MESSAGE} searching default location.'
+                )
+                warnings.warn(message)
+                path = auto_download_stpsf_data()
     else:
         path = path_from_config
 
@@ -891,19 +900,58 @@ nlambda={nlambda:d}""".format(nlambda=nlambda),
 def combine_docstrings(cls):
     """Combine the docstrings of a method and earlier implementations of the same method in parent classes"""
     for name, func in cls.__dict__.items():
-        # Allow users to see the Poppy calc_psf docstring along with the JWInstrument version
+        # Allow users to see the Poppy calc_psf docstring along with the Instrument version
         if name == 'calc_psf':
-            jwinstrument_class = cls
+            instrument_class = cls
             spacetelescope_class = cls.__base__
 
-            ind0 = getattr(jwinstrument_class, 'calc_psf').__doc__.index('add_distortion')  # pull the new parameters
-            ind1 = getattr(spacetelescope_class, 'calc_psf').__doc__.index('Returns')  # end of parameters
+            inst_doc = getattr(instrument_class, 'calc_psf').__doc__
+            st_doc = getattr(spacetelescope_class, 'calc_psf').__doc__
 
-            func.__doc__ = (
-                getattr(spacetelescope_class, 'calc_psf').__doc__[0:ind1]
-                + getattr(jwinstrument_class, 'calc_psf').__doc__[ind0:]
-                + getattr(spacetelescope_class, 'calc_psf').__doc__[ind1:]
-            )
+            if cls.telescope == 'Roman':
+                params = 'Parameters'
+
+                # i0: pull WFI docstring summary (at top)
+                ind_i0 = inst_doc.index(params)
+
+                # i1: pull WFI-specific params
+                # get first letter in substring starting after "Parameters"
+                ind_i_post_params = ind_i0 + len(params)
+                ind_i_let = re.search('\w',
+                                      inst_doc[ind_i_post_params:]).span()[0]
+
+                # get last newline character before that letter in the substring
+                ind_i_newl = inst_doc[ind_i_post_params:
+                                               (ind_i_post_params
+                                                + ind_i_let)].rfind('\n')
+                ind_i1 = ind_i_post_params + ind_i_newl + 1
+
+                # s0: pull STInstrument docstring summary from after first line
+                # (skipping "Compute a PSF.")
+                ind_s0 = re.search('\\n', st_doc).span()[0]
+
+                # s2: pull STInstrument docstring returned items from "Returns:"
+                # s1: pull STInstrument docstring params from by finding last
+                # newline character before s2
+                ind_s2 = st_doc.index('Returns')
+                ind_s1 = st_doc[:ind_s2].rfind('\n')
+
+                func.__doc__ = (
+                    inst_doc[0:ind_i0]
+                    + st_doc[ind_s0:ind_s1]
+                    + inst_doc[ind_i1:]
+                    + st_doc[ind_s2:]
+                )
+
+            else:
+                ind0 = inst_doc.index('add_distortion')  # pull the new parameters
+                ind1 = st_doc.index('Returns')  # end of parameters
+
+                func.__doc__ = (
+                    st_doc[0:ind1]
+                    + inst_doc[ind0:]
+                    + st_doc[ind1:]
+                )
 
     return cls
 

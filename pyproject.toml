@@ -12,6 +12,7 @@ description = "Creates simulated point spread functions for Space Telescopes (Ja
 authors = [
     { name = "Association of Universities for Research in Astronomy", email = "help@stsci.edu" },
 ]
+license-files = ["LICENSE.md"]
 dynamic = [
     "version",
 ]
@@ -28,9 +29,6 @@ dependencies = [
     "synphot>=1.0.0",
     "astroquery>=0.4.6",
 ]
-
-[project.license]
-file = "LICENSE.md"
 
 [project.optional-dependencies]
 test = [
@@ -56,11 +54,14 @@ namespaces = false
 
 [tool.setuptools.package-data]
 "*" = [
-    "*.fits, *.csv",
+    "*.fits", "*.csv", "scripts/"
 ]
 "stpsf.tests" = [
     "data/*",
 ]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["docs/_build/","build/"]
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
@@ -86,19 +87,11 @@ source = [
 ]
 omit = [
     "stpsf/conftest*",
-    "stpsf/cython_version*",
-    "stpsf/setup_package*",
-    "stpsf/*/setup_package*",
-    "stpsf/*/*/setup_package*",
     "stpsf/tests/*",
     "stpsf/*/tests/*",
     "stpsf/*/*/tests/*",
     "stpsf/version*",
     "*/stpsf/conftest*",
-    "*/stpsf/cython_version*",
-    "*/stpsf/setup_package*",
-    "*/stpsf/*/setup_package*",
-    "*/stpsf/*/*/setup_package*",
     "*/stpsf/tests/*",
     "*/stpsf/*/tests/*",
     "*/stpsf/*/*/tests/*",
@@ -116,19 +109,11 @@ exclude_lines = [
 ]
 omit = [
     "stpsf/conftest*",
-    "stpsf/cython_version*",
-    "stpsf/setup_package*",
-    "stpsf/*/setup_package*",
-    "stpsf/*/*/setup_package*",
     "stpsf/tests/*",
     "stpsf/*/tests/*",
     "stpsf/*/*/tests/*",
     "stpsf/version*",
     "*/stpsf/conftest*",
-    "*/stpsf/cython_version*",
-    "*/stpsf/setup_package*",
-    "*/stpsf/*/setup_package*",
-    "*/stpsf/*/*/setup_package*",
     "*/stpsf/tests/*",
     "*/stpsf/*/tests/*",
     "*/stpsf/*/*/tests/*",

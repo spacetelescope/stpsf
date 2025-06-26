@@ -232,12 +232,18 @@ def apply_detector_charge_diffusion(psf_hdulist, options):
     """
 
     sigma = options.get('charge_diffusion_sigma')
+    inst = psf_hdulist[0].header['INSTRUME'].upper()
 
     if sigma is None:
         # look up default from constants
-        inst = psf_hdulist[0].header['INSTRUME'].upper()
         key = f"NIRCAM_{psf_hdulist[0].header['CHANNEL'][0]}W" if inst == 'NIRCAM' else inst
         sigma = stpsf.constants.INSTRUMENT_DETECTOR_CHARGE_DIFFUSION_DEFAULT_PARAMETERS[key]
+
+    if sigma == 0:
+        stpsf.stpsf_core._log.info('Detector charge diffusion not applied '
+                                   'because charge_diffusion_sigma option is '
+                                   f"{'0' if inst !=' WFI' else '0 or None'}")
+        return psf_hdulist
 
     ext = 1  # Apply to the 'OVERDIST' extension
 

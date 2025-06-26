@@ -45,7 +45,7 @@ class SegmentUpdate(object):
             # parse from some XML in a SUR file
             self.id = int(xmlnode.attrib['id'])
             self.type = xmlnode.attrib['type']
-            self.segment = xmlnode.attrib['seg_id'][0:2]
+            self.segment = xmlnode.attrib['seg_id']
             self.absolute = xmlnode.attrib['absolute'] == 'true'
             self.coord = xmlnode.attrib['coord']  # local or global
             self.stage_type = xmlnode.attrib['stage_type']  # recenter_fine, fine_only, none
@@ -171,7 +171,7 @@ class SUR(object):
     def xmltext(self):
         """The XML text representation of a given move"""
         text = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                <SEGMENT_UPDATE_REQUEST creator="?" date="{date}" time="{time}" version="0.0.1" operational="false"
+                <SEGMENT_UPDATE_REQUEST creator="?" date="{self.date}" time="{self.time}" version="0.0.1" operational="false"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../setup_files/
                 schema/segment_update_request.xsd">
                 <CONFIGURATION_NAME>{self.configuration_name}</CONFIGURATION_NAME>

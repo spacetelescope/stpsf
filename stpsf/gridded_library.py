@@ -1,3 +1,4 @@
+import logging
 import itertools
 import os
 from collections import OrderedDict
@@ -10,6 +11,8 @@ from astropy.nddata import NDData
 from photutils.psf import GriddedPSFModel
 
 import stpsf.detectors
+
+_log = logging.getLogger('stpsf')
 
 
 class CreatePSFLibrary:
@@ -171,12 +174,17 @@ class CreatePSFLibrary:
         self.location_list = self._set_psf_locations(num_psfs, psf_location, psf_location_list)
 
         # Set PSF attributes for the 3 kwargs that will be used before the calc_psf() call
-        if 'add_distortion' in kwargs:
+        if 'add_distortion' in kwargs and instrument.telescope != 'Roman':
             self.add_distortion = kwargs['add_distortion']
-
-        else:
+        if 'add_distortion' in kwargs and instrument.telescope == 'Roman':
+            _log.warn('Note that the add_distortion argument no longer affects '
+                      'Roman instrument simulations. All WFI PSFs natively '
+                      'include distortion effects and all RomanCoronagraph '
+                      'PSFs do not.')
+        elif 'add_distortion' not in kwargs and instrument.telescope != 'Roman':
             self.add_distortion = True
             kwargs['add_distortion'] = self.add_distortion
+        # (distortion isn't recommended for Roman sims, so omit otherwise)
 
         if 'oversample' in kwargs:
             self.oversample = kwargs['oversample']
@@ -278,18 +286,19 @@ class CreatePSFLibrary:
         1 per instrument/filter/ detector). Also saves the library file(s) if requested.
 
         """
+        add_distortion = getattr(self, 'add_distortion', False)
 
         # Set output mode and extension to use
         if self.use_detsampled_psf is True:
             self.webb.options['output_mode'] = 'Detector sampled image'
             self.oversample = 1
-            if self.add_distortion:
+            if add_distortion:
                 ext = 'DET_DIST'
             else:
                 ext = 'DET_SAMP'
         elif self.use_detsampled_psf is False:
             self.webb.options['output_mode'] = 'Oversampled image'
-            if self.add_distortion:
+            if add_distortion:
                 ext = 'OVERDIST'
             else:
                 ext = 'OVERSAMP'
@@ -341,7 +350,7 @@ class CreatePSFLibrary:
                 psf[ext].data = astropy.convolution.convolve(psf[ext].data, kernel)
 
                 # Convolve PSF with a model for interpixel capacitance
-                if self.add_distortion and add_ipc_gridded:
+                if add_distortion and add_ipc_gridded:
                     stpsf.detectors.apply_detector_ipc(psf, extname=ext)
                     self.webb.options['add_ipc'] = True  # restore the user's value for the IPC option
 
@@ -392,7 +401,7 @@ class CreatePSFLibrary:
             meta['NUM_PSFS'] = (self.num_psfs, 'The total number of fiducial PSFs')
 
             # Distortion information
-            if self.add_distortion:
+            if add_distortion:
                 meta['DISTORT'] = (psf[ext].header['DISTORT'], 'SIAF distortion coefficients applied')
                 meta['SIAF_VER'] = (psf[ext].header['SIAF_VER'], 'SIAF PRD version used')
 
@@ -575,9 +584,8 @@ def display_psf_grid(grid, zoom_in=True, figsize=(14, 12), scale_range=1e-4, dif
     import matplotlib
     import matplotlib.pyplot as plt
 
-    def tuple_to_int(t):
-        if isinstance(t, tuple):
-            return (int(t[0]), int(t[1]))
+    def array_to_int(t):
+        return (int(t[0]), int(t[1]))
 
     def show_grid_helper(grid, data, title='Grid of PSFs', vmax=0, vmin=0, scale='log'):
         npsfs = grid.data.shape[0]
@@ -605,7 +613,7 @@ def display_psf_grid(grid, zoom_in=True, figsize=(14, 12), scale_range=1e-4, dif
                 im = axes[n - 1 - iy, ix].imshow(data[i], norm=norm, cmap=cmap, origin='lower')
                 axes[n - 1 - iy, ix].xaxis.set_visible(False)
                 axes[n - 1 - iy, ix].yaxis.set_visible(False)
-                axes[n - 1 - iy, ix].set_title('{}'.format(tuple_to_int(grid.grid_xypos[i])))
+                axes[n - 1 - iy, ix].set_title('{}'.format(array_to_int(grid.grid_xypos[i])))
                 if zoom_in:
                     axes[n - 1 - iy, ix].use_sticky_edges = False
                     axes[n - 1 - iy, ix].margins(x=-0.25, y=-0.25)

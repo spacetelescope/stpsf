@@ -40,14 +40,6 @@ STPSF and its underlying optical library POPPY may be installed from the `Python
 
     Successfully installed stpsf
 
-Note that ``pip install stpsf`` only installs the program code. **If you install via pip, you must manually download and install the data files, as** :ref:`described <data_install>` **below.**
-To obtain source spectra for calculations, you should also follow :ref:`installation instructions for synphot <synphot_install>`.
-
-.. note::
-  Installation through conda is not available as of STPSF version 1.1.0. Conda
-  users should instead follow the insructions in the preceding section to
-  install via pip.
-
 
 .. _synphot_install:
 
@@ -61,21 +53,22 @@ Stsynphot is an optional dependency, but is highly recommended. Its installation
 Installing the Required Data Files
 ----------------------------------
 
-*If you install via pip or manually*, you must install the data files yourself.
+.. note::
+  The necessary data files will be installed automatically in a default path, ``$HOME/data/stpsf-data``, and there is no user action required unless you want to install them somewhere else.
 
-.. (If you install via Conda, the data files are automatically installed, in
-    which case you can skip this section.) [uncomment once conda installation is
-    available again]
+Files containing such information as the JWST pupil shape, instrument throughputs, and aperture positions are distributed separately from STPSF. These sum to about 100 MB in size.
 
-Files containing such information as the JWST pupil shape, instrument throughputs, and aperture positions are distributed separately from STPSF. To run STPSF, you must download these files and tell STPSF where to find them using the ``STPSF_PATH`` environment variable.
+STPSF will now **automatically download and install these files** the first time it is run.  By default these will be downloaded and installed into a folder ``$HOME/data/stpsf-data``  within the user's home directory. This directory will be created automatically if it doesn't exist already. If this path is acceptable to you, then no further action is needed on your part, and it'll all work automatically.
 
-1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz>`_  [approx. 70 MB]
+*If you would like to place the data files at some other location*,  you can manually install the data files yourself.
+
+1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz>`_  [approx. 175 MB]
 2. Untar ``stpsf-data-LATEST.tar.gz`` into a directory of your choosing.
 3. Set the environment variable ``STPSF_PATH`` to point to that directory. e.g. ::
 
     export STPSF_PATH=$HOME/data/stpsf-data
 
-for bash. (You will probably want to add this to your ``.bashrc``.)
+for bash. (You will probably want to add this to your ``.bashrc``, or equivalent for the shell of your choice.)
 
 You should now be able to successfully ``import stpsf`` in a Python session.
 
@@ -87,12 +80,12 @@ You should now be able to successfully ``import stpsf`` in a Python session.
 .. Note::
 
    **For STScI Users Only:** Users at STScI may access the required data files from the Central Storage network. Set the following environment variables in your ``bash`` shell. (You will probably want to add this to your ``.bashrc``.) ::
+
       export STPSF_PATH="/grp/stpsf/stpsf-data"
       export PYSYN_CDBS="/grp/hst/cdbs"
 
 Software Requirements
 ---------------------
-
 
 See `the requirements.txt specification file <https://github.com/spacetelescope/stpsf/blob/develop/requirements.txt>`_ for the required package dependencies.
 
@@ -129,3 +122,19 @@ To install the current development version of STPSF, you can use ``pip`` to inst
 This will create directories ``./src/poppy`` and ``./src/stpsf`` in your current directory containing the cloned repository. If you have commit access to the repository, you may want to clone via ssh with a URL like ``git+ssh://git@github.com:spacetelescope/stpsf.git``. Documentation of the available options for installing directly from Git can be found in the `pip documentation <http://pip.readthedocs.org/en/latest/reference/pip_install.html#git>`_.
 
 Remember to :ref:`install the required data files <data_install>`, if you have not already installed them.
+
+.. _specific_versions:
+
+Using Specific Data Versions
+--------------------------------
+
+If you need a specific version of the STPSF data you can download it directly
+
+| Full Versions:
+| `stpsf-data-2.1.0.tar.gz <https://stsci.box.com/shared/static/ybp9cupdgxicsn3yj7p9ru9ivuyzcyfw.gz>`_
+| `stpsf-data-2.0.0.tar.gz <https://stsci.box.com/shared/static/i3ui9gfypnhmu5ocec47ooci2ehwf9xf.gz>`_
+
+
+| Min Versions:
+| `minimal-stpsf-data-2.1.0.tar.gz <https://stsci.box.com/shared/static/z4wt613tg9txgfo5gc4qkvco1jzg74xe.gz>`_
+| `minimal-stpsf-data-2.0.0.tar.gz <https://stsci.box.com/shared/static/4f0jrt20l1tagsmz9s3juxfacu4kgigm.gz>`_

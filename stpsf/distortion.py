@@ -125,7 +125,7 @@ def distort_image(
         instrument = hdu_list[0].header['INSTRUME'].upper().strip()
 
         if instrument == 'WFI':
-            aper_name = 'WFI' + hdu_list[0].header['DETECTOR'][-2:] + '_FULL'
+            aper_name = hdu_list[0].header['DETECTOR'] + '_FULL'
         else:
             aper_name = hdu_list[0].header['APERNAME'].upper()
 
@@ -246,7 +246,7 @@ def apply_distortion(hdulist_or_filename=None, fill_value=0):
     # Log instrument and detector names
     instrument = hdu_list[0].header['INSTRUME'].upper().strip()
     if instrument == 'WFI':
-        aper_name = 'WFI' + hdu_list[0].header['DETECTOR'][-2:] + '_FULL'
+        aper_name = hdu_list[0].header['DETECTOR'] + '_FULL'
     else:
         aper_name = hdu_list[0].header['APERNAME'].upper()
 
@@ -315,14 +315,14 @@ def apply_rotation(hdulist_or_filename=None, rotate_value=None, crop=True):
     # Log instrument and detector names
     instrument = hdu_list[0].header['INSTRUME'].upper().strip()
     if instrument == 'WFI':
-        aper_name = 'WFI' + hdu_list[0].header['DETECTOR'][-2:] + '_FULL'
+        aper_name = hdu_list[0].header['DETECTOR'] + '_FULL'
     else:
         aper_name = hdu_list[0].header['APERNAME'].upper()
 
     if instrument in ['MIRI', 'NIRSPEC']:
         raise ValueError("{}'s rotation is already included in STPSF and " "shouldn't be added again.".format(instrument))
     if instrument == 'WFI':
-        raise ValueError('Rotation not necessary for {:} as pupil are aligned with SCAs (to confirm).'.format(instrument))
+        raise ValueError('Rotation not necessary for {:} as pupil are aligned with detectors (to confirm).'.format(instrument))
 
     # Set rotation value if not already set by a keyword argument
     if rotate_value is None:

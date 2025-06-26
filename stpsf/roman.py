@@ -11,6 +11,7 @@ WARNING: This model has not yet been validated against other PSF
 import logging
 import os.path
 import pprint
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -18,7 +19,7 @@ import poppy
 from astropy.io import fits
 from scipy.interpolate import griddata
 
-from . import distortion, utils, stpsf_core
+from . import distortion, utils, stpsf_core, detectors
 
 _log = logging.getLogger('stpsf')
 
@@ -98,7 +99,7 @@ class FieldDependentAberration(poppy.ZernikeWFE):
 
     """By default, `get_aberration_terms` will zero out Z1, Z2, and Z3
     (piston, tip, and tilt) as they are not meaningful for telescope
-    PSF calculations (the former is irrelevant, the latter two would
+    PSF calculations (the former is irrelevant; the latter two would
     be handled by a distortion solution). Change
     `_omit_piston_tip_tilt` to False to include the Z1-3 terms."""
     _omit_piston_tip_tilt = True
@@ -212,15 +213,16 @@ def _load_wfi_detector_aberrations(filename):
     from astropy.io import ascii
 
     zernike_table = ascii.read(filename, encoding='utf-8-sig')
-    detectors = {}
+    detectors_dict = {}
 
     def build_detector_from_table(number, zernike_table):
         """Build a FieldDependentAberration optic for a detector using
-        Zernikes Z1-Z22 at various wavelengths and field points"""
+        Zernikes Z1-Z45 at various wavelengths and field points"""
         single_detector_info = zernike_table[zernike_table['sca'] == number]
         field_points = set(single_detector_info['field_point'])
         detector = FieldDependentAberration(
-            4096, 4096, radius=RomanInstrument.PUPIL_RADIUS, name='Field Dependent Aberration (SCA{:02})'.format(number)
+            4096, 4096, radius=RomanInstrument.PUPIL_RADIUS,
+            name=f"Field Dependent Aberration (WFI{number:02d})"
         )
         for field_id in field_points:
             field_point_rows = single_detector_info[single_detector_info['field_point'] == field_id]
@@ -251,9 +253,27 @@ def _load_wfi_detector_aberrations(filename):
 
     detector_ids = set(zernike_table['sca'])
     for detid in detector_ids:
-        detectors['SCA{:02}'.format(detid)] = build_detector_from_table(detid, zernike_table)
+        detectors_dict['WFI{:02}'.format(detid)] = build_detector_from_table(detid, zernike_table)
 
-    return detectors
+    return detectors_dict
+
+
+class _RomanInstrumentOptionsDict(dict):
+    """
+    A wrapper for the `RomanInstrument.options` dict that prevents the
+    `add_distortion` key from being modified since distortion can't be added to
+    PSFs from Roman's WFI (whose input data is already distorted) or Coronagraph
+    Instrument (where distortion is not implemented).
+
+    The default value set for `add_distortion` in `RomanInstrument` should be
+    something other than True or False that indicates to users that distortion
+    can't be toggled in the Roman instrument model.
+    """
+    def __setitem__(self, key, value):
+        if key == 'add_distortion' and value != 'NA':
+            _log.warn('Roman: add_distortion disabled for Roman PSFs')
+        else:
+            super().__setitem__(key, value)
 
 
 @utils.combine_docstrings
@@ -267,8 +287,18 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.siaf = stpsf_core.get_siaf_with_caching('roman')
+        self._aperturename = None
+
+        # reassign self.options from dict to _RomanInstrumentOptionsDict,
+        # mainly to prevent user modification of the add_distortion key
+        self.options['add_distortion'] = 'NA'  # distortion can't be toggled
+        self.options = _RomanInstrumentOptionsDict(self.options.copy())
+
         self.options['jitter'] = 'gaussian'
-        self.options['jitter_sigma'] = 0.012  # arcsec/axis, see https://roman.ipac.caltech.edu/sims/Param_db.html#telescope
+        self.options['jitter_sigma'] = 0.012
+        # arcsec/axis, see https://github.com/RomanSpaceTelescope/roman-technical-information/tree/main/data/Observatory/MissionandObservatoryTechnicalOverview#telescope-parameters
 
     def calc_psf(
         self,
@@ -286,37 +316,39 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         save_intermediates=False,
         return_intermediates=False,
         normalize='first',
-        add_distortion=True,
+        add_distortion=None,
         crop_psf=False,
     ):
         """
-        Compute a PSF
+        Compute a PSF.
+
+        Note that Roman WFI PSFs, unlike those from the JWST instruments,
+        always include distortion. Additionally, distortion is not implemented
+        in STPSF for the Roman Coronagraph Instrument. As such, the
+        `add_distortion` argument of the Roman implementation of `calc_psf()`
+        will not affect the simulated PSF.
 
         Parameters
         ----------
-        add_distortion : bool
-            If True, will add 2 new extensions to the PSF HDUlist object. The 2nd extension
-            will be a distorted version of the over-sampled PSF and the 3rd extension will
-            be a distorted version of the detector-sampled PSF.
+        add_distortion : None
+            Included for backward compatibility, but this argument has no
+            effect since, as mentioned above, distortion can no longer be
+            toggled in Roman PSFs. WFI PSFs natively include distortion effects
+            and RomanCoronagraph PSFs do not.
         crop_psf : bool
-            Included for API compatibility with the JWST instrument classes, but has no
-            effect on the results for Roman WFI PSF calculations.
+            Included for API compatibility with the JWST instrument classes,
+            but has no effect on the results for Roman WFI PSF calculations.
 
         """
 
-        # Save new keywords to the options dictionary
-        self.options['add_distortion'] = add_distortion
-        self.options['crop_psf'] = crop_psf
+        if add_distortion is not None:
+            _log.warn('Note that the add_distortion argument no longer affects '
+                      'Roman instrument simulations. All WFI PSFs natively '
+                      'include distortion effects and all RomanCoronagraph '
+                      'PSFs do not.')
 
-        # add_distortion keyword is not implemented for RomanCoronagraph Class
-        if self.name == 'RomanCoronagraph' and add_distortion is True:
-            self.options['add_distortion'] = False
-            self.options['crop_psf'] = False
-            info_message = (
-                'Geometric distortions are not implemented in STPSF for Roman CGI.  '
-                'The add_distortion keyword must be set to False for this case.'
-            )
-            _log.info(info_message)
+        # Save new keyword to the options dictionary
+        self.options['crop_psf'] = crop_psf
 
         # Run poppy calc_psf
         psf = stpsf_core.SpaceTelescopeInstrument.calc_psf(
@@ -378,7 +410,12 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     def _calc_psf_format_output(self, result, options):
         """
-        Add distortion to the created 1-extension PSF
+        Add detector charge diffusion model to the created 1-extension PSF.
+
+        (As of STPSF v2.1.0, no longer applies distortion given that WFI optical
+         models were delivered with inherent distortion effects in Cycle 10. If
+         future deliveries arrive sans distortion, see pre-v2.1.0 commit history
+         for code that handled distortion.)
 
         Apply desired formatting to output file:
                  - rebin to detector pixel scale if desired
@@ -394,29 +431,25 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         Modifies the 'result' HDUList object.
 
         """
-        # Pull values from options dictionary
-        add_distortion = options.get('add_distortion', True)
-        # Add distortion if set in calc_psf
-        if add_distortion:
-            _log.debug('Adding PSF distortion(s)')
+        # Set up new extensions for detector charge transfer model
+        n_exts = len(result)
+        for ext in np.arange(n_exts):
+            hdu_new = fits.ImageHDU(result[ext].data, result[ext].header)
+            # ^ these will be the PSFs that are edited ^
+            result.append(hdu_new)
+            ext_new = ext + n_exts
+            result[ext_new].header['EXTNAME'] = result[ext].header['EXTNAME'][0:4] + 'DIST'  # change extension name
+            _log.debug('Appending new extension {} with EXTNAME = {}'.format(ext_new, result[ext_new].header['EXTNAME']))
 
-            # Set up new extensions to add distortion to:
-            n_exts = len(result)
-            for ext in np.arange(n_exts):
-                hdu_new = fits.ImageHDU(result[ext].data, result[ext].header)  # these will be the PSFs that are edited
-                result.append(hdu_new)
-                ext_new = ext + n_exts
-                result[ext_new].header['EXTNAME'] = result[ext].header['EXTNAME'][0:4] + 'DIST'  # change extension name
-                _log.debug('Appending new extension {} with EXTNAME = {}'.format(ext_new, result[ext_new].header['EXTNAME']))
+        # apply detector charge transfer model
+        psf_updated = detectors.apply_detector_charge_diffusion(result,
+                                                                options)
 
-            _log.debug('WFI: Adding optical distortion')
-            psf_distorted = distortion.apply_distortion(result)  # apply siaf distortion model
-
-            # Edit the variable to match if input didn't request distortion
-            # (cannot set result = psf_distorted due to return method)
-            [result.append(fits.ImageHDU()) for i in np.arange(len(psf_distorted) - len(result))]
-            for ext in np.arange(len(psf_distorted)):
-                result[ext] = psf_distorted[ext]
+        # Edit the variable to match if input didn't request distortion
+        # (cannot set result = psf_updated due to return method)
+        [result.append(fits.ImageHDU()) for i in np.arange(len(psf_updated) - len(result))]
+        for ext in np.arange(len(psf_updated)):
+            result[ext] = psf_updated[ext]
 
         # Rewrite result variable based on output_mode set:
         stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
@@ -429,30 +462,26 @@ class WFIPupilController:
     The pupil depends on pupil_mask, detector, and filter;
     pupil_mask is set automatically upon the receipt of the
     detector and filter values selected by the user in the WFI class.
-    The user should not interact with this class directly, only
-    through the API provided through the WFI class.
+    Users should only interact with this class through the API provided
+    in the WFI class.
+
+    Parameters
+    ----------
+    datapath : string
+        Path to STPSF-WFI data files
     """
 
-    def __init__(self):
-        self._datapath = None
-        self._pupil_basepath = None
+    def __init__(self, datapath):
+        self.set_base_path(datapath)
 
         self._pupil = None
-        self._pupil_mask = None  # new for stpsf 1.0
+        self._pupil_mask = None
 
         # Flag to en-/disable automatic selection of the appropriate pupil_mask
         self._auto_pupil = True
 
         # Flag to en-/disable automatic selection of the appropriate pupil file
         self._auto_pupil_mask = True
-
-        # Save formattable pupil file names for each pupil mask
-        self.pupil_file_formatters = {
-            'SKINNY': 'RST_WIM_Filter_skinny_{0}.fits.gz',
-            'WIDE': 'RST_WIM_Filter_F184_{0}.fits.gz',
-            'GRISM': 'RST_WSM_Grism_Grism_{0}.fits.gz',
-            'PRISM': 'RST_WSM_Prism_Prism_{0}.fits.gz',
-        }
 
     @property
     def pupil(self):
@@ -478,11 +507,12 @@ class WFIPupilController:
 
     @pupil_mask.setter
     def pupil_mask(self, name):
-        raise AttributeError('Pupil mask cannot be directly specified. ' 'Use lock_pupil_mask() instead.')
+        raise AttributeError('Pupil mask cannot be directly specified. '
+                             'Use lock_pupil_mask() instead.')
 
-    def _get_filter_mask(self, wfi_filter):
+    def _get_pupil_mask(self, wfi_filter):
         """
-        Returns the appropriate mask for a given WFI filter.
+        Returns the appropriate pupil mask for a given WFI filter.
 
         Parameters
         ----------
@@ -492,16 +522,11 @@ class WFIPupilController:
         wfi_filter = wfi_filter.upper()
 
         if wfi_filter in GRISM_FILTERS:
+            # As of Cycle 10, GRISM0 and GRISM1 are the only filters that share
+            # a set of pupil masks with each other
             return 'GRISM'
-        elif wfi_filter in PRISM_FILTERS:
-            return 'PRISM'
-        elif wfi_filter in ['F184', 'F213']:
-            return 'WIDE'
         else:
-            # this method should only be called after WFI.filter was validated,
-            # so we assume all inputs are valid and direct those that don't pass
-            # preceding cases to skinny
-            return 'SKINNY'
+            return wfi_filter
 
     def set_base_path(self, datapath):
         """
@@ -516,7 +541,26 @@ class WFIPupilController:
         self._datapath = datapath
         self._pupil_basepath = os.path.join(self._datapath, 'pupils')
 
-    def update_pupil(self, filter, detector):
+    def pupil_file_formatter(self, wfi_filter, detector):
+        """
+        Generate proper pupil filename given a filter and a detector.
+
+        Parameters
+        ----------
+        wfi_filter : string
+            See WFI.filter_list for a list of valid filters.
+
+        detector : string
+            See WFI.detector_list for a list of valid detectors.
+        """
+        if wfi_filter.upper().startswith('F'):
+            return f"RST_WIM_Filter_{wfi_filter}_{detector}.fits.gz"
+        elif wfi_filter.upper().startswith('GRISM'):
+            return f"RST_WSM_Grism_grism_{detector}.fits.gz"
+        elif wfi_filter.upper() == 'PRISM':
+            return f"RST_WSM_Prism_prism_{detector}.fits.gz"
+
+    def update_pupil(self, wfi_filter, detector):
         """
         Selects the specific pupil file corresponding with a detector
         and filter combination sent from the WFI class. Also finds and
@@ -524,33 +568,31 @@ class WFIPupilController:
 
         Parameters
         ----------
-        filter : string
+        wfi_filter : string
             See WFI.filter_list for a list of valid filters.
 
         detector : string
             See WFI.detector_list for a list of valid detectors.
         """
         if not self._auto_pupil:
-            _log.info('Automatic pupil selection was locked; ' 'using user-provided pupil.')
+            _log.info('Automatic pupil selection was locked; '
+                      'using user-provided pupil.')
             return
 
         if self._pupil_basepath is None:
             raise Exception('update_pupil called before setting pupil file path')
 
-        # change detector string to match file format (e.g., "SCA01" -> "SCA_1")
-        det_substr = f'{detector[:3]}_{str(int((detector[3:])))}'
-
         # figure out proper mask based on filter (or use locked mask if enabled)
-        pupil_mask = self._get_filter_mask(filter) if self._auto_pupil_mask else self.pupil_mask
-
-        path_formatter = self.pupil_file_formatters[pupil_mask]
-        pupil = os.path.join(self._pupil_basepath, path_formatter.format(det_substr))
+        pupil_mask = self._get_pupil_mask(wfi_filter) if self._auto_pupil_mask else self.pupil_mask
+        pupil = os.path.join(self._pupil_basepath,
+                             self.pupil_file_formatter(pupil_mask, detector))
 
         self._pupil_mask = pupil_mask
         self._pupil = pupil
 
         _log.info(
-            f"Using {'' if self._auto_pupil_mask else 'locked '}" f"pupil mask '{pupil_mask}' and detector '{detector}'."
+            f"Using {'' if self._auto_pupil_mask else 'locked '}"
+            f"pupil mask '{pupil_mask}' and detector '{detector}'."
         )
 
     def lock_pupil(self, pupil_path):
@@ -595,9 +637,7 @@ class WFIPupilController:
         filter : string
             See WFI.pupil_mask_list for a list of valid pupil masks.
         """
-        if pupil_mask not in self.pupil_file_formatters.keys():
-            raise Exception('invalid pupil mask')
-        elif not self._auto_pupil:
+        if not self._auto_pupil:
             raise Exception('Pupil is locked. Unlock pupil before locking pupil mask.')
         else:
             self._pupil_mask = pupil_mask
@@ -626,7 +666,7 @@ class WFI(RomanInstrument):
         # https://roman.ipac.caltech.edu/sims/Param_db.html
         pixelscale = 110e-3  # arcsec/px
 
-        # Initialize the aberrations for super().__init__
+        # Initialize the aberrations for parent SpaceTelescopeInstrument class
         self._aberration_files = {}
         self._is_custom_aberration = False
         self._current_aberration_file = ''
@@ -634,23 +674,26 @@ class WFI(RomanInstrument):
         super().__init__('WFI', pixelscale=pixelscale)
 
         # Initialize the pupil controller
-        self._pupil_controller = WFIPupilController()
-        self._pupil_controller.set_base_path(self._datapath)
+        self._pupil_controller = WFIPupilController(self._datapath)
 
-        self.pupil_mask_list = list(self._pupil_controller.pupil_file_formatters.keys())
+        self.pupil_mask_list = [fltr for fltr in self.filter_list.copy()
+                                if not fltr.startswith('GRISM')]
+        self.pupil_mask_list.append(np.str_('GRISM'))  # GRISM0/1 share pupils
 
-        # Define default aberration files for WFI modes
-        self._aberration_files = {
-            'imaging': os.path.join(self._datapath, 'wim_zernikes_cycle9.csv'),
-            'prism': os.path.join(self._datapath, 'wsm_prism_zernikes_cycle9.csv'),
-            'grism': os.path.join(self._datapath, 'wsm_grism_zernikes_cycle9.csv'),
-            'custom': None,
-        }
+        # Define default aberration files for WFI filters
+        self._aberration_files = {'custom': None}
+        self._aberration_files.update({
+            fltr: os.path.join(
+                self._datapath,
+                (f"{'WIM' if fltr.startswith('F') else 'WSM'}"
+                 f"_{fltr}_zernikes_cycle10.csv"))
+            for fltr in self.filter_list
+        })
 
         # Load and set default detector from aberration file
         self._detector_npixels = 4096
         self._load_detector_aberrations(self._aberration_files[self.mode])
-        self.detector = 'SCA01'
+        self.detector = 'WFI01'
 
         self.opd_list = [os.path.join(self._STPSF_basepath, 'upscaled_HST_OPD.fits')]
         self.pupilopd = self.opd_list[-1]
@@ -675,10 +718,10 @@ class WFI(RomanInstrument):
         path : string
             The path to the file containing detector aberrations.
         """
-        detectors = _load_wfi_detector_aberrations(path)
-        assert len(detectors.keys()) > 0
+        detectors_dict = _load_wfi_detector_aberrations(path)
+        assert len(detectors_dict.keys()) > 0
 
-        self._detectors = detectors
+        self._detectors = detectors_dict
         self._current_aberration_file = path
 
     def _validate_config(self, **kwargs):
@@ -695,56 +738,90 @@ class WFI(RomanInstrument):
         assert self.pupil is not None, 'pupil is None'
         super()._validate_config(**kwargs)
 
-    def _get_filter_mode(self, wfi_filter):
-        """
-        Given a filter name, returns the WFI mode.
-
-        Parameters
-        ----------
-        wfi_filter : string
-            Name of WFI filter. See WFI.filter_list for valid values.
-
-        Returns
-        -------
-        mode : string
-            Returns 'imaging', 'grism', or 'prism' depending on filter.
-
-        Raises
-        ------
-        ValueError
-            ...if the input filter is not found in the WFI filter list.
-        """
-
-        wfi_filter = wfi_filter.upper()
-        if wfi_filter in GRISM_FILTERS:
-            return 'grism'
-        elif wfi_filter in PRISM_FILTERS:
-            return 'prism'
-        elif wfi_filter in self.filter_list:
-            return 'imaging'
-        else:
-            raise ValueError(f"Instrument {self.name} doesn't have a filter " f'called {wfi_filter}.')
-
-    def _update_pupil(self, filter=None, detector=None):
+    def _update_pupil(self, wfi_filter=None, detector=None):
         if detector is None:
             detector = self.detector
-        if filter is None:
-            filter = self.filter
+        if wfi_filter is None:
+            wfi_filter = self.filter
 
-        if detector is not None and filter is not None:
-            self._pupil_controller.update_pupil(filter=filter, detector=detector)
+        if detector is not None and wfi_filter is not None:
+            self._pupil_controller.update_pupil(wfi_filter=wfi_filter,
+                                                detector=detector)
 
     @RomanInstrument.detector.setter
     def detector(self, value):
         """
         The current WFI detector. See WFI.detector_list for valid values.
+
+        As of Cycle 10, also switches the current filter's throughput file
+        location since these are now detector-based.
         """
+        if value.upper().startswith('SCA'):  # backward-compatible name assignment
+            value = f"WFI{value[-2:]}"
         if value.upper() not in self.detector_list:
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
 
         self._detector = value.upper()
         if self._detector is not None:
             self._update_pupil(detector=self._detector)
+        self._update_aperturename()
+
+    def _update_aperturename(self):
+        """Update SIAF aperture name after change in detector or other relevant properties.
+        This function handles just inferring the new value of the aperturename.
+        See the aperturename.setter function for additional changed based on that.
+        """
+        self.aperturename = self._detector.replace('SCA', 'WFI') + "_FULL"
+
+    @RomanInstrument.aperturename.setter
+    def aperturename(self, value):
+        """Set SIAF aperture name to new value, with validation.
+
+        This also updates the pixelscale to the local value for that aperture, for a small precision enhancement.
+        """
+        try:
+            ap = self.siaf[value]
+        except KeyError:
+            raise ValueError(f'Aperture name {value} not a valid SIAF aperture name for {self.name}')
+
+        # Only update if new value is different
+        if self._aperturename != value:
+            self._aperturename = value
+
+            # Update pixelscale based on specified aperture name
+            self.pixelscale = self._get_pixelscale_from_apername(value)
+
+        # adjust filter throughput file location
+        found_parent = False
+        filters_info = {}
+        for fl, info in self._filters.items():
+            filter_path = Path(info.filename)
+
+            # find 'filters', the earliest common parent directory of default
+            # stpsf filter file structure (stpsf-data/INSTRUMENT/*filters*)
+            # and WFI's filter file structure (stpsf-data/WFI/*filters*/DETECTOR).
+            if not found_parent:
+                for parent in filter_path.parents:
+                    if parent.name == 'filters':
+                        found_parent = True
+                        break
+                    else:
+                        continue
+            # done this way because SpaceTelescopeInstrument.__init__()
+            # (a WFI parent class) sets filter location to the default WFI path
+            # with SpaceTelescopeInstrument._get_filters() upon class creation,
+            # so the filter files' direct parent directory the first time a
+            # detector is assigned in WFI.__init__() (the "filters" directory)
+            # is not at the same level as on later changes to the detector attribute
+            # (the corresponding "WFINN" child directory of "WFI/filters").
+
+            # save filter info but change throughput file based on new detector
+            info_edit = {key : (val if key != 'filename'
+                                else str(parent / self._detector / filter_path.name))
+                         for key, val in info._asdict().items()}
+            filters_info[fl] = stpsf_core.Filter(**info_edit)
+
+        self._filters = filters_info
 
     @RomanInstrument.filter.setter
     def filter(self, value):
@@ -755,7 +832,8 @@ class WFI(RomanInstrument):
         value = value.upper()
 
         if value not in self.filter_list:
-            raise ValueError(f"Instrument {self.name} doesn't have a " f'filter called {value}.')
+            raise ValueError(f"Instrument {self.name} doesn't have a "
+                             f"filter called {value}.")
 
         self._filter = value
 
@@ -763,8 +841,7 @@ class WFI(RomanInstrument):
         # empty) and if they haven't been locked by user
         if self._aberration_files and not self._is_custom_aberration:
             # identify aberration file for new mode
-            mode = self._get_filter_mode(self._filter)
-            aberration_file = self._aberration_files[mode]
+            aberration_file = self._aberration_files[self._filter]
 
             # if aberrations are not already loaded for the new mode,
             # load and replace detectors using the new mode's aberration file
@@ -774,7 +851,7 @@ class WFI(RomanInstrument):
         # Update pupil only if detector was previously loaded
         # ( i.e., skip this step when called by super() )
         if self.detector is not None:
-            self._update_pupil(filter=self._filter)
+            self._update_pupil(wfi_filter=self._filter)
 
     @property
     def pupil(self):
@@ -809,7 +886,7 @@ class WFI(RomanInstrument):
         """
         The current WFI mode. Cannot be directly set by the user.
         """
-        return self._get_filter_mode(self.filter)
+        return self.filter
 
     @mode.setter
     def mode(self, value):
@@ -831,7 +908,8 @@ class WFI(RomanInstrument):
         names/values (comments in parentheses should not be included):
         - sca (Detector number)
         - wavelength (µm)
-        - field_point (field point number/ID for SCA and wavelength, starts with 1)
+        - field_point (field point number/ID for detector and wavelength.
+                       starts with 1)
         - local_x (mm, local detector coords)
         - local_y (mm, local detector coords)
         - global_x (mm, global instrument coords)
@@ -899,6 +977,7 @@ class WFI(RomanInstrument):
         """
         self._pupil_controller.unlock_pupil()
         self._update_pupil()  # reset pupil
+        _log.info('Restoring default pupil selection behavior.')
 
     def lock_pupil_mask(self, pupil_mask):
         """
@@ -914,8 +993,11 @@ class WFI(RomanInstrument):
         filter : string
             See WFI.pupil_mask_list for a list of valid pupil masks.
         """
+        if pupil_mask not in self.pupil_mask_list:
+            raise Exception('invalid pupil mask')
         self._pupil_controller.lock_pupil_mask(pupil_mask)
         self._update_pupil()
+        _log.warning('Disabling default pupil mask selection behavior.')
 
     def unlock_pupil_mask(self):
         """
@@ -925,6 +1007,7 @@ class WFI(RomanInstrument):
         """
         self._pupil_controller.unlock_pupil_mask()
         self._update_pupil()  # reset pupil mask
+        _log.info('Restoring default pupil mask selection behavior.')
 
 
 class RomanCoronagraph(RomanInstrument):
@@ -1149,7 +1232,8 @@ class RomanCoronagraph(RomanInstrument):
         """Print the table of observing mode options and their associated optical configuration"""
         _log.info('Printing the table of Roman Coronagraph Instrument observing modes supported by STPSF.')
         _log.info(
-            'Each is defined by a combo of camera, filter, apodizer, ' 'focal plane mask (FPM), and Lyot stop settings:'
+            'Each is defined by a combo of camera, filter, apodizer, '
+            'focal plane mask (FPM), and Lyot stop settings:'
         )
         _log.info(pprint.pformat(self._mode_table))
 

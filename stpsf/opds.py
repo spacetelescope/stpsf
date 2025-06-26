@@ -1870,8 +1870,8 @@ class OTE_Linear_Model_WSS(OPD):
 
         """
 
-        if segment == 'SM':
-            raise ValueError('SM not supported by move_seg_local. Use move_sm_local instead.')
+        if segment == 'SM-19':
+            raise ValueError('SM-19 not supported by move_seg_local. Use move_sm_local instead.')
 
         # Handle tilts and clocking
         tilts = np.array([xtilt, ytilt, clocking], dtype=float)
@@ -2302,7 +2302,7 @@ class OTE_Linear_Model_WSS(OPD):
                     rot_unit = update.units['X_TILT']
                     trans_unit = update.units['X_TRANS']
 
-                    if update.segment == 'SM':
+                    if update.segment == 'SM-19':
                         self.move_sm_local(
                             xtilt=update.moves['X_TILT'] * sign,
                             ytilt=update.moves['Y_TILT'] * sign,

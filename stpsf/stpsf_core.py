@@ -343,6 +343,13 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         """Update SIAF aperture name after change in detector or other relevant properties"""
         self.aperturename = self._detectors[self._detector]
 
+    def _get_pixelscale_from_apername(self, apername):
+        """Simple utility function to look up pixelscale from apername"""
+        ap = self.siaf[apername]
+        # Here we make the simplifying assumption of **square** pixels, which is true within 0.5%.
+        # The slight departures from this are handled in the distortion model; see distortion.py
+        return (ap.XSciScale + ap.YSciScale) / 2
+
     def _get_fits_header(self, result, options):
         """populate FITS Header keywords"""
         super(SpaceTelescopeInstrument, self)._get_fits_header(result, options)
@@ -727,7 +734,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
         wfi = stpsf.WFI()
         wfi.filter = "Z087"
-        wfi.detector = "SCA02"
+        wfi.detector = "WFI02"
         grid = wfi.psf_grid(all_detectors=False, oversample=5, fov_pixels=101)
 
         """
@@ -1139,13 +1146,6 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         except KeyError:
             raise ValueError('Not a valid aperture name for {}: {}'.format(self.name, aperture_name))
-
-    def _get_pixelscale_from_apername(self, apername):
-        """Simple utility function to look up pixelscale from apername"""
-        ap = self.siaf[apername]
-        # Here we make the simplifying assumption of **square** pixels, which is true within 0.5%.
-        # The slight departures from this are handled in the distortion model; see distortion.py
-        return (ap.XSciScale + ap.YSciScale) / 2
 
     def _get_fits_header(self, result, options):
         """populate FITS Header keywords"""
@@ -3542,6 +3542,13 @@ class NIRISS(JWInstrument):
 
         # Note - the syntax for specifying shifts is different between FITS files and
         # AnalyticOpticalElement instances. Annoying but historical.
+
+	# Note on NIRISS NRM geometry
+	# The file for the pupil mask MASK_NRM was updated to include
+	# 0.82 to 0.80 m subaperture flat-to-flat distance. Github issue 76
+	# The new file, MASK_NRM.fits.gz, is include with  stpsf-data for  >2.0.0v
+	# File provided by  @rcooper295 (02/05/2025)
+
         if self.pupil_mask == 'MASK_NRM':
             optsys.add_pupil(
                 transmission=self._datapath + '/optics/MASK_NRM.fits.gz',

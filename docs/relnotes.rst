@@ -23,6 +23,50 @@ See https://github.com/spacetelescope/stpsf/issues for currently open issues and
 Version History and Change Log
 -------------------------------
 
+Version 2.1.0
+=============
+*2025 June*
+This release updates the Roman instrument model for use with the Cycle 10 optical models of
+WFI wavefront error from Goddard Space Flight Center (Fall 2024).
+Note that accessing these optical models requires an upgrade to the latest reference data.
+The updated Roman reference files introduce
+a) Zernike coefficients specific to each filter for modeling wavefront error,
+b) throughputs specific to each filter *and* detector, and
+c) pupil masks specific to each of the imaging and prism filters. (The zeroth and first order grism filters continue to share a pupil mask.)
+The `add_distortion` flag now has no effect on Roman simulations since our input WFI pupil masks natively include distortion effects.
+
+**What's Changed**
+* release 2.0.0 by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/48
+* example notebook on how to transition from webbpsf to stpsf by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/57
+* new information added to our transition documentation by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/58
+* small change to remove hard coded field point in trending by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/59
+* Update readthedocs for webbpsf_to_stpsf notebook by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/66
+* Fix NIRISS bug by adding conditional statement to handle PUPIL filters  by @tonysohn in https://github.com/spacetelescope/stpsf/pull/67
+* Create cffconvert.yml by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/72
+* Rename two notebooks for webbpsf->stpsf by @mperrin in https://github.com/spacetelescope/stpsf/pull/74
+* update notebook path by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/75
+* removing the filter keyword in tar extractall by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/80
+* Roman: Update SIAF aperturename and pixel scale based on detector. by @mperrin in https://github.com/spacetelescope/stpsf/pull/81
+* Adding support for off-nominal phase map sizes  by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/87
+* Roman: Implement calls to detector charge diffusion model.  by @mperrin in https://github.com/spacetelescope/stpsf/pull/82
+* [SCSB-205] `project.license.file` -> `project.license-files` by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/84
+* assert len instead of return by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/92
+* simplify test by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/93
+* Update branch with latest develop by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/94
+* Update release.rst by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/91
+* Merge dev into this issue_76 branch by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/95
+* New file for NIRISS NRM pupil geometry by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/90
+* update release.rst for handling Webbpsf support on box by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/70
+* minor cleanup and consolidation by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/68
+* build(deps): update ipython requirement from <8.31.0,>=8.27.0 to >=8.27.0,<8.35.0 by @dependabot in https://github.com/spacetelescope/stpsf/pull/83
+* Fix display_psf_grid position labeling by @ojustino in https://github.com/spacetelescope/stpsf/pull/96
+* tweak/enhance auto data install by @mperrin in https://github.com/spacetelescope/stpsf/pull/50
+* #98 - Reference issue in SUR.xmltext() by @kulpster85 in https://github.com/spacetelescope/stpsf/pull/99
+* Roman Cycle 10 Updates by @ojustino in https://github.com/spacetelescope/stpsf/pull/100
+* Re-enable add_distortion argument for Roman @ojustino in https://github.com/spacetelescope/stpsf/pull/104
+
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/2.0.0...2.1.0
+
 Version 2.0.0
 =============
 *2024 December*

@@ -1930,6 +1930,9 @@ def show_wfs_during_program(
     # or use values provided by the user
     sci_duration = science_visit_table['start_mjd'].max() - science_visit_table['start_mjd'].min()
     plot_padding_time_range = max(sci_duration.to(u.day) * 0.2, 4 * u.day)
+    if plot_padding_time_range > 30 * u.day:
+        plot_padding_time_range = 30 * u.day # Avoid a padding larger than 30 days
+
     if start_date is None:
         start_date = science_visit_table['start_mjd'].min() - plot_padding_time_range
     else:
@@ -1938,6 +1941,10 @@ def show_wfs_during_program(
         end_date = science_visit_table['end_mjd'].max() + plot_padding_time_range
     else:
         end_date = astropy.time.Time(end_date)
+
+    min_date = astropy.time.Time('2022-03-14') #Final Alignment
+    if start_date < min_date:
+        start_date = min_date
 
     # Look up wavefront sensing and mirror move corrections for that range
     opdtable = get_opdtable_for_daterange(start_date, end_date)
@@ -1953,6 +1960,13 @@ def show_wfs_during_program(
         except FileNotFoundError:
             stpsf.mast_wss.mast_retrieve_opd(opd_fn, verbose=verbose)
             opd, opd_hdul = stpsf.trending._read_opd(opd_fn)
+
+        if opd.shape != (256, 256):  # handle the case for commissioning phasemaps
+            # the results from the zoom function preserve the STD between both phase maps and
+            # the total sum between the phase maps is proportional to the zoom value
+            # by construction there are no OPDs larger than 256x256
+            opd = scipy.ndimage.zoom(opd, 256 / opd.shape[0])
+
 
         opds.append(opd)
         wfs_dates.append(opdtable[row_index]['date'])
@@ -2125,7 +2139,8 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
 
     # Make a matching sim
     nrc = stpsf.setup_sim_to_match_file(hdul, verbose=False)
-    opdname = nrc.pupilopd[0].header['CORR_ID'] + '-NRCA3_FP1-1.fits'
+    opdname = '{}-{}-{}.fits'.format(nrc.pupilopd[0].header['CORR_ID'], 
+                                 nrc.pupilopd[0].header['APERNAME'],nrc.pupilopd[0].header['GROUP_ID'] )
     if verbose:
         print('Calculating PSF to match that TA image...')
     psf = nrc.calc_psf(fov_pixels=im_obs.shape[0])
