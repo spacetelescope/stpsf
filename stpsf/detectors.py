@@ -587,9 +587,9 @@ def apply_miri_ifu_broadening(hdulist, options, slice_width=0.196):
     model_type = options.get('ifu_broadening', 'empirical_cruciform')
 
     if model_type is None or model_type.lower() == 'none':
-        webbpsf.webbpsf_core._log.debug('MIRI MRS: IFU broadening option is set to None, skipping IFU PSF broadening effects.')
+        stpsf.stpsf_core._log.debug('MIRI MRS: IFU broadening option is set to None, skipping IFU PSF broadening effects.')
         return hdulist
-    webbpsf.webbpsf_core._log.debug('MIRI MRS: Adding IFU PSF broadening effects.')
+    stpsf.stpsf_core._log.debug('MIRI MRS: Adding IFU PSF broadening effects.')
 
     ext = 1  # Apply this effect to the OVERDIST extension, which at this point in the code will be ext 1
 
@@ -703,7 +703,7 @@ def _miri_mrs_empirical_broadening(psf_model, alpha_width, beta_width):
         slice width in pixels
     """
     kernel_beta = astropy.convolution.Box1DKernel(beta_width)
-    webbpsf.webbpsf_core._log.info(f'  MRS empirical broadening: alpha width {alpha_width}, beta width {beta_width}')
+    stpsf.stpsf_core._log.info(f'  MRS empirical broadening: alpha width {alpha_width}, beta width {beta_width}')
 
     # TODO: extend algorithm to handle the datacube case
 
@@ -760,7 +760,7 @@ def _miri_mrs_empirical_cruciform(psf_model, amp, fwhm, x_0):
     Parameters
     -----------
     psf_model : ndarray
-       webbpsf output results, either monochromatic model or datacube
+       stpsf output results, either monochromatic model or datacube
     amp : float
        amplitude of Lorentzian in pixels
     fwhm : float
@@ -769,7 +769,7 @@ def _miri_mrs_empirical_cruciform(psf_model, amp, fwhm, x_0):
        offset of Lorentzian in pixels
     """
     kernel_cruciform = _Lorentz1DKernel(1.0, fwhm, x_0)
-    webbpsf.webbpsf_core._log.info(f'  MRS empirical cruciform: amp {amp} fwhm {fwhm} x_0 {x_0}')
+    stpsf.stpsf_core._log.info(f'  MRS empirical cruciform: amp {amp} fwhm {fwhm} x_0 {x_0}')
 
     # Flux conservation: the integral of the Lorentz kernel is the same as the amplitude
     # therefore the following will keep the total flux conserved in the summed output PSF.
