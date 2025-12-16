@@ -1,4 +1,5 @@
 # Functions to match or fit PSFs to observed JWST data
+import numpy as np
 import astropy
 import astropy.io.fits as fits
 import pysiaf
@@ -6,7 +7,8 @@ import pysiaf
 import stpsf
 
 
-def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest'):
+def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest',
+                            match_source_position=False):
     """Setup a stpsf Instrument instance matched to a given dataset
 
     Parameters
@@ -19,6 +21,16 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
         plot?
     choice : string
         Method to choose which OPD file to use, e.g. 'before', 'after', or 'closest'
+    match_source_position : bool
+        Set up the model to match the inferred coordinates of the science target in that image?
+        Specifically, use the FITS header to look up the target RA and Dec, then use the WCS
+        to determine where in pixel coordinates that RA, Dec is located. Set up the STPSF
+        instrument to have the detector_position attribute at that position (rounded to integer pixels),
+        and set the source_offset_x/y options for the remaining subpixel position.
+        Note, actually achieving subpixel alignment  will very likely need further adjustment of the
+        source_offset_x/y values manually, depending on the acheived precision of the WCS in your data.
+        If not set, the target position will be set to the default reference position of the relevant
+        aperture, which is typically the center of the full frame or center of a subarray.
     """
     if isinstance(filename_or_HDUList, str):
         if verbose:
@@ -98,6 +110,8 @@ def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choic
     # TODO add other per-instrument keyword checks
 
     if verbose:
+        is_full_frame = (inst.aperturename == 'NIS_CEN') if inst.name == 'NIRISS' else ('FULL' in inst.aperturename)
+
         print(
             f"""
 Configured simulation instrument for:
@@ -105,11 +119,38 @@ Configured simulation instrument for:
     Filter: {inst.filter}
     Detector: {inst.detector}
     Apername: {inst.aperturename}
-    Det. Pos.: {inst.detector_position} {'in subarray' if "FULL" not in inst.aperturename else ""}
+    Det. Pos.: {inst.detector_position} {'in subarray' if not is_full_frame else ""}
     Image plane mask: {inst.image_mask}
     Pupil plane mask: {inst.pupil_mask}
     """
         )
+
+    # Should we try to match the source position more exactly in that image, taking into account dithers etc?
+    if match_source_position:
+        # we do this using jwst datamodels so we can invoke the gWCS
+        import jwst.datamodels, astropy.units as u
+        model = jwst.datamodels.open(filename_or_HDUList)
+        # What is the coordinate location of the target set in APT, as of the epoch of observations?
+        targ_coords = astropy.coordinates.SkyCoord(model.meta.target.ra,
+                                    model.meta.target.dec,
+                                    frame='icrs', unit=u.deg)
+        # where does that show up in the FITS file
+        targ_pos = model.meta.wcs.world_to_pixel(targ_coords)
+        targ_pos_integer_part = np.asarray(np.round(targ_pos), int)
+        targ_pos_subpix_part = targ_pos - targ_pos_integer_part
+
+        inst.detector_position = targ_pos_integer_part
+        inst.options['source_offset_x'] = targ_pos_subpix_part[0] * inst.pixelscale
+        inst.options['source_offset_y'] = targ_pos_subpix_part[1] * inst.pixelscale
+        if verbose:
+            print(f"""    Attempting to match target position precisely...
+    Target RA, Dec from file header: {targ_coords.to_string('hmsdms')}
+    Based on WCS that is at pixel coords {targ_pos}
+    Setting Det. Pos.: {inst.detector_position} {'in subarray' if not is_full_frame else ""}
+    Setting subpixel offset: {targ_pos_subpix_part} pixels = {targ_pos_subpix_part[0] * inst.pixelscale:.3f}, {targ_pos_subpix_part[1] * inst.pixelscale:.3f} arcsec.
+    """)
+
+
 
     return inst
 
