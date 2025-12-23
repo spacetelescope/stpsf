@@ -158,6 +158,11 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
         else:
             raise ValueError("Don't know how to check fluxes for angle={0}".format(angle))
 
+    # we also verify that the SI WFE has been flipped in the Y axis in this case, as needed for NIRCam coronagraphy
+    osys = nc.get_optical_system()
+    si_wfe = osys.planes[-2]
+    assert si_wfe._is_OPD_flipped_for_NRC_coron, "The SI OPD model derived from Zemax should be flipped in this case"
+
     # If you change either of the following, the expected flux values will need to be updated:
     nlam = 1
     oversample = 4
@@ -324,6 +329,11 @@ def test_nircam_coron_unocculted(plot=False):
     # This test just verifies that calc_psf() runs without error
     nc.calc_psf(monochromatic=2.12e-6)
 
+    # we also verify that the SI WFE has been flipped in the Y axis in this case, as needed for NIRCam coronagraphy
+    osys = nc.get_optical_system()
+    si_wfe = osys.planes[-2]
+    assert si_wfe._is_OPD_flipped_for_NRC_coron, "The SI OPD model derived from Zemax should be flipped in this case"
+
 
 def test_defocus(fov_arcsec=1, display=False):
     """Test we can apply a defocus to a PSF
@@ -458,10 +468,10 @@ def test_nircam_coron_wfe_offset(fov_pix=15, oversample=2, fit_gaussian=True):
             yloc.append(xvals[yvals == yvals.max()][0])
     yloc = np.array(yloc)
 
-    # Difference from 2.5 to 3.3 um should be ~0.025mm
+    # Difference from 2.5 to 3.3 um should be ~0.025mm. Updated to ~0.030 mm in PR #125 based on SI WFE model updates
     diff_25_33 = np.abs(yloc[0] - yloc[1])
     assert np.allclose(
-        diff_25_33, 0.025, rtol=rtol
+        diff_25_33, 0.030, rtol=rtol
     ), 'PSF shift between {:.2f} and {:.2f} um of {:.3f} mm does not match expected value (~0.025 mm).'.format(
         warr[1], warr[0], diff_25_33
     )

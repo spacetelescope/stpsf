@@ -25,7 +25,11 @@ Wide Field Instrument (WFI)
 
 The WFI model is based on the Cycle 10 instrument reference information
 from the Roman team at Goddard Space Flight Center (GSFC).
-The `reported jitter for the Roman observatory <https://github.com/RomanSpaceTelescope/roman-technical-information/tree/main/data/Observatory/MissionandObservatoryTechnicalOverview#telescope-parameters>`_ is 0.012 arcsec per axis.
+Though the pointing `jitter requirement for the Roman observatory <https://github.com/RomanSpaceTelescope/roman-technical-information/tree/main/data/Observatory/MissionandObservatoryTechnicalOverview#telescope-parameters>`_
+is 0.008 arcsec per axis, STPSF's WFI model uses a lower value of 0.006 arcsec
+per axis at GSFC's recommendation. More significantly, the WFI model also
+incorporates charge diffusion as an additional Gaussian convolution kernel with
+sigma 0.033 arcsec per axis.
 
 .. note::
 

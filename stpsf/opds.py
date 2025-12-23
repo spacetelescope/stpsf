@@ -1284,7 +1284,24 @@ class OTE_Linear_Model_WSS(OPD):
             print('  \t %10s %10s %10s %10s %10s     n/a' % tuple(self._sm_control_modes))
             segment = 18
             thatsegment = self.segment_state[18]
+            print('%2s\t %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f' % tuple(['SM'] + thatsegment.tolist()))
+        print(f"\nPlus IEC-induced WFE with ampliude {self._iec_wfe_amplitude:.2f} nm rms")
+
+        print("\n--------------------\nPM Total Segment State (including pose + IEC drifts + thermal/frill drifts:")
+        total_segment_state = self.segment_state + self._get_frill_drift_poses() + self._get_iec_drift_poses()
+        print('Segment poses in Control coordinates: (microns for decenter & piston, microradians for tilts and clocking):')
+        print('  \t %10s %10s %10s %10s %10s %10s' % tuple(self._control_modes))
+        for i, segment in enumerate(self.segnames[0:18]):
+            thatsegment = total_segment_state[i]
+
             print('%2s\t %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f' % tuple([segment] + thatsegment.tolist()))
+        if len(self.segnames) == 19:  # SM is present
+            print('Secondary Mirror Pose in Control coordinates: ')
+            print('  \t %10s %10s %10s %10s %10s     n/a' % tuple(self._sm_control_modes))
+            segment = 18
+            thatsegment = self.segment_state[18]
+            print('%2s\t %10.4f %10.4f %10.4f %10.4f %10.4f %10.4f' % tuple(['SM'] + thatsegment.tolist()))
+
 
     # ---- segment manipulation via linear model
 
@@ -2501,7 +2518,7 @@ class OTE_Linear_Model_WSS(OPD):
         if display:
             self.display()
 
-    def _get_dynamic_opd(self, delta_time=14 * u.day, case='EOL'):
+    def _get_dynamic_opd(self, iec_mode=True, pitch_mode=True, delta_time=0 * u.day, case='FLIGHT'):
         """Return ONLY the dynamic portion of the OPD, including thermal slew + frill + IEC
         Normally these are all folded up as part of the update_opd method, but it can be
         useful in certain circumstances to extract just this part, e.g. for plotting or analysis
@@ -2530,7 +2547,11 @@ class OTE_Linear_Model_WSS(OPD):
         # sm_pose_coeffs.shape = (5, 1)  # to allow broadcasting below
         sm_pose_coeffs = np.zeros((5, 1))
 
-        drift_segment_state = self._get_frill_drift_poses() + self._get_iec_drift_poses()
+        drift_segment_state = np.zeros((19, 6), float)
+        if iec_mode:
+            drift_segment_state += self._get_iec_drift_poses()
+        if pitch_mode:
+            drift_segment_state += self._get_frill_drift_poses()
 
         for iseg, segname in enumerate(self.segnames[0:18]):
             pose_coeffs = drift_segment_state[iseg].copy()
@@ -2650,12 +2671,10 @@ class OTE_Linear_Model_WSS(OPD):
 
         return ote_seg_motions_frill * self._frill_wfe_amplitude
 
-    def apply_iec_drift(self, amplitude=None, random=False, case='BOL', delay_update=False):
-        """Apply model of segment PTT motions for the drift seen at OTIS induced by the IEC
-        (Instrument Electronics Compartment) heater resistors. This effect was in part due to
-        non-flight-like ground support equipment mountings, and is not expected in flight at
-        the same levels it was seen at JSC. We model it anyway, at an amplitude consistent with
-        upper limits for flight.
+    def apply_iec_drift(self, amplitude, delay_update=False):
+        """Apply model of segment PTT motions for the drift induced by the IEC
+        (Instrument Electronics Compartment) heater resistors. The spatial pattern
+        used here is based on the analyses presented in Telfer et al. 2024 Proc. SPIE.
 
         This is additive with other WFE terms.
 
@@ -2663,30 +2682,13 @@ class OTE_Linear_Model_WSS(OPD):
         ----------
         amplitude : float
             Amplitude of drift in nm rms to apply
-        random : bool
-            if True, choose a random amplitude from within the expected range
-            for either the BOL or EOL cases. The assumed model is a sinusoidal drift
-            between 0 and 3.5 nm, i.e. a random variate from the arcsine distribution
-            times 3.5.
-        case : string
-            either "BOL" for current best estimate at beginning of life, or
-            "EOL" for more conservative prediction at end of life. Only relevant
-            if random=True. (Note, for IEC drift the amplitude is the same regardless.)
         delay_update : bool
             hold off on computing the WFE change? This is useful for computational efficiency if you're
             making many changes at once.
         """
 
-        # These segment piston/tip/tilt misalignments are normalized to give 1 nm rms.
-        if random:
-            max_amp = 3.5  # regardless of EOL or BOL
-
-            amplitude = scipy.stats.arcsine().rvs() * max_amp
-            _log.info(f'Applying random IEC-induced drift with amplitude {amplitude} nm rms (out of max {max_amp} nm rms).')
-        elif amplitude is None:
-            raise ValueError('if random=False, you must provide a value for the amplitude.')
-        else:
-            _log.info(f'Applying IEC-induced drift with amplitude {amplitude} nm rms.')
+        # The drift segment piston/tip/tilt misalignments are normalized to give 1 nm rms.
+        _log.info(f'Applying IEC-induced drift with amplitude {amplitude} nm rms.')
         self._iec_wfe_amplitude = amplitude
 
         if not delay_update:
@@ -2694,40 +2696,39 @@ class OTE_Linear_Model_WSS(OPD):
 
     def _get_iec_drift_poses(self):
         # These segment piston/tip/tilt motions approximate the OTE observed
-        # oscillation seen at JSC OTIS cryo vac test, due to IEC heater thermal loading
-        # through GSE paths.
+        # oscillation seen in flight due to IEC heater thermal loading.
 
-        # Developed in the PFR190 study by Perrin & Telfer as
-        # oscillation_opd_case1_var2_ptt.fits.gz; decomposed into segment PTT by Perrin
-        # in "Make PSF Sim Library for JWST cycle 1 props - Development.ipynb"
-
+        # Measured in flight by R. Telfer, delivered to Perrin as 'IEC_av_net_all.fits'
+        # Decomposed into segment PTT by Perrin in
+        # "Develop IEC WFE Flight Model for STPSF.ipynb"
         ote_seg_motions_iec = (
-            np.array(
-                [
-                    [0.5211, 0.2925, -0.3567, 0.0, 0.0, 0.0],
-                    [-0.0652, 0.2788, 0.1896, 0.0, 0.0, 0.0],
-                    [0.2491, -0.2203, 0.1522, 0.0, 0.0, 0.0],
-                    [0.4078, 0.1386, 0.0301, 0.0, 0.0, 0.0],
-                    [-0.0663, -0.0702, 0.2119, 0.0, 0.0, 0.0],
-                    [0.3488, -0.3986, -0.2216, 0.0, 0.0, 0.0],
-                    [0.4363, -0.4034, -0.5762, 0.0, 0.0, 0.0],
-                    [-0.584, -0.4198, -0.0271, 0.0, 0.0, 0.0],
-                    [1.1319, -0.195, 0.8383, 0.0, 0.0, 0.0],
-                    [0.3116, -0.4376, 0.4631, 0.0, 0.0, 0.0],
-                    [-0.0052, 0.6276, -0.1083, 0.0, 0.0, 0.0],
-                    [0.1727, 0.6529, -0.5457, 0.0, 0.0, 0.0],
-                    [-0.3807, -0.4189, -0.602, 0.0, 0.0, 0.0],
-                    [-0.4924, -0.1094, 0.0996, 0.0, 0.0, 0.0],
-                    [1.0861, -0.1953, 0.8371, 0.0, 0.0, 0.0],
-                    [0.4202, -0.6961, 0.3543, 0.0, 0.0, 0.0],
-                    [0.7644, 0.6466, -0.0861, 0.0, 0.0, 0.0],
-                    [0.1887, 0.0825, -0.7851, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                ]
-            )
-            / 1000
+                       # Fit coordinates in WSS control basis, scaled to have 1 nm RMS, in units of nm
+                       # Xtilt          YTilt    Piston       clocking, rad_trans, RoC
+            np.array([[-0.58259548, -0.33075706, -0.05476588, 0, 0, 0],
+                   [-0.12024492, -0.26902193, -0.44873196, 0, 0, 0],
+                   [-0.41292732,  0.43535294, -0.24294152, 0, 0, 0],
+                   [-0.71582482, -0.32755135, -0.13868752, 0, 0, 0],
+                   [-0.02381347,  0.20343897, -0.32245266, 0, 0, 0],
+                   [-0.56024322,  0.30239843,  0.05709397, 0, 0, 0],
+                   [ 0.22943398,  0.60499065,  0.44779136, 0, 0, 0],
+                   [ 0.20461637,  0.09357965, -0.16961389, 0, 0, 0],
+                   [-0.04657445,  0.10656212, -0.37515802, 0, 0, 0],
+                   [-0.2914627 , -0.03065583, -0.30805125, 0, 0, 0],
+                   [ 0.23847799, -0.55356551,  0.28530475, 0, 0, 0],
+                   [-0.36600475, -0.86378628,  0.91148742, 0, 0, 0],
+                   [ 0.46851786,  1.18566825,  0.68334293, 0, 0, 0],
+                   [ 0.17738028,  0.2308024 , -0.40605515, 0, 0, 0],
+                   [-0.43693984, -0.04438047, -0.66063669, 0, 0, 0],
+                   [-0.42718532,  0.28414531, -0.21359245, 0, 0, 0],
+                   [-0.01165143, -0.48412486,  0.41933479, 0, 0, 0],
+                   [ 0.01821291, -0.39035983,  0.68854777, 0, 0, 0],
+                      [ 0.0, 0.0, 0.0, 0, 0, 0]])  # SM is unaffected by IEC
+            / 1000  # convert from nm to microns
         )
         return ote_seg_motions_iec * self._iec_wfe_amplitude
+
+#    def display_component(self, ):
+#        pass
 
     def header_keywords(self):
         """Return info we would like to save in FITS header of output PSFs"""
@@ -3021,6 +3022,91 @@ def convert_quantity(input_quantity, from_units=None, to_units=u.day):
         output_quantity = input_quantity.to(to_units)
 
     return output_quantity
+
+def estimate_iec_induced_wfe_at_time(times, plot=False):
+    """ Estimate the IEC-induced WFE amplitude at given time(s) based on observatory thermal telemetry
+    Implements the model described in Telfer et al. Proc SPIE 2024
+
+    Parameters
+    ----------
+    times : str or astropy Time, or iterable list/ndarray of those
+        Time(s) to compute the WFE for, in a format understandable by astropy.time.Time
+        Must be a past time for which observatory telemetry is available in MAST. In
+        principle this should be true for any time from launch until a few hours before
+        the current time, for any time during which JWST is operational.
+    plot : bool
+        Make a plot? Mostly for test and debugging.
+    """
+
+    # Ensure we are working with astropy Times
+    times_array = astropy.time.Time(times)
+
+    # Retrieve the IEC heater telemetry, over a slightly padded time range to accomodate the measured delays
+    time_padding = 2* np.max(np.abs([lag for mnemonic, amp, lag, t_mean in constants.iec_mnemonics])) * astropy.units.minute
+    tstart_padded = times_array.min() - time_padding
+    tend_padded = times_array.max() + time_padding
+
+    iecvals = stpsf.mast_wss.retrieve_iec_heater_telemetry(tstart_padded, tend_padded, plot=False)
+
+    # To get the WFE at a given time, we need temporally shifted (via interpolation) version of the heater telemetry.
+    interpolators = {}
+    for mnemonic, amp, lag, t_mean in constants.iec_mnemonics:
+        telem_times, telem_values = iecvals[mnemonic]
+
+        # For convenience we do all the interpolations using MJD for the time axis
+        # Set up an interpolator for the measured telemetry
+        interpolators[mnemonic] = scipy.interpolate.interp1d(telem_times.mjd, telem_values, kind='cubic', fill_value='extrapolate')
+
+    # Define inline a summed interpolator which we will use below. We do it this way to help enable the plot functionality
+    def interpolate_iec_wfe_coeff(times_array):
+        iec_wfe_coeff = np.zeros_like(times_array, float)
+        shifted_iecvals = {}
+        for mnemonic, amp, lag, t_mean in constants.iec_mnemonics:
+            # Evaluate that for the requested times, taking into account the calibrated lag.
+            shifted_iecvals[mnemonic] = interpolators[mnemonic]((times_array - lag*astropy.units.minute).mjd)
+
+            iec_wfe_coeff += amp * (shifted_iecvals[mnemonic] - t_mean)
+        return iec_wfe_coeff
+
+    iec_wfe_coeff = interpolate_iec_wfe_coeff(times_array)
+
+    if plot:
+        fig, axes = plt.subplots(figsize=(16,9), nrows=2)
+        plot_times = astropy.time.Time(np.linspace(tstart_padded.mjd, tend_padded.mjd, 1000), format='mjd')
+
+        # This code is intentionally a bit repetitive of the above, to plot the intermediate quantities
+        for mnemonic, amp, lag, t_mean in constants.iec_mnemonics:
+            telem_times, telem_values = iecvals[mnemonic]
+            # Plot the measurements
+            lines = axes[0].plot(telem_times.plot_date, telem_values, marker='+', ls='none', label=mnemonic+" measurements")
+            # Plot the continuous curves interpolated smoothly between the measured values
+            axes[0].plot(plot_times.plot_date, interpolators[mnemonic](plot_times.mjd),
+                         color=lines[0].get_color())
+            # Plot the shifted version that we actually gets used in making the IEC calc
+            shifted_iecval = interpolators[mnemonic]((times_array - lag*astropy.units.minute).mjd)
+            axes[0].plot(times_array.plot_date, shifted_iecval, color=lines[0].get_color(), marker='.', ls='none',
+                         label=f"{mnemonic}, with {lag} min lag")
+
+        axes[0].set_ylabel("Temp [K]")
+        axes[0].set_title("Instrument Electronics Compartment (IEC) temperature telemetry", fontweight='bold')
+
+        # Plot the IEC WFE at the requested time points
+        axes[1].plot(times_array.plot_date, iec_wfe_coeff, color='black', marker='o', ls='none',
+                     label='Interpolated IEC WFE Coefficient')
+        # Plot the IEC WFE as a continous smooth curve
+        axes[1].plot(plot_times.plot_date, interpolate_iec_wfe_coeff(plot_times), color='black', )
+        axes[1].set_title("Inferred OTE WFE based on IEC thermal-to-WFE model", fontweight='bold')
+        axes[1].set_ylabel("WFE coeff [nm]")
+        axes[1].set_xlim(*axes[0].get_xlim())
+        axes[1].set_ylim(-3, 3)
+        for ax in axes:
+            ax.legend(loc='upper right')
+            ax.xaxis.axis_date()
+            ax.set_xlabel("Time [UTC]")
+        plt.tight_layout()
+
+    return iec_wfe_coeff
+
 
 
 # --------------------------------------------------------------------------------

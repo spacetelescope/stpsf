@@ -19,7 +19,7 @@ dynamic = [
 readme = "README.rst"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.21.6",
+    "numpy>=1.21.6,<2.4.0",
     "scipy>=1.5.0",
     "matplotlib>=3.2.0",
     "astropy>=5.1.0",
@@ -43,6 +43,9 @@ docs = [
     "sphinx-automodapi",
     "sphinx-issues",
     "tomli; python_version <\"3.11\"",
+]
+jwst = [
+    "jwst",
 ]
 
 [project.urls]

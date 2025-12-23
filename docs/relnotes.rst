@@ -23,6 +23,34 @@ See https://github.com/spacetelescope/stpsf/issues for currently open issues and
 Version History and Change Log
 -------------------------------
 
+Version 2.2.0
+=============
+*2025 December*
+This release includes updates for the Roman WFI PSF to synchronize with the Roman ETC
+release in January 2026. It also includes accumulated JWST updates as of December 2025.
+
+## What's Changed
+* Docs update by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/109
+* Docs update by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/110
+* update mast_wss.query_wfsc_images_latest for cycle 4 by @mperrin in https://github.com/spacetelescope/stpsf/pull/112
+* Update ci with prerelease by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/113
+* env fix for ci by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/115
+* Implement model for IEC-driven WFE astigmatism by @mperrin in https://github.com/spacetelescope/stpsf/pull/114
+* add docs for IEC WFE by @mperrin in https://github.com/spacetelescope/stpsf/pull/116
+* added large psf pupil update for miri and minor charge difusion term … by @marcio-melendez in https://github.com/spacetelescope/stpsf/pull/118
+* update predicted LOS jitter to 6 mas for Roman by @mperrin in https://github.com/spacetelescope/stpsf/pull/119
+* Document updated Roman jitter values by @ojustino in https://github.com/spacetelescope/stpsf/pull/120
+* build(deps): update synphot requirement from <1.6.0,>=1.4.0 to >=1.4.0,<1.7.0 by @dependabot[bot] in https://github.com/spacetelescope/stpsf/pull/107
+* Misc improvements to trending plots, in particular for FP6 vs FP1 by @mperrin in https://github.com/spacetelescope/stpsf/pull/123
+* very minor: quiet astropy warning for one plot.  by @mperrin in https://github.com/spacetelescope/stpsf/pull/126
+* build(deps): update pysiaf requirement from <0.25.0,>=0.23.3 to >=0.23.3,<0.26.0 by @dependabot[bot] in https://github.com/spacetelescope/stpsf/pull/124
+* Improve load_wss_opd optional plot; add option to toggle which target phase map model is used by @mperrin in https://github.com/spacetelescope/stpsf/pull/127
+* Improve NIRCam coron SI WFE model, based on empirical testing by @mperrin in https://github.com/spacetelescope/stpsf/pull/125
+* update query range in MAST WSS OPD query for 4 day WFS cadence by @mperrin in https://github.com/spacetelescope/stpsf/pull/128
+
+
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/2.1.0...2.2.0
+
 Version 2.1.0
 =============
 *2025 June*

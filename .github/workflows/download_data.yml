@@ -1,7 +1,7 @@
 # Downloads STPSF dataset and caches it to GitHub cache,
 # making a new cache for a new data version
-# the cache key is in the form `stpsf-data-mini-1.3.0`,
-# `stpsf-data-full-1.2.6`, etc.
+# the cache key is in the form
+# `stpsf-data-full-1.3.0`, `stpsf-data-prerel-1.3.1` etc.
 #
 # To provide your own test workflow with the STPSF dataset,
 # you should use this workflow to set up a cache in your repository,
@@ -22,21 +22,16 @@
 #     with:
 #       minimal: true
 
-name: download and cache data
+name: download and cache STPSF data
 
 on:
   workflow_call:
     inputs:
-      url:
-        description: URL to gzip file
+      dataset_type:
+        description: "Choose dataset type ('development' or 'latest_release')"
         type: string
         required: false
-        default: https://stsci.box.com/shared/static/3hzmbarac5yxjt6x7gn17vz02k7c8z1d.gz
-      minimal:
-        description: dataset is minimal (as opposed to full)
-        type: boolean
-        required: false
-        default: true
+        default: development
     outputs:
       version:
         value: ${{ jobs.download.outputs.version }}
@@ -44,49 +39,79 @@ on:
         value: ${{ jobs.download.outputs.cache_path }}
       cache_key:
         value: ${{ jobs.download.outputs.cache_key }}
+
   workflow_dispatch:
     inputs:
-      url:
-        description: URL to gzip file
+      dataset_type:
+        description: "Which dataset type ('development' or 'latest_release')"
         type: string
         required: false
-        default: https://stsci.box.com/shared/static/3hzmbarac5yxjt6x7gn17vz02k7c8z1d.gz
-      minimal:
-        description: dataset is minimal (as opposed to full)
-        type: boolean
-        required: false
-        default: true
+        default: development
+
+
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 0 * * 0"   # weekly
   release:
   push:
     branches:
       - develop
 
 env:
-  FULL_DATA_URL: https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz
-  MINIMAL_DATA_URL: https://stsci.box.com/shared/static/3hzmbarac5yxjt6x7gn17vz02k7c8z1d.gz
+  PRERELEASE_URL: https://stsci.box.com/shared/static/50i1h17hij7r3pki8zmaxsh8o7pyqj79.gz
+  LATEST_RELEASE_URL: https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz
 
 jobs:
   download:
-    name: download and cache STPSF data
+    name: download and cache STPSF ${{ inputs.dataset_type }} data
     runs-on: ubuntu-latest
     steps:
-      - run: wget ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call') && inputs.url || env.MINIMAL_DATA_URL }} -O ${{ runner.temp }}/stpsf-data.tar.gz
-      - run: mkdir ${{ runner.temp }}/data/
-      - run: tar -xzvf ${{ runner.temp }}/stpsf-data.tar.gz -C ${{ runner.temp }}/data/
+      - name: Select dataset URL
+        id: dataset_url
+        env:
+          DATASET_TYPE: ${{ inputs.dataset_type || github.event.inputs.dataset_type || 'development' }}
+          PRERELEASE_URL: ${{ env.PRERELEASE_URL }}
+          LATEST_RELEASE_URL: ${{ env.LATEST_RELEASE_URL }}
+        run: |
+          if [ "$DATASET_TYPE" = "development" ]; then
+            echo "url=$PRERELEASE_URL" >> $GITHUB_OUTPUT
+          elif [ "$DATASET_TYPE" = "latest_release" ]; then
+            echo "url=$LATEST_RELEASE_URL" >> $GITHUB_OUTPUT
+          else
+            echo "Unsupported dataset_type: $DATASET_TYPE" >&2
+            exit 1
+          fi
+
+      - name: Download dataset
+        run: wget ${{ steps.dataset_url.outputs.url }} -O ${{ runner.temp }}/stpsf-data.tar.gz
+
+      - name: Extract dataset
+        run: |
+          mkdir -p ${{ runner.temp }}/data/
+          tar -xzvf ${{ runner.temp }}/stpsf-data.tar.gz -C ${{ runner.temp }}/data/
+
       - id: cache_path
-        run: echo cache_path=${{ runner.temp }}/data/ >> $GITHUB_OUTPUT
+        env:
+          DATA_PATH: ${{ runner.temp }}/data/
+        run: echo "cache_path=$DATA_PATH" >> $GITHUB_OUTPUT
+
       - id: version
-        run: echo "version=$(cat ${{ steps.cache_path.outputs.cache_path }}/stpsf-data/version.txt)" >> $GITHUB_OUTPUT
+        env:
+          DATA_PATH: ${{ steps.cache_path.outputs.cache_path }}
+        run: echo "version=$(cat $DATA_PATH/stpsf-data/version.txt)" >> $GITHUB_OUTPUT
+
       - id: cache_key
-        run: echo "cache_key=stpsf-data-mini-${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v4  # v4.0.2
+        env:
+          DATASET_TYPE: ${{ inputs.dataset_type }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: echo "cache_key=stpsf-data-$DATASET_TYPE-$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Save cache
+        uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/data/
           key: ${{ steps.cache_key.outputs.cache_key }}
+
     outputs:
       version: ${{ steps.version.outputs.version }}
       cache_path: ${{ steps.cache_path.outputs.cache_path }}
       cache_key: ${{ steps.cache_key.outputs.cache_key }}
-

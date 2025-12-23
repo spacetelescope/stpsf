@@ -375,6 +375,8 @@ JWST_INSCRIBED_DIAMETER = 5.47334  # meters. Middle corners of C segments
 
 JWST_TYPICAL_LOS_JITTER_PER_AXIS = 0.0008  # milliarcseconds jitter, 1 sigma per axis. = approx 1 mas rms radial, typically
 
+ROMAN_TYPICAL_LOS_JITTER_PER_AXIS = 0.0060  # milliarcseconds jitter, 1 sigma per axis. See https://github.com/spacetelescope/stpsf/issues/111
+                                            # This is a representative predicted average. "The requirement of 8mas is exceeded in under 1% of the present simulations"
 
 # ad hoc, highly simplified models for charge diffusion within detectors
 # These values are PLACEHOLDERS and should be updated based on comparisons with data and ePSFs (ongoing)
@@ -388,7 +390,7 @@ INSTRUMENT_DETECTOR_CHARGE_DIFFUSION_DEFAULT_PARAMETERS = {
     'NIRSPEC': 0.036,
     'MIRI': 0.001,  # Fit by Marshall + Marcio to ePSFs, after adding IPC
     #  0.070 Based on user reports, see issue #674. However, this was before adding IPC effects
-    'WFI': 0.0,  # Placeholder variable. Needs value update. Edit log message when sigma == 0 in detectors.apply_detector_charge_diffusion() after update.
+    'WFI': 0.033,  # 20250919 Value from Goddard recommendation (stpsf issue #111)
     'ROMANCORONAGRAPH': 0.0
 }
 # add Interpixel capacitance (IPC) effects. These are the parameters for each detector kernel
@@ -409,3 +411,22 @@ INSTRUMENT_IFU_BROADENING_PARAMETERS = {
     'NIRSPEC': {'sigma': 0.05},
     'MIRI': {'sigma': 0.05},
 }
+
+# Information about the effects on WFE of the IEC thermal variations
+#
+# Table of value for IEC telemetry to WFE model. Coefficients from model fit by Randal Telfer
+# Method as in Telfer et al. 2024 Proc. SPIE
+# Model Amp and Lag values from an updated fit to more data, delivered by email from Telfer to Perrin & Melendez on 2024 Nov 25
+# T_mean values from time average semi-arbitrarily over all of 2024 January; this is mostly just a convenience cache
+# to avoid having to recompute T_mean each time, and to ensure a mean over a suitably long time period
+iec_mnemonics = (
+    # Mnemonic       Model_amp   Lag     T_mean
+    #                [RMS nm/K]  [min]   [K]
+    ('ST_ZTC1FGSIA', 1.425,      0.027,  280.706933),
+    ('ST_ZTC2FGSIA', 3.327,     -0.075,  280.420823),
+    ('ST_ZTC1MIRIA', 0.593,      1.148,  280.642024),
+    ('ST_ZTC2NRCDA', 0.472,     -0.037,  280.433027),
+    ('ST_ZTC3NRCDA', 2.530,     -0.084,  280.821185),
+    # uncertainties in amplitude are ± 0.039 - 0.106 nm/K
+    # uncertainties in lag are ± 0.075 - 0.109 min
+)

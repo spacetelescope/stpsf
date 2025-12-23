@@ -53,18 +53,64 @@ authors:
     family-names: Chambers
   - given-names: Alden
     family-names: Jurling
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15747364
 repository-code: 'https://github.com/spacetelescope/stpsf'
+url: 'https://github.com/spacetelescope/stpsf'
 abstract: >-
   STPSF produces simulated PSFs for the James Webb Space
-  Telescope, NASA's flagship infrared space telescope.
-  STPSF can simulate images for any of the four science
+  Telescope, NASA's flagship infrared space telescope. STPSF
+  can simulate images for any of the four science
   instruments plus the fine guidance sensor, including both
   direct imaging, coronagraphic, and spectroscopic modes.
 
 
-  STPSF also supports simulating PSFs for the upcoming
-  Nancy Grace Roman Space Telescope (formerly WFIRST),
-  including its Wide Field Instrument and a preliminary
-  version of the Coronagraph Instrument.
-license: "BSD-3-Clause"
-version: 2.1.0
+  STPSF also supports simulating PSFs for the upcoming Nancy
+  Grace Roman Space Telescope (formerly WFIRST), including
+  its Wide Field Instrument and a preliminary version of the
+  Coronagraph Instrument.
+license: BSD-3-Clause
+version: 2.2.0
+references:
+  - type: article
+    authors:
+      - given-names: Marshall D.
+        family-names: Perrin
+      - given-names: Anand
+        family-names: Sivaramakrishnan
+      - given-names: Charles-Philippe
+        family-names: Lajoie
+      - given-names: Erin
+        family-names: Elliott
+      - given-names: Laurent
+        family-names: Pueyo
+      - given-names: Swara
+        family-names: Ravindranath
+      - given-names: Loïc
+        family-names: Albert
+    title: "Updated point spread function simulations for JWST with WebbPSF"
+    journal: "Proc. SPIE"
+    volume: 9143
+    year: 2014
+    doi: 10.1117/12.2056689
+    url: https://doi.org/10.1117/12.2056689
+
+  - type: article
+    authors:
+      - given-names: Marshall D.
+        family-names: Perrin
+      - given-names: Rémi
+        family-names: Soummer
+      - given-names: Erin M.
+        family-names: Elliott
+      - given-names: Matthew D.
+        family-names: Lallo
+      - given-names: Anand
+        family-names: Sivaramakrishnan
+    title: "Simulating point spread functions for the James Webb Space Telescope with WebbPSF"
+    journal: "Proc. SPIE"
+    volume: 8442
+    year: 2012
+    doi: 10.1117/12.925230
+    url: https://doi.org/10.1117/12.925230

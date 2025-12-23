@@ -1616,7 +1616,8 @@ class JWInstrument(SpaceTelescopeInstrument):
             self, slew_delta_time=slew_delta_time, slew_case=slew_case, ptt_only=ptt_only, verbose=verbose
         )
 
-    def load_wss_opd(self, filename, output_path=None, backout_si_wfe=True, verbose=True, plot=False, save_ote_wfe=False):
+    def load_wss_opd(self, filename, output_path=None, backout_si_wfe=True, verbose=True, plot=False, save_ote_wfe=False,
+                     use_exact_wss_target_phase=True):
         """Load an OPD produced by the JWST WSS into this instrument instance, specified by filename
 
         This includes:
@@ -1655,6 +1656,13 @@ class JWInstrument(SpaceTelescopeInstrument):
             Note that the exported OPD file will give the OTE estimated total WFE at the selected Instrument's field
             point, not the OTE global at master chief ray, since it is the OTE WFE at the selected field point
             which is most of use for some other tool.
+        use_exact_wss_target_phase : bool
+            STPSF contains two versions of the model for the NIRCam "target phase map" at field points 1 and 6 (FP1, FP6),
+            i.e. the wavefront error inherent in the instrument at a given sensing field point, that the wavefront control
+            should not include. This switch allows toggling between the two. For trending functions that may compare
+            directly to analyses results from the JWSS WSS, it's beneficial to use precisely the same map for FP1/FP6
+            as is used by the JWST WSS. However for typical PSF calculations it may be better to use the standard
+            STPSF model, since that's more consistent with that used in other field points.
 
         """
         # We use the size of the user supplied name of the JWST pupil in order to create the matching size OPD
@@ -1676,25 +1684,25 @@ class JWInstrument(SpaceTelescopeInstrument):
             print(f'Importing and format-converting OPD from {filename}')
         opdhdu = stpsf.mast_wss.import_wss_opd(filename, npix_out=npix_out)
 
+        if plot:
+            initial_opd_copy = opdhdu[0].data.copy()  # Save for use in plotting, before any mods
+
         # Mask out any pixels in the OPD array which are outside the OTE pupil.
         # This is mostly cosmetic, and helps mask out some edge effects from the extrapolation + interpolation in
         # resizing the OPDs
         ote_pupil_mask = utils.get_pupil_mask(npix=npix_out) != 0
         opdhdu[0].data *= ote_pupil_mask
 
-        # opdhdu[0].header['RMS_OBS'] = (stpsf.utils.rms(opdhdu[0].data, mask=ote_pupil_mask)*1e9,
-        #                               "[nm] RMS Observatory WFE (i.e. OTE+SI) at sensing field pt")
-
         if plot:
             import matplotlib
             import matplotlib.pyplot as plt
 
-            fig, axes = plt.subplots(figsize=(16, 9), ncols=3, nrows=2)
+            fig, axes = plt.subplots(figsize=(12, 12), ncols=3, nrows=3)
             vm = 2e-7
             plot_kwargs = {'vmin': -vm, 'vmax': vm, 'cmap': matplotlib.cm.RdBu_r, 'origin': 'lower'}
             axes[0, 0].imshow(opdhdu[0].data.copy() * ote_pupil_mask, **plot_kwargs)
             axes[0, 0].set_title(f'OPD from\n{os.path.basename(filename)}')
-            axes[0, 0].set_xlabel(f'RMS: {utils.rms(opdhdu[0].data*1e9, ote_pupil_mask):.2f} nm rms')
+            axes[0, 0].set_xlabel(f'RMS: {utils.rms(opdhdu[0].data*1e9, ote_pupil_mask):.2f} nm rms\nopdhdu[0].data.copy()')
 
         if backout_si_wfe:
             # Check which field point was used for sensing
@@ -1720,21 +1728,27 @@ class JWInstrument(SpaceTelescopeInstrument):
                 # note that there is a slight focus offset between the two wavelengths, due to NIRCam's refractive design
             # Set to the sensing aperture, and retrieve the OPD there
             sensing_inst.set_position_from_aperture_name(sensing_apername)
-            # special case: for the main sensing points FP1 or FP6, we use the official WAS target phase map,
+           # special case: for the main sensing points FP1 or FP6, we use the official WAS target phase map,
             # rather than the STPSF-internal SI WFE model.
 
             # Select correct target phase map based on sensing field point.
             # Note that the sensing maintenance program changed field point from NRC A3 to A1 around Dec 2024.
-            if sensing_apername in ['NRCA3_FP1', 'NRCA1_FP6']:
+            if (sensing_apername in ['NRCA3_FP1', 'NRCA1_FP6']) and use_exact_wss_target_phase:
                 was_targ_file = utils.get_target_phase_map_filename(sensing_apername)
                 sensing_fp_si_wfe = poppy.FITSOpticalElement(opd=was_targ_file).opd
+                si_wfe_is_from = 'file '+os.path.basename(was_targ_file)
             else:
                 sensing_fp_si_wfe = sensing_inst.get_wfe('si')
-
+                si_wfe_is_from = 'interpolated ISIM CV3 Zernikes'
+            if verbose:
+                print("Sensing inst model using apername", sensing_apername)
+                print(f"Using sensing field point SI WFE model from {si_wfe_is_from}")
             if npix_out != 1024:   # handle the case if the user has selected a different NPIX other than the default
                 # the results from the zoom function preserve the STD between both phase maps and
                 # the total sum between the phase maps is proportional to the zoom value
                 sensing_fp_si_wfe = scipy.ndimage.zoom(sensing_fp_si_wfe, npix_out / 1024)
+                if verbose:
+                    print("Zooming SI WFE model to resize to match OPD npix")
 
             sensing_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
 
@@ -1743,6 +1757,7 @@ class JWInstrument(SpaceTelescopeInstrument):
             sihdu.header['CONTENTS'] = 'Model of SI WFE at sensing field point'
             sihdu.header['BUNIT'] = 'meter'
             sihdu.header['APERNAME'] = sensing_apername
+            sihdu.header['SOURCE'] = si_wfe_is_from
             sihdu.header.add_history('This model for SI WFE was subtracted from the measured total WFE')
             sihdu.header.add_history('to estimate the OTE-only portion of the WFE.')
             opdhdu.append(sihdu)
@@ -1770,31 +1785,31 @@ class JWInstrument(SpaceTelescopeInstrument):
             if plot or save_ote_wfe:
                 # Either of these options will need the total OTE WFE.
                 # Under normal circumstances stpsf will compute this later automatically, but if needed we do it here too
-                selected_fp_ote_wfe = sensing_inst.get_wfe('ote_field_dep')
+                selected_fp_ote_wfe = self.get_wfe('ote_field_dep')
+                selected_fp_si_wfe = self.get_wfe('si')
                 total_ote_wfe_at_fp = opdhdu[0].data + (selected_fp_ote_wfe * ote_pupil_mask)
+                self.pupilopd = opdhdu
+                total_obs_wfe_at_fp = self.get_wfe('total')
+                diffopd = total_obs_wfe_at_fp - initial_opd_copy
 
             if plot:
-                axes[0, 1].imshow(sensing_fp_si_wfe * ote_pupil_mask, **plot_kwargs)
-                axes[0, 1].set_title(f'SI OPD\nat {sensing_apername}')
-                axes[0, 1].set_xlabel(f'RMS: {utils.rms(sensing_fp_si_wfe * 1e9, ote_pupil_mask):.2f} nm rms')
 
-                axes[0, 2].imshow(opdhdu[0].data + sensing_fp_ote_wfe * ote_pupil_mask, **plot_kwargs)
-                axes[0, 2].set_title(f'OTE total OPD at sensing field point\ninferred from {os.path.basename(filename)}')
-                axes[0, 2].set_xlabel(f'RMS: {utils.rms(opdhdu[0].data*1e9, ote_pupil_mask):.2f} nm rms')
+                def show_one_panel(ax, opd_array, title):
+                    ax.imshow(opd_array * ote_pupil_mask, **plot_kwargs)
+                    ax.set_title(title)
+                    ax.set_xlabel(f"RMS: {utils.rms(opd_array * 1e9, ote_pupil_mask):.2f} nm rms")
 
-                axes[1, 0].imshow(sensing_fp_ote_wfe * ote_pupil_mask, **plot_kwargs)
-                axes[1, 0].set_title(f'OTE field dependent OPD\nat {sensing_apername}')
-                axes[1, 0].set_xlabel(f'RMS: {utils.rms(sensing_fp_ote_wfe * 1e9, ote_pupil_mask):.2f} nm rms')
+                show_one_panel(axes[0, 0], initial_opd_copy, f"Initial import Obs OPD at sensing FP\nfrom {os.path.basename(filename)}")
+                show_one_panel(axes[0, 1], sensing_fp_si_wfe, f'SI OPD\nat sensing FP {sensing_apername}\nfrom {si_wfe_is_from}')
+                show_one_panel(axes[0, 2], sensing_fp_ote_wfe, f'OTE field dep ∆OPD\nat sensing FP {sensing_apername}\nrelative to NRCALL center')
 
-                axes[1, 1].imshow(selected_fp_ote_wfe * ote_pupil_mask, **plot_kwargs)
-                axes[1, 1].set_title(f'OTE field dependent OPD\nat current field point in {self.name} {self.detector}')
-                axes[1, 1].set_xlabel(f'RMS: {utils.rms(selected_fp_ote_wfe * 1e9, ote_pupil_mask):.2f} nm rms')
+                show_one_panel(axes[1, 0], opdhdu[0].data, f'OTE-only on-axis OPD\n(top row left - center - right)')
+                show_one_panel(axes[1, 1], selected_fp_si_wfe, f'SI OPD\nat selected FP {self.aperturename}\npixel coords {self.detector_position}')
+                show_one_panel(axes[1, 2], selected_fp_ote_wfe, f'OTE field dep ∆OPD\nat selected FP {self.aperturename}\npixel coords {self.detector_position}')
 
-                axes[1, 2].imshow(total_ote_wfe_at_fp, **plot_kwargs)
-                axes[1, 2].set_title(
-                    f'Total OTE OPD at current FP in {self.name} {self.detector}\ninferred from {os.path.basename(filename)}'
-                )
-                axes[1, 2].set_xlabel(f'RMS: {utils.rms(total_ote_wfe_at_fp*1e9, ote_pupil_mask):.2f} nm rms')
+                show_one_panel(axes[2, 0], total_obs_wfe_at_fp, f'Total observatory OPD\nat selected FP\n(2nd row left + center + right)')
+                show_one_panel(axes[2, 1], diffopd, f"Difference between input and resulting OPD\ninferred from {os.path.basename(filename)}\n(2nd row left - top row left")
+                show_one_panel(axes[2, 2], total_ote_wfe_at_fp, f'OTE-only OPD\nat selected FP\n(2nd row left + 2nd row right')
 
                 plt.tight_layout()
 
@@ -1828,7 +1843,7 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         self.pupilopd = opdhdu
 
-    def load_wss_opd_by_date(self, date=None, choice='closest', verbose=True, plot=False, **kwargs):
+    def load_wss_opd_by_date(self, date=None, choice='closest', verbose=True, plot=False, use_exact_wss_target_phase=True, **kwargs):
         """Load an OPD produced by the JWST WSS into this instrument instance, specified by filename.
 
         This does a MAST query by date to identify the relevant OPD file, then calls load_wss_opd.
@@ -1850,7 +1865,7 @@ class JWInstrument(SpaceTelescopeInstrument):
         if date is None:
             date = astropy.time.Time.now().isot
         opd_fn = stpsf.mast_wss.get_opd_at_time(date, verbose=verbose, choice=choice, **kwargs)
-        self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, **kwargs)
+        self.load_wss_opd(opd_fn, verbose=verbose, plot=plot, use_exact_wss_target_phase=use_exact_wss_target_phase, **kwargs)
 
     @poppy.utils.quantity_input(wavelengths=units.meter)
     def calc_datacube_fast(self, wavelengths, compare_methods=False, outfile=None,

@@ -62,7 +62,7 @@ STPSF will now **automatically download and install these files** the first time
 
 *If you would like to place the data files at some other location*,  you can manually install the data files yourself.
 
-1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz>`_  [approx. 175 MB]
+1. Download the following file:  `stpsf-data-LATEST.tar.gz <https://stsci.box.com/shared/static/kqfolg2bfzqc4mjkgmujo06d3iaymahv.gz>`_  [approx. 88 MB]
 2. Untar ``stpsf-data-LATEST.tar.gz`` into a directory of your choosing.
 3. Set the environment variable ``STPSF_PATH`` to point to that directory. e.g. ::
 
@@ -89,7 +89,7 @@ Software Requirements
 
 See `the requirements.txt specification file <https://github.com/spacetelescope/stpsf/blob/develop/requirements.txt>`_ for the required package dependencies.
 
-**Required Python version**: STPSF 1.1 and above require Python 3.10 or higher.
+**Required Python version**: STPSF 2.0 and above require Python 3.10 or higher.
 
 The major dependencies are the standard `NumPy, SciPy <http://www.scipy.org/scipylib/download.html>`_, `matplotlib <http://matplotlib.org>`_ stack, and `Astropy <http://astropy.org>`_.
 
@@ -131,10 +131,12 @@ Using Specific Data Versions
 If you need a specific version of the STPSF data you can download it directly
 
 | Full Versions:
+| `stpsf-data-2.2.0.tar.gz <https://stsci.box.com/shared/static/mjst9j056ibf2uph4gxy8qxmi89tjzwk.gz>`_
 | `stpsf-data-2.1.0.tar.gz <https://stsci.box.com/shared/static/ybp9cupdgxicsn3yj7p9ru9ivuyzcyfw.gz>`_
 | `stpsf-data-2.0.0.tar.gz <https://stsci.box.com/shared/static/i3ui9gfypnhmu5ocec47ooci2ehwf9xf.gz>`_
 
 
 | Min Versions:
+| `minimal-stpsf-data-2.2.0.tar.gz <https://stsci.box.com/shared/static/994a5c7uxc9u9w2li9cwwh440cumbklm.gz>`_
 | `minimal-stpsf-data-2.1.0.tar.gz <https://stsci.box.com/shared/static/z4wt613tg9txgfo5gc4qkvco1jzg74xe.gz>`_
 | `minimal-stpsf-data-2.0.0.tar.gz <https://stsci.box.com/shared/static/4f0jrt20l1tagsmz9s3juxfacu4kgigm.gz>`_

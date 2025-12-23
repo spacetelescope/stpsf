@@ -19,7 +19,7 @@ import poppy
 from astropy.io import fits
 from scipy.interpolate import griddata
 
-from . import distortion, utils, stpsf_core, detectors
+from . import distortion, utils, stpsf_core, detectors, constants
 
 _log = logging.getLogger('stpsf')
 
@@ -297,7 +297,7 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         self.options = _RomanInstrumentOptionsDict(self.options.copy())
 
         self.options['jitter'] = 'gaussian'
-        self.options['jitter_sigma'] = 0.012
+        self.options['jitter_sigma'] = constants.ROMAN_TYPICAL_LOS_JITTER_PER_AXIS
         # arcsec/axis, see https://github.com/RomanSpaceTelescope/roman-technical-information/tree/main/data/Observatory/MissionandObservatoryTechnicalOverview#telescope-parameters
 
     def calc_psf(

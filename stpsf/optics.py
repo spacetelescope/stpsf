@@ -11,6 +11,7 @@ import poppy.utils
 from astropy.table import Table
 from scipy.interpolate import RegularGridInterpolator, griddata
 from scipy.ndimage import rotate
+from scipy.ndimage import zoom
 
 from . import constants, utils, stpsf_core
 
@@ -1408,11 +1409,13 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
                 # to 1024
                 self.amplitude = self.amplitude[256: 256 + 1024, 256: 256 + 1024]
             elif self.instrument.name == 'MIRI':
-                self.amplitude = fits.getdata(
+                amplitude_nominal = fits.getdata(
                     os.path.join(
                         utils.get_stpsf_data_path(), 'MIRI', 'optics', 'MIRI_tricontagon_oversized_rotated.fits.gz'
                     )
                 )
+                # this will adjust the amplitude size according to the opd size
+                self.amplitude = amplitude_nominal if npix==1024 else zoom(amplitude_nominal, npix / 1024)
 
             else:
                 # internal pupil is a 4 percent oversized circumscribing circle?
@@ -1430,6 +1433,15 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
         else:
             self.opd = poppy.zernike.opd_from_zernikes(coeffs, npix=npix, outside=0)
             self.amplitude = (self.opd != 0).astype(int)
+
+        # Special case for NIRCam coronagraphy: we need to flip the OPD model in the Y axis.
+        #   In this case we are using a lookup table of Zernike coefficients derived from Zemax models
+        #   and it has been empirically determined that there seems to be a coordinate system inconsistency
+        #   in that. Flipping that vertically in the Y axis results in model PSFs that better match
+        #   observed coronagraphic PSFs.
+        if is_nrc_coron:
+            self.opd = self.opd[::-1]
+            self._is_OPD_flipped_for_NRC_coron = True
 
     def header_keywords(self):
         """Return info we would like to save in FITS header of output PSFs"""

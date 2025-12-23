@@ -184,7 +184,7 @@ def wavefront_time_series_plot(
 
     ax.set_xlim(start_date.plot_date, end_date.plot_date)
 
-    if end_date - start_date < 365:
+    if end_date - start_date < 365*u.day:
         ax.xaxis.set_major_locator(matplotlib.dates.WeekdayLocator(interval=1))
         ax.xaxis.set_minor_locator(matplotlib.dates.DayLocator())
     else:
@@ -352,8 +352,13 @@ def wfe_histogram_plot(
 
     sensing_markers, = axes[0].plot_date(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-',
                                          label='Sensing visit')
-    axes[0].xaxis.set_major_locator(matplotlib.dates.DayLocator(bymonthday=[1]))
-    axes[0].xaxis.set_minor_locator(matplotlib.dates.DayLocator(interval=1))
+    if end_date - start_date < 3*u.year:
+        axes[0].xaxis.set_major_locator(matplotlib.dates.DayLocator(bymonthday=[1]))
+        axes[0].xaxis.set_minor_locator(matplotlib.dates.DayLocator(interval=1))
+    else:
+        axes[0].xaxis.set_major_locator(matplotlib.dates.MonthLocator(bymonth=[1, 4, 7, 10]))
+        axes[0].xaxis.set_minor_locator(matplotlib.dates.DayLocator(bymonthday=[1]))
+
     axes[0].tick_params('x', length=10, rotation=30)
 
     if mark_corrections == 'lines':
@@ -642,14 +647,19 @@ def single_measurement_trending_plot(
         was_targ_file = stpsf.utils.get_target_phase_map_filename(sensing_apername)
         prev_was_targ_file = stpsf.utils.get_target_phase_map_filename(prev_sensing_apername)
 
-
         target_1024 = astropy.io.fits.getdata(was_targ_file)
         target_256 = poppy.utils.krebin(target_1024, (256, 256)) / 16  # scale factor for rebinning w/out increasing values
 
-        if prev_was_targ_file != was_targ_file:
-            prev_target_1024 = astropy.io.fits.getdata(prev_was_targ_file)
-            prev_target_256 = poppy.utils.krebin(prev_target_1024,
+        if sensing_apername == 'NRCA1_FP6':
+            # for all FP6 measurements we'll still need the older FP1 target pos too,
+            # to allow comparing to the MIMF reference with the field dependence subtracted
+            targ_file_fp1 = stpsf.utils.get_target_phase_map_filename('NRCA3_FP1')
+            fp1_target_1024 = astropy.io.fits.getdata(targ_file_fp1)
+            fp1_target_256 = poppy.utils.krebin(fp1_target_1024,
                                                  (256, 256)) / 16  # scale factor for rebinning w/out increasing values
+
+        if prev_was_targ_file != was_targ_file:
+            prev_target_256 = fp1_target_256
         else:
             prev_target_256 = target_256
 
@@ -680,7 +690,7 @@ def single_measurement_trending_plot(
         ref_label = get_datetime_utc(ref_opd_hdu)
 
     if subtract_target:
-        ref_opd -= target_256
+        ref_opd -= fp1_target_256
 
     # Read associated post-correction measurement, if present
     if opdtable[row_index]['is_pre_correction']:
@@ -696,6 +706,7 @@ def single_measurement_trending_plot(
         diff2_title = 'post-move - reference'
         delta_opd2 = post_opd - ref_opd
         delta_opd2[~mask] = np.nan
+        delta_opd2 -= np.nanmedian(delta_opd2)  # ensure it's zero mean
 
         # infer the correction ID
         # based on the assumption that the move probably came from the immediately prior WSS session
@@ -704,6 +715,13 @@ def single_measurement_trending_plot(
             print('   That measurement has a correction, therefore reading in post-move sensing data and SUR.')
             print(f'   Inferred prior correction ID is {prior_corr_id}')
         sur_fn = f'{prior_corr_id}_sur.xml'
+        if not os.path.exists(sur_fn):
+            # check for slight differences in SUR fn
+            import glob
+            try_sur_fns = glob.glob('?'+sur_fn[1:7]+"*_sur.xml")
+            if len(try_sur_fns) == 1:
+                print(f"Found {try_sur_fns[0]} as SUR filename, instead of {sur_fn} based on prior correction ID")
+                sur_fn = try_sur_fns[0]
     else:
         show_post_move = False
         meas_title = 'Measurement'
@@ -735,7 +753,7 @@ def single_measurement_trending_plot(
 
     title = f'{filename}    {visit}     {get_datetime_utc(opdhdu)}'
     if subtract_target:
-        title += '\nNIRCam FP1 Target Phase Map Subtracted'
+        title += f'\nNIRCam {sensing_apername[-3:]} Target Phase Map Subtracted'
     plt.suptitle(title, fontweight='bold', fontsize=18)
 
     # Row 1: Latest measurement, and correction if present #####
@@ -1097,8 +1115,8 @@ def wavefront_drift_plots(
 
 def get_month_start_end(year, month):
     _, ndays = calendar.monthrange(year, month)
-    start_date_str = f'{year:04d}-{month:02d}-01'
-    end_date_str = f'{year:04d}-{month:02d}-{ndays:02d}'
+    start_date_str = f'{year:04d}-{month:02d}-01T00:00:00'
+    end_date_str = f'{year:04d}-{month:02d}-{ndays:02d}T23:59:59'
 
     start_date = astropy.time.Time(start_date_str)
     end_date = astropy.time.Time(end_date_str)
@@ -1380,10 +1398,10 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
 
     axes[0].plot_date(dates_array.plot_date, rms_obs * 1e9, color='C1', ls='-', label='Observatory WFE at NIRCam NRCA3')
     axes[0].plot_date(dates_array.plot_date, rms_ote * 1e9, color='C0', ls='-', label='Telescope WFE')
-
     for ax in axes:
         for corr_date in correction_times:
-            ax.axvline(corr_date.plot_date, color='darkgreen', ls='--', alpha=0.5)
+            if (start_date < corr_date) and (corr_date < end_date):
+                ax.axvline(corr_date.plot_date, color='darkgreen', ls='--', alpha=0.5)
 
     # axes[0].axhline(59, ls=":", color='gray')
     # axes[0].axhline(80, ls=":", color='gray')
@@ -1522,6 +1540,7 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
                 ls='--',
                 alpha=0.5,
             )
+            cp.set_in_layout(False)  # avoid display layout bug: don't consider the connectionpatches for layout
             fig.add_artist(cp)
 
         else:

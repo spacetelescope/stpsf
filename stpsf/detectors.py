@@ -241,8 +241,8 @@ def apply_detector_charge_diffusion(psf_hdulist, options):
 
     if sigma == 0:
         stpsf.stpsf_core._log.info('Detector charge diffusion not applied '
-                                   'because charge_diffusion_sigma option is '
-                                   f"{'0' if inst !=' WFI' else '0 or None'}")
+                                   'because charge_diffusion_sigma option is 0'
+                                   )
         return psf_hdulist
 
     ext = 1  # Apply to the 'OVERDIST' extension

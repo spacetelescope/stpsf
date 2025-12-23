@@ -66,6 +66,7 @@ Contents
    jwst_large_psf.ipynb
    jwst_optical_budgets.ipynb
    jwst_psf_subtraction.ipynb
+   jwst_iec_wfe.ipynb
    jwst_wavefront_deltas.ipynb
    less_common_usage.rst
 

@@ -652,3 +652,26 @@ def test_get_rms_per_segment():
             assert 10 < rms_per_seg[seg] < 100
 
         assert np.isclose(rms_per_seg[seg], ote.rms(seg))
+
+def test_iec_wfe_model():
+    jwst = pytest.importorskip('jwst')  # The IEC telemetry retrieval functionality requires the JWST pipeline
+    import astropy.time
+    ote = stpsf.opds.OTE_Linear_Model_WSS()
+
+    # Test applying 1 nm rms of IEC-pattern astigmatism
+    ote.apply_iec_drift(1)
+    assert np.isclose(ote.rms(), 0.97, rtol=0.01), "OTE WFE RMS for this test case should be just under 1 nm RMS"
+
+    # Test calling the interpolator function with a single time as a string
+    time_test = '2025-07-25T12:00:00'   # This time happens to have iec_coeff right around -2
+    iec_coeff = stpsf.opds.estimate_iec_induced_wfe_at_time(time_test, plot=True)   # also test here the plot option in that function in mast_wss
+    assert np.isclose(iec_coeff, -2, rtol=0.01)
+
+    ote.apply_iec_drift(iec_coeff)
+    assert np.isclose(ote.rms(), 0.97*2, rtol=0.01), "OTE WFE RMS for this test case should be just under 2 nm RMS"
+
+    # Test calling with a range of times as an array Time object
+    # Also test plotting
+    times = astropy.time.Time(time_test) + np.arange(60)*5*astropy.units.second
+    iec_coeffs = stpsf.opds.estimate_iec_induced_wfe_at_time(times, plot=True)
+    assert np.isclose(iec_coeff, iec_coeffs[0], rtol=0.01), "These values should be similar"

@@ -14,6 +14,9 @@ STPSF: Simulated Point Spread Functions for the James Webb and Nancy Grace Roman
 .. image:: https://codecov.io/gh/spacetelescope/stpsf/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/spacetelescope/stpsf
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.15747364.svg
+  :target: https://doi.org/10.5281/zenodo.15747364
+
 .. |Documentation Status| image:: https://img.shields.io/readthedocs/stpsf/latest.svg?logo=read%20the%20docs&logoColor=white&label=Docs&version=latest
    :target: https://stpsf.readthedocs.io/en/latest/
    :alt: Documentation Status
