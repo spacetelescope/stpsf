@@ -129,28 +129,51 @@ Configured simulation instrument for:
     if match_source_position:
         # we do this using jwst datamodels so we can invoke the gWCS
         import jwst.datamodels, astropy.units as u
+        print(filename_or_HDUList, jwst.datamodels.__path__)
         model = jwst.datamodels.open(filename_or_HDUList)
-        # What is the coordinate location of the target set in APT, as of the epoch of observations?
-        targ_coords = astropy.coordinates.SkyCoord(model.meta.target.ra,
-                                    model.meta.target.dec,
-                                    frame='icrs', unit=u.deg)
-        # where does that show up in the FITS file
-        targ_pos = model.meta.wcs.world_to_pixel(targ_coords)
-        targ_pos_integer_part = np.asarray(np.round(targ_pos), int)
-        targ_pos_subpix_part = targ_pos - targ_pos_integer_part
 
-        inst.detector_position = targ_pos_integer_part
-        inst.options['source_offset_x'] = targ_pos_subpix_part[0] * inst.pixelscale
-        inst.options['source_offset_y'] = targ_pos_subpix_part[1] * inst.pixelscale
-        if verbose:
-            print(f"""    Attempting to match target position precisely...
-    Target RA, Dec from file header: {targ_coords.to_string('hmsdms')}
-    Based on WCS that is at pixel coords {targ_pos}
-    Setting Det. Pos.: {inst.detector_position} {'in subarray' if not is_full_frame else ""}
-    Setting subpixel offset: {targ_pos_subpix_part} pixels = {targ_pos_subpix_part[0] * inst.pixelscale:.3f}, {targ_pos_subpix_part[1] * inst.pixelscale:.3f} arcsec.
-    """)
+        try:
+            if not hasattr(model.meta, 'wcs'):
+                raise astropy.wcs.WcsError("The selected file does not appear to have WCS metadata. Cannot use match_source_position.")
+            print(model.meta.wcs)
+            # What is the coordinate location of the target set in APT, as of the epoch of observations?
+            targ_coords = astropy.coordinates.SkyCoord(model.meta.target.ra,
+                                        model.meta.target.dec,
+                                        frame='icrs', unit=u.deg)
+            # where does that show up in the FITS file
+            targ_pos = model.meta.wcs.world_to_pixel(targ_coords)
+            targ_pos_integer_part = np.asarray(np.round(targ_pos), int)
+            targ_pos_subpix_part = targ_pos - targ_pos_integer_part
+            asdasd
+            if verbose:
+                print(f"""    Attempting to match target position precisely...
+        Target RA, Dec from file header: {targ_coords.to_string('hmsdms')}
+        Based on WCS that is at pixel coords {targ_pos}""")
 
-
+            # need to check for invalid coords, which may either be floats outside the allowed detector range
+            # or may be NaNs. (Depending on astropy version, or input files, or other context?)
+            if np.any(np.isnan(targ_pos)):
+                raise ValueError("coords should not be NaNs")
+            inst.detector_position = targ_pos_integer_part
+            inst.options['source_offset_x'] = targ_pos_subpix_part[0] * inst.pixelscale
+            inst.options['source_offset_y'] = targ_pos_subpix_part[1] * inst.pixelscale
+            if verbose:
+                print(f"""        Setting Det. Pos.: {inst.detector_position} {'in subarray' if not is_full_frame else ""}
+        Setting subpixel offset: {targ_pos_subpix_part} pixels = {targ_pos_subpix_part[0] * inst.pixelscale:.3f}, {targ_pos_subpix_part[1] * inst.pixelscale:.3f} arcsec.
+        """)
+        except ValueError:
+            # Can't set detector position; coords probably outside detector,
+            if verbose:
+                print(f"""    **Unable to set detector position: invalid coordinates!
+        Target may be outside of this file's image area, for instance in another detector or offset outside of the FOV
+        Leaving detector coordinates at default position: {inst.detector_position} {'in subarray' if not is_full_frame else ""}
+        """)
+        except astropy.wcs.WcsError:
+            # Can't set detector position due to WCS issue.
+            if verbose:
+                print(f"""    **Unable to set detector position: File lacks a valid WCS.
+        Leaving detector coordinates at default position: {inst.detector_position} {'in subarray' if not is_full_frame else ""}
+        """)
 
     return inst
 
