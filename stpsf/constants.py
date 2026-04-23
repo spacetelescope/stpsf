@@ -418,13 +418,13 @@ INSTRUMENT_IFU_BROADENING_PARAMETERS = {
 INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS = {
     'NIRCam_SWA_MASKSWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     'NIRCam_SWA_MASKLWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'NIRCam_SWA_MASK210R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'NIRCam_SWA_MASK335R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCam_SWA_MASK210R': {'pupil_shift_x': -0.0045, 'pupil_shift_y': -0.0019, 'pupil_rotation': -0.338},  # From M. Perrin, fits to ref star from pid 1411,
+    'NIRCam_SWA_MASK335R': {'pupil_shift_x': 0.0090, 'pupil_shift_y': 0.0013, 'pupil_rotation': -0.083}, # from K. Lawson, fits to ref star from pid 4050
     'NIRCam_SWA_MASK430R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     'NIRCam_LWA_MASKSWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     'NIRCam_LWA_MASKLWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     'NIRCam_LWA_MASK210R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'NIRCam_LWA_MASK335R': {'pupil_shift_x': -0.012, 'pupil_shift_y': -0.023, 'pupil_rotation': -0.60},  # from K. Lawson, fits to ERS progid 1386 data
+    'NIRCam_LWA_MASK335R': {'pupil_shift_x': -0.0134, 'pupil_shift_y': -0.0076, 'pupil_rotation': -0.56},  # from K. Lawson, fits to ERS progid 1386 data
     'NIRCam_LWA_MASK430R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     # Draft placeholder values for MIRI based on Wright, Sabatke, & Telfer 2023.
     #    (∆V2, ∆V3) = (0.68%, -1.1%)
