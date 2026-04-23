@@ -437,6 +437,14 @@ INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS = {
     'MIRI_MASKLYOT': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
 }
 
+# The coronagraph mask central wavelengths as-built may not precisely match the nominal design wavelengths.
+# In particular there's a measured offset for the F1140C mask
+MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS = {
+        'FQPM1065': 10.65e-6,
+        'FQPM1140': 11.40e-6*1.03,   # priv. comm. A. Boccaletti and P. Baudoz
+        'FQPM1550': 15.50e-6,
+        }
+
 # Information about the effects on WFE of the IEC thermal variations
 #
 # Table of value for IEC telemetry to WFE model. Coefficients from model fit by Randal Telfer

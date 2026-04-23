@@ -2268,13 +2268,13 @@ class MIRI(JWInstrument_with_IFU):
             return container
 
         if self.image_mask == 'FQPM1065':
-            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1065', 10.65e-6))
+            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1065', constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS['FQPM1065']))
             trySAM = False
         elif self.image_mask == 'FQPM1140':
-            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1140', 11.40e-6))
+            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1140', constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS['FQPM1065']))
             trySAM = False
         elif self.image_mask == 'FQPM1550':
-            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1550', 15.50e-6))
+            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1550', constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS['FQPM1065']))
             trySAM = False
         elif self.image_mask == 'LYOT2300':
             # diameter is 4.25 (measured) 4.32 (spec) supposedly 6 lambda/D
