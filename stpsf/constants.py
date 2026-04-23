@@ -414,7 +414,7 @@ INSTRUMENT_IFU_BROADENING_PARAMETERS = {
     'MIRI': {'sigma': 0.05},
 }
 
-# Alignment information about instrument internal pupil masks (
+# Alignment information about instrument internal pupil masks
 INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS = {
     'NIRCam_SWA_MASKSWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     'NIRCam_SWA_MASKLWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
@@ -426,10 +426,15 @@ INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS = {
     'NIRCam_LWA_MASK210R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
     'NIRCam_LWA_MASK335R': {'pupil_shift_x': -0.012, 'pupil_shift_y': -0.023, 'pupil_rotation': -0.60},  # from K. Lawson, fits to ERS progid 1386 data
     'NIRCam_LWA_MASK430R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'MIRI_MASKFQPM_F1065C': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'MIRI_MASKFQPM_F11140': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'MIRI_MASKFQPM_F1550C': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
-    'MIRI_MASKLYOT': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    # Draft placeholder values for MIRI based on Wright, Sabatke, & Telfer 2023.
+    #    (∆V2, ∆V3) = (0.68%, -1.1%)
+    # note, sign flip in Y compared to that paper, since this is applied at MIRI's
+    # internal exit pupil image, which is flipped in Y relative to the primary entrance pupil
+    # These are *placeholder* values, and are pending refinement
+    'MIRI_MASKFQPM_F1065C': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+    'MIRI_MASKFQPM_F11140': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+    'MIRI_MASKFQPM_F1550C': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+    'MIRI_MASKLYOT': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
 }
 
 # Information about the effects on WFE of the IEC thermal variations
