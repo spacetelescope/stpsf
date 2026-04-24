@@ -1388,17 +1388,27 @@ class JWInstrument(SpaceTelescopeInstrument):
             if self.name == 'NIRCam':
                 # This is complicated. Depends on the channel, and the image plane mask used...
                 # TODO more work needed here.
-                lookup_key = f'{self.name}_{self.channel[0].upper()}W{self.module}_' + self.pupil_mask
+                lookup_key = f'{self.name.upper()}_{self.channel[0].upper()}W{self.module}_{self.image_mask}'
+            elif self.name == 'MIRI':
+                lookup_key = f'{self.name}_{self.pupil_mask}_{self.image_mask}'
             else:
-                lookup_key = self.name + '_' + self.pupil_mask
+                lookup_key = f'{self.name}_{self.pupil_mask}'
+            _log.debug("Looking up default pupil mask alignment params for "+lookup_key)
 
         values = []
-        for param in ('pupil_shift_x', 'pupil_shift_y', 'pupil_rotation'):
+        header_keywords = ('PUPLSHFX', 'PUPLSHFY', 'PUPL_ROT')
+                           #[%] Coronagraph Lyot pupil X shift rel. to prim
+        header_comments = ('Coron. Lyot pupil X shift relative to primary',
+                           'Coron. Lyot pupil Y shift relative to primary',
+                           '[deg] Coron. Lyot pupil rotation rel. to prim.',)
+        for i, param in enumerate(('pupil_shift_x', 'pupil_shift_y', 'pupil_rotation')):
             val = self.options.get(param)  # has user directly provided a value?
             # if not, check if we have a default for this instrument + mask
             if (val is None) and (lookup_key in constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS):
                 val = constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[lookup_key].get(param)
                 _log.debug(f' Found default {lookup_key} {param} = {val}')
+
+            self._extra_keywords[header_keywords[i]] = (val if val is not None else 0, header_comments[i])
 
             if val is not None and param.startswith('pupil_shift'):
                 val *= constants.JWST_CIRCUMSCRIBED_DIAMETER
@@ -2124,8 +2134,10 @@ class MIRI(JWInstrument_with_IFU):
         # Coordinate system note:
         # The pupil shifts get applied at the instrument pupil, which is an image of the OTE exit pupil
         # and is thus flipped in Y relative to the V frame entrance pupil. Therefore flip sign of pupil_shift_y
-        self.options['pupil_shift_x'] = -0.0068  # In flight measurement. See Wright, Sabatke, Telfer 2022, Proc SPIE
-        self.options['pupil_shift_y'] = -0.0110  # Sign intentionally flipped relative to that paper!! See note above.
+        # The default here is left as None, unspecified, which allows later selection of distinct default
+        # values based on mode. See method _get_pupil_mask_alignment()
+        self.options['pupil_shift_x'] = None
+        self.options['pupil_shift_y'] = None
 
         self.image_mask_list = ['FQPM1065', 'FQPM1140', 'FQPM1550', 'LYOT2300', 'LRS slit']
         self.pupil_mask_list = ['MASKFQPM', 'MASKLYOT', 'P750L']
@@ -2265,16 +2277,11 @@ class MIRI(JWInstrument_with_IFU):
                     poppy.SquareFieldStop(size=24, rotation=self._rotation, **offsets),
                 ],
             )
+            self._extra_keywords['FQPMWAVE'] = (wavelength, '[m] FQPM mask retardance reference wavelength')   # record the mask reference wavelength used in this calculation
             return container
 
-        if self.image_mask == 'FQPM1065':
-            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1065', constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS['FQPM1065']))
-            trySAM = False
-        elif self.image_mask == 'FQPM1140':
-            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1140', constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS['FQPM1065']))
-            trySAM = False
-        elif self.image_mask == 'FQPM1550':
-            optsys.add_image(make_fqpm_wrapper('MIRI FQPM 1550', constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS['FQPM1065']))
+        if self.image_mask in ['FQPM1065', 'FQPM1140', 'FQPM1550']:
+            optsys.add_image(make_fqpm_wrapper('MIRI '+self.image_mask, constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS[self.image_mask]))
             trySAM = False
         elif self.image_mask == 'LYOT2300':
             # diameter is 4.25 (measured) 4.32 (spec) supposedly 6 lambda/D
@@ -2612,8 +2619,9 @@ class NIRCam(JWInstrument):
         self._pixelscale_long = self._get_pixelscale_from_apername('NRCA5_FULL')
         self.pixelscale = self._pixelscale_short
 
-        self.options['pupil_shift_x'] = 0  # Set to 0 since NIRCam FAM corrects for PM shear in flight
-        self.options['pupil_shift_y'] = 0
+        self.options['pupil_shift_x'] = None  # Set to None since NIRCam FAM corrects for PM shear in flight
+        self.options['pupil_shift_y'] = None  # Making this None rather than 0 allows for later implementation of
+                                              # distinct default values for coronagraphy.
 
         # Enable the auto behaviours by default (after superclass __init__)
         self.auto_channel = True
