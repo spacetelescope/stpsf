@@ -211,6 +211,11 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
         _log.info('File {0} has the expected total flux based on prior reference calculation: {1}'.format(fnout, totflux))
 
     # _log.info("Lots of test files output as test_nircam_*.fits")
+    # Check that we have set the pupil shifts based on the default
+    chan= 'SW' if nc.channel == 'short' else 'LW'
+    assert psf[0].header['PUPLSHFX'] == stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}']['pupil_shift_x']
+    assert psf[0].header['PUPLSHFY'] == stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}']['pupil_shift_y']
+
 
 
 def test_nircam_get_detector():
