@@ -213,8 +213,14 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
     # _log.info("Lots of test files output as test_nircam_*.fits")
     # Check that we have set the pupil shifts based on the default
     chan= 'SW' if nc.channel == 'short' else 'LW'
-    assert psf[0].header['PUPLSHFX'] == stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}']['pupil_shift_x']
-    assert psf[0].header['PUPLSHFY'] == stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}']['pupil_shift_y']
+
+    def get_default_val(paramname):
+        # Lookup value from the constants file. If it's None, return a 0 (so the returned value is always a number)
+        val = stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}'][val]
+        return val if val is not None else 0
+
+    assert psf[0].header['PUPLSHFX'] == get_default_val('pupil_shift_x')
+    assert psf[0].header['PUPLSHFY'] == get_default_val('pupil_shift_y')
 
 
 
