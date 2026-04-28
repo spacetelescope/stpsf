@@ -216,7 +216,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
 
     def get_default_val(paramname):
         # Lookup value from the constants file. If it's None, return a 0 (so the returned value is always a number)
-        val = stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}'][val]
+        val = stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS[f'NIRCAM_{chan}{nc.module}_{nc.image_mask}'][paramname]
         return val if val is not None else 0
 
     assert psf[0].header['PUPLSHFX'] == get_default_val('pupil_shift_x')
