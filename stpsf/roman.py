@@ -484,12 +484,13 @@ class WFI(RomanInstrument):
 
         super().__init__('WFI', pixelscale=pixelscale)
 
-        # Initialize the pupil controller
-        #self._pupil_controller = WFIPupilController(self._datapath)
+        self._pupil_filename = None
+        self.pupil_datacube_index = None
 
-        self.pupil_mask_list = [fltr for fltr in self.filter_list.copy()
-                                if not fltr.startswith('GRISM')]
-        self.pupil_mask_list.append(np.str_('GRISM'))  # GRISM0/1 share pupils
+        self.pupil_mask_list = []
+        #fltr for fltr in self.filter_list.copy()
+        #                        if not fltr.startswith('GRISM')]
+        #self.pupil_mask_list.append(np.str_('GRISM'))  # GRISM0/1 share pupils
 
         # Define default aberration files for WFI filters
         self._aberration_files = {'custom': None}
@@ -549,19 +550,26 @@ class WFI(RomanInstrument):
         assert self.pupil is not None, 'pupil is None'
         super()._validate_config(**kwargs)
 
-    def _update_pupil(self, wfi_filter=None, detector=None):
+    def _update_pupil(self):
         # The pupil geometry depends on field position,
         # parameterized by SCA and field position number within the SCA
 
-        if detector is None:
-            detector = self.detector
-        if wfi_filter is None:
-            wfi_filter = self.filter
-        fn = f'RST_WFI_pupil_{wfi_filter}_WFI{detector[-2:]}_allfieldpoints.fits.gz'
+        if self._detector is None or not self._auto_pupil:
+            # cannot update the pupil yet, class still being initialized
+            # or else the auto_pupil has been disabled by the user
+            return
 
-        self._pupil_filename = os.path.join(self._datapath, 'pupils', fn)
-        _log.debug("Updating pupil filename to {self._pupil_filename}")
-        print(f"Updating pupil filename to {self._pupil_filename}")
+        self.pupil_datacube_index = _wfi_sci_xy_to_fp(*self.detector_position)
+
+        pupil_filename = f'RST_WFI_pupil_{self.filter}_WFI{self.detector[-2:]}_allfieldpoints.fits.gz'
+        self._pupil_filename = os.path.join(self._datapath, 'pupils', pupil_filename)
+        _log.debug(f"Updating pupil filename to {self._pupil_filename}, field point {self.pupil_datacube_index} for {self.detector} {self.detector_position}")
+
+        # TODO: Implement the filename for the high spatial frequency mirror info
+        highfreq_filename = f'RST_WFI_primary_highfreq_{self.filter}_WFI{self.detector[-2:]}.fits.gz'
+        self._pupilopd_filename = os.path.join(self._datapath, 'pupils', highfreq_filename)
+        # TODO:
+        # set self.pupilopd
 
 
     @RomanInstrument.detector.setter
@@ -578,15 +586,13 @@ class WFI(RomanInstrument):
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
 
         self._detector = value.upper()
-        if self._detector is not None and self._auto_pupil:
-            self._update_pupil()
+        self._update_pupil()
         self._update_aperturename()
 
     @RomanInstrument.detector_position.setter
     def detector_position(self, position):
-        super().detector_position.__set__(self, position)
-        if self._detector is not None and self._auto_pupil:
-            self._update_pupil()
+        RomanInstrument.detector_position.fset(self, position)
+        self._update_pupil()
 
     def _update_aperturename(self):
         """Update SIAF aperture name after change in detector or other relevant properties.
@@ -670,10 +676,7 @@ class WFI(RomanInstrument):
             if not os.path.samefile(self._current_aberration_file, aberration_file):
                 self._load_detector_aberrations(aberration_file)
 
-        # Update pupil only if detector was previously loaded
-        # ( i.e., skip this step when called by super() )
-        if self.detector is not None and self._auto_pupil:
-            self._update_pupil()
+        self._update_pupil()
 
     @property
     def pupil(self):
@@ -697,7 +700,7 @@ class WFI(RomanInstrument):
         The corresponding mask for the current filter. Cannot be
         directly set by the user.
         """
-        return self._pupil_controller.pupil_mask
+        return None
 
     @pupil_mask.setter
     def pupil_mask(self, name):
@@ -1062,3 +1065,36 @@ class RomanCoronagraph(RomanInstrument):
         result[0].header.set('LSTRAN', os.path.basename(self._lyotstop_fname), comment='Lyot stop transmission')
         result[0].header.set('PUPLSCAL', lyotstop_hdr['PUPLSCAL'], comment='Lyot stop pixel scale in m/pixel')
         result[0].header.set('PUPLDIAM', lyotstop_hdr['PUPLDIAM'], comment='Lyot stop array size, incl padding.')
+
+
+def _wfi_sci_xy_to_fp(x, y):
+    """Convert from (x, y) in pixels to the field point numbering used for the Zernikes and pupil masks
+
+    Inverse of fp_to_sci_xy
+
+    Parameters
+    ----------
+    x, y : float
+        Pixel coordinates in Science frame. Values expected to be within 0-4096
+
+    Returns
+    -------
+    fp : int
+        Field point index from 1 to 25
+        """
+    n = 4096
+    vertical = np.round(4 * y / n + 1)
+    horizontal = np.round(4 * (n - x) / n)
+    fp = int(horizontal * 5 + vertical)
+    return fp
+
+
+def _wfi_fp_to_sci_xy(fp):
+    """Convert from field point number to Sci frame X, Y pixel coord
+
+    Inverse of sci_xy_to_fp
+    """
+    n = 4096
+    y = int(np.mod(fp - 1, 5) * n // 4)
+    x = int(4 - (fp - 1) // 5) * n // 4
+    return (x, y)

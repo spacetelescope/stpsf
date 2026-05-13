@@ -591,10 +591,14 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
                 pupil_transmission = self.pupil
             else:
                 raise TypeError('Not sure what to do with a pupil of ' 'that type: {}'.format(type(self.pupil)))
+            # ---- check if we have an index into a datacube; this is used for Roman
+            transmission_index = self.pupil_datacube_index if hasattr(self, 'pupil_datacube_index') else None
+
             # ---- apply pupil intensity and OPD to the optical model
             pupil_optic = poppy.FITSOpticalElement(
                 name='{} Entrance Pupil'.format(self.telescope),
                 transmission=pupil_transmission,
+                transmission_index = transmission_index,
                 opd=opd_map,
                 planetype=poppy.poppy_core.PlaneType.pupil,
                 # rotation=self._rotation
