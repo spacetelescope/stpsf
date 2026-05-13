@@ -462,203 +462,6 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
 
 
-class WFIPupilController:
-    """
-    This is a helper class for the WFI and is used to swap in
-    the correct pupil each time the detector is changed.
-    The pupil depends on pupil_mask, detector, and filter;
-    pupil_mask is set automatically upon the receipt of the
-    detector and filter values selected by the user in the WFI class.
-    Users should only interact with this class through the API provided
-    in the WFI class.
-
-    Parameters
-    ----------
-    datapath : string
-        Path to STPSF-WFI data files
-    """
-
-    def __init__(self, datapath):
-        self.set_base_path(datapath)
-
-        self._pupil = None
-        self._pupil_mask = None
-
-        # Flag to en-/disable automatic selection of the appropriate pupil_mask
-        self._auto_pupil = True
-
-        # Flag to en-/disable automatic selection of the appropriate pupil file
-        self._auto_pupil_mask = True
-
-    @property
-    def pupil(self):
-        """
-        The path to the FITS file containing pupil information for the
-        detector/filter combination sent from the WFI class. Cannot be
-        directly set by the user.
-        """
-        return self._pupil
-
-    @pupil.setter
-    def pupil(self, value):
-        raise AttributeError('Pupil cannot be directly specified. ' 'Use lock_pupil() instead.')
-
-    @property
-    def pupil_mask(self):
-        """
-        The corresponding mask for the filter sent from the WFI class.
-        (See WFI.pupil_mask_list for a list of valid filters.) Cannot
-        be directly set by the user.
-        """
-        return self._pupil_mask
-
-    @pupil_mask.setter
-    def pupil_mask(self, name):
-        raise AttributeError('Pupil mask cannot be directly specified. '
-                             'Use lock_pupil_mask() instead.')
-
-    def _get_pupil_mask(self, wfi_filter):
-        """
-        Returns the appropriate pupil mask for a given WFI filter.
-
-        Parameters
-        ----------
-        wfi_filter : string
-            See WFI.filter_list for a list of valid filters.
-        """
-        wfi_filter = wfi_filter.upper()
-
-        if wfi_filter in GRISM_FILTERS:
-            # As of Cycle 10, GRISM0 and GRISM1 are the only filters that share
-            # a set of pupil masks with each other
-            return 'GRISM'
-        else:
-            return wfi_filter
-
-    def set_base_path(self, datapath):
-        """
-        Sets the root directory of the path to STPSF's data files.
-        This should be set before this class is used.
-
-        Parameters
-        ----------
-        datapath : string
-            Path to STPSF-WFI data files
-        """
-        self._datapath = datapath
-        self._pupil_basepath = os.path.join(self._datapath, 'pupils')
-
-    def pupil_file_formatter(self, wfi_filter, detector):
-        """
-        Generate proper pupil filename given a filter and a detector.
-
-        Parameters
-        ----------
-        wfi_filter : string
-            See WFI.filter_list for a list of valid filters.
-
-        detector : string
-            See WFI.detector_list for a list of valid detectors.
-        """
-        if wfi_filter.upper().startswith('F'):
-            return f"RST_WIM_Filter_{wfi_filter}_{detector}.fits.gz"
-        elif wfi_filter.upper().startswith('GRISM'):
-            return f"RST_WSM_Grism_grism_{detector}.fits.gz"
-        elif wfi_filter.upper() == 'PRISM':
-            return f"RST_WSM_Prism_prism_{detector}.fits.gz"
-
-    def update_pupil(self, wfi_filter, detector):
-        """
-        Selects the specific pupil file corresponding with a detector
-        and filter combination sent from the WFI class. Also finds and
-        indirectly sets the proper pupil_mask in the process.
-
-        Parameters
-        ----------
-        wfi_filter : string
-            See WFI.filter_list for a list of valid filters.
-
-        detector : string
-            See WFI.detector_list for a list of valid detectors.
-        """
-        if not self._auto_pupil:
-            _log.info('Automatic pupil selection was locked; '
-                      'using user-provided pupil.')
-            return
-
-        if self._pupil_basepath is None:
-            raise Exception('update_pupil called before setting pupil file path')
-
-        # figure out proper mask based on filter (or use locked mask if enabled)
-        pupil_mask = self._get_pupil_mask(wfi_filter) if self._auto_pupil_mask else self.pupil_mask
-        pupil = os.path.join(self._pupil_basepath,
-                             self.pupil_file_formatter(pupil_mask, detector))
-
-        self._pupil_mask = pupil_mask
-        self._pupil = pupil
-
-        _log.info(
-            f"Using {'' if self._auto_pupil_mask else 'locked '}"
-            f"pupil mask '{pupil_mask}' and detector '{detector}'."
-        )
-
-    def lock_pupil(self, pupil_path):
-        """
-        Prevents the WFIPupilController class from dynamically updating
-        the path to the pupil on any changes to the detector or filter
-        selected in the WFI class. Instead, the path remains locked on
-        whichever `pupil_path` was provided to this method.
-
-        CAUTION: This is non-standard usage of the WFI class and may
-        lead to unexpected behavior.
-
-        Parameters
-        ----------
-        pupil_path : string
-            The custom path to your pupil file.
-        """
-        self._pupil_mask = None
-        self._pupil = pupil_path
-        self._auto_pupil = False
-
-    def unlock_pupil(self):
-        """
-        Undoes the effects of lock_pupil() and resets WFIPupilController
-        to its default state of updating the pupil whenever a detector
-        or filter is changed in the WFI class.
-        """
-        self._auto_pupil = True
-
-    def lock_pupil_mask(self, pupil_mask):
-        """
-        Prevents the WFIPupilController class from dynamically updating
-        the pupil mask on any changes to the filter selected in the WFI
-        class. Instead, the pupil mask remains locked on whichever
-        `pupil_mask` was provided to this method.
-
-        CAUTION: This is non-standard usage of the WFI class and may
-        lead to unexpected behavior.
-
-        Parameters
-        ----------
-        filter : string
-            See WFI.pupil_mask_list for a list of valid pupil masks.
-        """
-        if not self._auto_pupil:
-            raise Exception('Pupil is locked. Unlock pupil before locking pupil mask.')
-        else:
-            self._pupil_mask = pupil_mask
-            self._auto_pupil_mask = False
-
-    def unlock_pupil_mask(self):
-        """
-        Undoes the effects of lock_pupil_mask() and resets
-        WFIPupilController to its default state of updating the pupil
-        mask whenever filter is changed in the WFI class.
-        """
-        self._auto_pupil_mask = True
-
-
 class WFI(RomanInstrument):
     """
     WFI represents the Roman mission's Wide Field Imager.
@@ -677,11 +480,12 @@ class WFI(RomanInstrument):
         self._aberration_files = {}
         self._is_custom_aberration = False
         self._current_aberration_file = ''
+        self._auto_pupil = True
 
         super().__init__('WFI', pixelscale=pixelscale)
 
         # Initialize the pupil controller
-        self._pupil_controller = WFIPupilController(self._datapath)
+        #self._pupil_controller = WFIPupilController(self._datapath)
 
         self.pupil_mask_list = [fltr for fltr in self.filter_list.copy()
                                 if not fltr.startswith('GRISM')]
@@ -746,14 +550,19 @@ class WFI(RomanInstrument):
         super()._validate_config(**kwargs)
 
     def _update_pupil(self, wfi_filter=None, detector=None):
+        # The pupil geometry depends on field position,
+        # parameterized by SCA and field position number within the SCA
+
         if detector is None:
             detector = self.detector
         if wfi_filter is None:
             wfi_filter = self.filter
+        fn = f'RST_WFI_pupil_{wfi_filter}_WFI{detector[-2:]}_allfieldpoints.fits.gz'
 
-        if detector is not None and wfi_filter is not None:
-            self._pupil_controller.update_pupil(wfi_filter=wfi_filter,
-                                                detector=detector)
+        self._pupil_filename = os.path.join(self._datapath, 'pupils', fn)
+        _log.debug("Updating pupil filename to {self._pupil_filename}")
+        print(f"Updating pupil filename to {self._pupil_filename}")
+
 
     @RomanInstrument.detector.setter
     def detector(self, value):
@@ -769,9 +578,15 @@ class WFI(RomanInstrument):
             raise ValueError('Invalid detector. Valid detector names are: {}'.format(', '.join(self.detector_list)))
 
         self._detector = value.upper()
-        if self._detector is not None:
-            self._update_pupil(detector=self._detector)
+        if self._detector is not None and self._auto_pupil:
+            self._update_pupil()
         self._update_aperturename()
+
+    @RomanInstrument.detector_position.setter
+    def detector_position(self, position):
+        super().detector_position.__set__(self, position)
+        if self._detector is not None and self._auto_pupil:
+            self._update_pupil()
 
     def _update_aperturename(self):
         """Update SIAF aperture name after change in detector or other relevant properties.
@@ -857,8 +672,8 @@ class WFI(RomanInstrument):
 
         # Update pupil only if detector was previously loaded
         # ( i.e., skip this step when called by super() )
-        if self.detector is not None:
-            self._update_pupil(wfi_filter=self._filter)
+        if self.detector is not None and self._auto_pupil:
+            self._update_pupil()
 
     @property
     def pupil(self):
@@ -867,7 +682,7 @@ class WFI(RomanInstrument):
         detector/filter combination sent from the WFI class. Cannot be
         directly set by the user.
         """
-        return self._pupil_controller.pupil
+        return self._pupil_filename
 
     @pupil.setter
     def pupil(self, value):
@@ -886,7 +701,7 @@ class WFI(RomanInstrument):
 
     @pupil_mask.setter
     def pupil_mask(self, name):
-        raise AttributeError('Pupil mask cannot be directly specified. ' 'Use lock_pupil_mask() instead.')
+        raise AttributeError('Pupil mask cannot be directly specified. ')
 
     @property
     def mode(self):
@@ -953,68 +768,6 @@ class WFI(RomanInstrument):
         self._load_detector_aberrations(aberration_path)
         self._aberration_files['custom'] = None
         self._is_custom_aberration = False
-
-    def lock_pupil(self, pupil_path):
-        """
-        Prevents dynamic updates of the path to the proper pupil file on
-        any changes to the selected detector or filter. Instead, the
-        path remains locked on whichever `pupil_path` was provided here.
-
-        WARNING: This is non-standard usage of the WFI class and may
-        lead to unexpected behavior.
-
-        Parameters
-        ----------
-        pupil_path : string
-            The custom path to your pupil file.
-        """
-        if os.path.isfile(pupil_path):
-            self._pupil_controller.lock_pupil(pupil_path)
-        else:
-            raise FileNotFoundError(f'{pupil_path} not found.')
-
-        _log.warning('Disabling default pupil selection behavior.')
-
-    def unlock_pupil(self):
-        """
-        Undoes the effects of lock_pupil() by resetting the class to
-        its default state of updating the pupil whenever a detector or
-        filter is changed. If necessary, it also sets the proper pupil
-        for the current detector/filter combination.
-        """
-        self._pupil_controller.unlock_pupil()
-        self._update_pupil()  # reset pupil
-        _log.info('Restoring default pupil selection behavior.')
-
-    def lock_pupil_mask(self, pupil_mask):
-        """
-        Prevents dynamic updates of the pupil mask on any change to the
-        selected filter. Instead, the pupil mask remains locked on
-        whichever `pupil_mask` was provided here.
-
-        WARNING: This is non-standard usage of the WFI class and may
-        lead to unexpected behavior.
-
-        Parameters
-        ----------
-        filter : string
-            See WFI.pupil_mask_list for a list of valid pupil masks.
-        """
-        if pupil_mask not in self.pupil_mask_list:
-            raise Exception('invalid pupil mask')
-        self._pupil_controller.lock_pupil_mask(pupil_mask)
-        self._update_pupil()
-        _log.warning('Disabling default pupil mask selection behavior.')
-
-    def unlock_pupil_mask(self):
-        """
-        Undoes the effects of lock_pupil_mask() and resets the class to
-        its default state of updating the pupil mask whenever the filter
-        is changed.
-        """
-        self._pupil_controller.unlock_pupil_mask()
-        self._update_pupil()  # reset pupil mask
-        _log.info('Restoring default pupil mask selection behavior.')
 
 
 class RomanCoronagraph(RomanInstrument):
