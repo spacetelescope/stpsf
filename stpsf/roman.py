@@ -4,8 +4,8 @@ Roman Instruments
 =================
 
 WARNING: This model has not yet been validated against other PSF
-         simulations, and uses several approximations (e.g. for
-         mirror polishing errors, which are taken from HST).
+         simulations, and uses several approximations
+
 """
 
 import logging
@@ -465,10 +465,6 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
 class WFI(RomanInstrument):
     """
     WFI represents the Roman mission's Wide Field Imager.
-
-    WARNING: This model has not yet been validated against other PSF
-             simulations, and uses several approximations (e.g. for
-             mirror polishing errors, which are taken from HST).
     """
 
     def __init__(self):
@@ -480,7 +476,7 @@ class WFI(RomanInstrument):
         self._aberration_files = {}
         self._is_custom_aberration = False
         self._current_aberration_file = ''
-        self._auto_pupil = True
+        self.auto_pupil = True
 
         super().__init__('WFI', pixelscale=pixelscale)
 
@@ -507,8 +503,8 @@ class WFI(RomanInstrument):
         self._load_detector_aberrations(self._aberration_files[self.mode])
         self.detector = 'WFI01'
 
-        self.opd_list = [os.path.join(self._STPSF_basepath, 'upscaled_HST_OPD.fits')]
-        self.pupilopd = self.opd_list[-1]
+        self.opd_list = []
+        self.pupilopd = None
 
     def _addAdditionalOptics(self, optsys, **kwargs):
         _log.debug('   No optics added for WFI')
@@ -554,19 +550,22 @@ class WFI(RomanInstrument):
         # The pupil geometry depends on field position,
         # parameterized by SCA and field position number within the SCA
 
-        if self._detector is None or not self._auto_pupil:
+        if self._detector is None or not self.auto_pupil:
             # cannot update the pupil yet, class still being initialized
             # or else the auto_pupil has been disabled by the user
             return
 
         self.pupil_datacube_index = _wfi_sci_xy_to_fp(*self.detector_position)
 
-        pupil_filename = f'RST_WFI_pupil_{self.filter}_WFI{self.detector[-2:]}_allfieldpoints.fits.gz'
+        element = 'GRISM' if self.filter in GRISM_FILTERS else self.filter
+
+        pupil_filename = f'RST_WFI_pupil_{element}_WFI{self.detector[-2:]}_allfieldpoints.fits.gz'
         self._pupil_filename = os.path.join(self._datapath, 'pupils', pupil_filename)
-        _log.debug(f"Updating pupil filename to {self._pupil_filename}, field point {self.pupil_datacube_index} for {self.detector} {self.detector_position}")
+        _log.debug(f"Updating pupil filename to {self._pupil_filename}, field point {self.pupil_datacube_index} for "+
+                   f"{self.detector} {self.detector_position}")
 
         # TODO: Implement the filename for the high spatial frequency mirror info
-        highfreq_filename = f'RST_WFI_primary_highfreq_{self.filter}_WFI{self.detector[-2:]}.fits.gz'
+        highfreq_filename = f'RST_WFI_primary_highfreq_{element}_WFI{self.detector[-2:]}.fits.gz'
         self._pupilopd_filename = os.path.join(self._datapath, 'pupils', highfreq_filename)
         # TODO:
         # set self.pupilopd

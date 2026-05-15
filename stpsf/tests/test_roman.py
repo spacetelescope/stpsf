@@ -11,14 +11,14 @@ GRISM_FILTERS = roman.GRISM_FILTERS
 PRISM_FILTERS = roman.PRISM_FILTERS
 
 
-def pupil_path(wfi, mask=None):
+def pupil_path(wfi):
     """
     dynamically generate current pupil path for a given WFI instance
     """
-    mask = wfi._pupil_controller._get_pupil_mask(wfi.filter) if mask is None else mask
+    element = 'GRISM' if wfi.filter in GRISM_FILTERS else wfi.filter
 
-    base = wfi._pupil_controller._pupil_basepath
-    file = wfi._pupil_controller.pupil_file_formatter(mask, wfi.detector)
+    base = wfi._datapath
+    file = f'pupils/RST_WFI_pupil_{element}_WFI{wfi.detector[-2:]}_allfieldpoints.fits.gz'
 
     return os.path.join(base, file)
 
@@ -83,72 +83,64 @@ def test_WFI_fwhm():
     assert 4.0 > fwhm_f184 / fwhm_f062 > 2.0
 
 
-def test_WFI_pupil_controller():
-    wfi = roman.WFI()
+def test_wfi_pupil_field_dependence():
+    """Test that it automatically loads different pupil based on detector and detector position
+     - The filename is selected based on detector and filter.
+     - The index into the datacube in that file is selected based on detector position
+    The expectation is there are a total of 25 field points (5x5) across each detector, with a particular
+    numbering and arrangement as used in the 2026 prelaunch data delivery.
+    Furthermore there are distinct sets of such files for each filter.
 
-    for detector in wfi.detector_list:
-        wfi.detector = detector
+    This test only iterates over a subset of filters and detectors and positions, because that
+    suffices to test the relevant functionalities in general.
 
-        assert os.path.isfile(pupil_path(wfi)), f'Pupil file missing: {pupil_path(wfi)}'
+    """
 
-        # Test detector change was successful
-        assert wfi.detector == detector, 'WFI detector was not set correctly'
-        assert wfi.pupil == pupil_path(wfi), 'pupil path was not set correctly'
+    elements = ['F087', "F184", 'PRISM']
+    dets = ['WFI01', 'WFI09', 'WFI18']
+    corners = np.asarray( [(0,0), (0, 1), (1,0), (1,1)]) * 4090
+    corner_field_point_expected = [21, 25, 1, 5]
 
-        # Test pupil mask lock/unlock
-        for mask in wfi.pupil_mask_list:
-            # test lock
-            wfi.lock_pupil_mask(mask)
+    for element in elements:
+        for det in dets:
+            wfi = roman.WFI()
+            wfi.filter = element
+            wfi.detector = det
+            assert wfi.detector_position == (2048, 2048), "Default detector position should be middle of the detector"
+            assert wfi.pupil_datacube_index == 13, "Default pupil datacube index should be middle of the 25 field points"
 
-            assert wfi.pupil == pupil_path(wfi, mask), 'Pupil path was not set correctly'
+            for (x,y), fp  in zip(corners, corner_field_point_expected):
+                wfi.detector_position = (x, y)
 
-            # introduce differing filter to modify
-            wfi.filter = 'PRISM' if mask != 'PRISM' else 'F062'
+                # Check that the wfi.pupil element updates as expected
+                assert det in wfi.pupil, "The pupil filename ought to update based on detector "
+                assert element in wfi.pupil, "The pupil filename ought to update based on filter"
+                assert wfi.pupil_datacube_index == fp, ("The pupil file datacube index did not match the"+
+                                                        f" expected field point: got {wfi.pupil_datacube_index} instead of {fp}")
 
-            assert wfi._pupil_controller._pupil_mask == wfi.pupil_mask, 'Pupil mask was not set correctly'
+                # Check that if we toggle off the auto_pupil feature then the pupil and datacube index stop changing.
+                selected_pupil_file = wfi.pupil
+                selected_pupil_cube_index = wfi.pupil_datacube_index
+                wfi.auto_pupil = False
+                wfi.detector_position = (512, 1536)
+                assert wfi.pupil_datacube_index == selected_pupil_cube_index, "Pupil file should not change with new det pos if auto_pupil is False"
+                assert wfi.pupil == selected_pupil_file, "Pupil file should not change with new det pos"
+                wfi.detector = 'WFI03'
+                assert wfi.pupil == selected_pupil_file, "Pupil file should not change with new detector if auto_pupil is False"
+                wfi.detector = det   # Reset before continuing the next part of the test
+                wfi.detector_position = (x, y)
 
-            # test unlock
-            wfi.unlock_pupil_mask()
+                # now re-enable auto_pupil and verify that it works as expected,
+                #   first for a change in detector position, then for a change in detector
+                wfi.auto_pupil = True
+                wfi.detector_position = (512, 1536)
+                assert wfi.pupil_datacube_index != selected_pupil_cube_index, "Pupil file should change with new det pos if auto_pupil is True"
+                assert wfi.pupil == selected_pupil_file, "Pupil file should not change with new det pos "
+                wfi.detector = 'WFI03'
+                assert wfi.pupil != selected_pupil_file, "Pupil file should change with new detector if auto_pupil is True"
+                wfi.detector = det   # Reset to current detector before continuing the for loop over field positions
 
-            assert wfi.pupil == pupil_path(wfi), 'Pupil mask unlock failed'
 
-        assert wfi._pupil_controller._auto_pupil, 'Pupil is locked and should not be'
-        assert wfi._pupil_controller._auto_pupil_mask, 'Pupil mask is locked and should not be'
-
-        # Test pupil lock/unlock
-        with pytest.raises(FileNotFoundError):
-            assert wfi.lock_pupil('file_that_does_not_exist.fits'), 'FileNotFoundError was not raised'
-
-        this_file = __file__
-        wfi.lock_pupil(this_file)
-        assert wfi.pupil == this_file, 'Pupil did not lock to proper file.'
-
-        wfi.unlock_pupil()
-        assert wfi.pupil == pupil_path(wfi), 'Pupil unlock failed.'
-
-        assert wfi._pupil_controller._auto_pupil, 'Pupil is locked and should  not be'
-        assert wfi._pupil_controller._auto_pupil_mask, 'Pupil mask is locked and should not be'
-
-        # Test effect of changing the filter on pupil path
-        for fltr in wfi.filter_list:
-            wfi.filter = fltr
-
-            assert wfi.pupil == pupil_path(wfi), f'Pupil was not set to correct value for filter {fltr}'
-
-    # Test persistence of pupil and pupil mask locks through a PSF calculation
-    wfi2 = roman.WFI()
-    wfi2.detector = detector
-    valid_pos = (4000, 1000)
-    wfi2.detector_position = valid_pos
-
-    wfi2.filter = 'F129'
-    wfi2.lock_pupil_mask('GRISM')
-    wfi2.filter = 'F129'
-    assert wfi2.pupil == pupil_path(wfi2, 'GRISM'), 'Pupil path was not set correctly'
-    wfi2.calc_psf(monochromatic=1.3e-6, fov_pixels=4)
-
-    assert wfi.pupil_mask == 'GRISM', 'Pupil mask changed during PSF calculation'
-    assert wfi2.pupil == pupil_path(wfi2, 'GRISM'), 'Pupil path changed during PSF calculation'
 
 
 def test_WFI_detector_position_setter():
@@ -323,3 +315,17 @@ def test_coronagraph_psf(display=False):
     monopsf = char_spc.calc_psf(nlambda=1, display=False)
     if display:
         roman.poppy.display_psf(monopsf)
+
+# -------- Test utility functions for WFI field of view position coordinate conversions
+
+
+def test_sci_xy_to_fp():
+    """Test corners match expectations"""
+    corner_data = ( ((0,0), 21), # lower left
+                    ((0, 4096), 25), # upper left
+                    ((4096, 0), 1), # lower right
+                    ((4096, 4096), 5) # upper right
+                  )
+    for (x, y), fp in corner_data:
+        assert roman._wfi_sci_xy_to_fp(x, y) == fp  # test xy->fp
+        assert roman._wfi_sci_xy_to_fp( *roman._wfi_fp_to_sci_xy(fp)) == fp , f'round trip error for fp {fp}'  # test round trip
