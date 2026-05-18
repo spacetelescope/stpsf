@@ -3913,3 +3913,6 @@ def one_segment_pupil(segmentname, npix=1024):
 
     newpupil[0].header['SEGMENT'] = segment_official_name
     return newpupil
+
+# This is a comment change with no functionality changes.
+# This PR is to test CI only -- don't merge!
