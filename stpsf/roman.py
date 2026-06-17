@@ -225,7 +225,7 @@ def _load_wfi_detector_aberrations(filename):
         single_detector_info = zernike_table[zernike_table['sca'] == number]
         field_points = set(single_detector_info['field_point'])
         detector = FieldDependentAberration(
-            4096, 4096, radius=RomanInstrument.PUPIL_RADIUS,
+            4096, 4096, radius=constants.ROMAN_PUPIL_DIAMETER/2,
             name=f"Field Dependent Aberration (WFI{number:02d})"
         )
         for field_id in field_points:
@@ -285,7 +285,6 @@ class _RomanInstrumentOptionsDict(dict):
 
 @utils.combine_docstrings
 class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
-    PUPIL_RADIUS = 2.4 / 2.0
     """
     RomanInstrument contains data and functionality common to Roman
     instruments, such as setting the pupil shape
@@ -294,6 +293,9 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.pupil_radius = constants.ROMAN_PUPIL_DIAMETER / 2  # override default value set in super(), based on FITS file size
+                                                                # which may not be correct since Roman pupil files have some padding
 
         self.siaf = stpsf_core.get_siaf_with_caching('roman')
         self._aperturename = None
