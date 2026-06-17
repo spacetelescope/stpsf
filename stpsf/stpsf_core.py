@@ -203,7 +203,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         fits.HDUList object corresponding to such a file. If the file contains a
         datacube, you may set this to a tuple (filename, slice) to select a
         given slice, or else the first slice will be used."""
-        self.pupil_radius = None  # Set when loading FITS file in get_optical_system
+        self.pupil_radius = None  # Set in subclass for JWST or Roman
 
         self.options = {}  # dict for storing other arbitrary options.
 
@@ -446,8 +446,6 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         self._extra_keywords['TEL_WFE'] = (float(pupil_rms_wfe_nm), '[nm] Telescope pupil RMS wavefront error')
         if hasattr(pupil_optic, 'header_keywords'):
             self._extra_keywords.update(pupil_optic.header_keywords())
-
-        self.pupil_radius = pupil_optic.pupil_diam / 2.0
 
         # add coord transform from entrance pupil to exit pupil
         optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)
@@ -826,6 +824,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         self.pupil = os.path.abspath(os.path.join(self._STPSF_basepath, 'jwst_pupil_RevW_npix1024.fits.gz'))
         'Filename *or* fits.HDUList for JWST pupil mask. Usually there is no need to change this.'
+
+        self.pupil_radius = constants.JWST_CIRCUMSCRIBED_DIAMETER / 2 * units.meter
 
         self._aperturename = None
         self._detector = None

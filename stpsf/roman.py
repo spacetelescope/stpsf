@@ -294,8 +294,7 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.pupil_radius = constants.ROMAN_PUPIL_DIAMETER / 2  # override default value set in super(), based on FITS file size
-                                                                # which may not be correct since Roman pupil files have some padding
+        self.pupil_radius = constants.ROMAN_PUPIL_DIAMETER / 2 * u.meter
 
         self.siaf = stpsf_core.get_siaf_with_caching('roman')
         self._aperturename = None
