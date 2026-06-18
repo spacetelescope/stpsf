@@ -52,8 +52,6 @@ def distort_image(
     ext=0,
     to_frame='sci',
     fill_value=0,
-    xnew_coords=None,
-    ynew_coords=None,
     return_coords=False,
     aper=None,
 ):
@@ -77,29 +75,8 @@ def distort_image(
         Value used to fill in any blank space by the skewed PSF. Default = 0.
         If set to None, values outside the domain are extrapolated.
     to_frame : str
-        Requested type of output coordinate frame.
-
-            * 'tel': arcsecs V2,V3
+        Requested type of output coordinate frame. DEPRECATED, now must be 'sci'
             * 'sci': pixels, in conventional DMS axes orientation
-            * 'det': pixels, in raw detector read out axes orientation
-            * 'idl': arcsecs relative to aperture reference location.
-
-    xnew_coords : None or ndarray
-        Array of x-values in new coordinate frame to interpolate onto.
-        Can be a 1-dimensional array of unique values, in which case
-        the final image will be of size (ny_new, nx_new). Or a 2d array
-        that corresponds to full regular grid and has same shape as
-        `ynew_coords` (ny_new, nx_new). If set to None, then final image
-        is same size as input image, and coordinate grid spans the min
-        and max values of siaf_ap.convert(xidl,yidl,'idl',to_frame).
-    ynew_coords : None or ndarray
-        Array of y-values in new coordinate frame to interpolate onto.
-        Can be a 1-dimensional array of unique values, in which case
-        the final image will be of size (ny_new, nx_new). Or a 2d array
-        that corresponds to full regular grid and has same shape as
-        `xnew_coords` (ny_new, nx_new). If set to None, then final image
-        is same size as input image, and coordinate grid spans the min
-        and max values of siaf_ap.convert(xidl,yidl,'idl',to_frame).
     return_coords : bool
         In addition to returning the final image, setting this to True
         will return the full set of new coordinates. Output will then
@@ -136,78 +113,55 @@ def distort_image(
     ny, nx = hdu_list[ext].shape
     pixelscale = hdu_list[ext].header['PIXELSCL']  # the pixel scale carries the over-sample value
 
+    # Subtle issue: How to handle oversampling and pixel scale depends on context, and
+    # in particular whether the user may have overridden the normal pixelscale with some custom
+    # value. If the simulated pixelscale does not match the actual SIAF pixelscale, then the
+    # oversampling relative to the SCI coordinate frame will not simply be the OVERSAMP keyword
+    # value. To accomodate that edge case, compute here the oversampling as the ratio of the
+    # computed pixelscale relative to the nominal average scale used in SIAF.
+    osamp = 0.5*(aper.XSciScale + aper.YSciScale) / pixelscale
+
     # Get 'sci' reference location where PSF is observed
-    xsci_cen = hdu_list[ext].header['DET_X']  # center x location in pixels ('sci')
-    ysci_cen = hdu_list[ext].header['DET_Y']  # center y location in pixels ('sci')
+    xcen_sci = hdu_list[ext].header['DET_X']  # center x location in pixels ('sci')
+    ycen_sci = hdu_list[ext].header['DET_Y']  # center y location in pixels ('sci')
 
     # Convert the PSF center point from pixels to arcseconds using pysiaf
-    xidl_cen, yidl_cen = aper.sci_to_idl(xsci_cen, ysci_cen)
+    xcen_idl, ycen_idl = aper.sci_to_idl(xcen_sci, ycen_sci)
 
     # ###############################################
     # Create an array of indices (in pixels) for where the PSF is located on the detector
     nx_half, ny_half = ((nx - 1) / 2.0, (ny - 1) / 2.0)
-    xlin = np.linspace(-1 * nx_half, nx_half, nx)
-    ylin = np.linspace(-1 * ny_half, ny_half, ny)
-    xarr, yarr = np.meshgrid(xlin, ylin)
+    xlin_pix = np.linspace(-1 * nx_half, nx_half, nx)
+    ylin_pix = np.linspace(-1 * ny_half, ny_half, ny)
+    xarr, yarr = np.meshgrid(xlin_pix, ylin_pix)
 
     # ###############################################
     # Create an array of indices (in pixels) that the final data will be interpolated onto
-    xnew_cen, ynew_cen = aper.convert(xsci_cen, ysci_cen, 'sci', to_frame)
-
-    # If new x and y values are specified, create a meshgrid
-    if (xnew_coords is not None) and (ynew_coords is not None):
-        if len(xnew_coords.shape) == 1 and len(ynew_coords.shape) == 1:
-            xnew, ynew = np.meshgrid(xnew_coords, ynew_coords)
-        elif len(xnew_coords.shape) == 2 and len(ynew_coords.shape) == 2:
-            assert xnew_coords.shape == ynew_coords.shape, 'If new x and y inputs are a grid, must be same shapes'
-            xnew, ynew = xnew_coords, ynew_coords
-    elif to_frame == 'sci':
-        osamp_x = aper.XSciScale / pixelscale
-        osamp_y = aper.YSciScale / pixelscale
-        xnew = xarr / osamp_x + xnew_cen
-        ynew = yarr / osamp_y + ynew_cen
+    if to_frame == 'sci':
+        xnew = xarr / osamp + xcen_sci
+        ynew = yarr / osamp + ycen_sci
     else:
-        # Get 'idl' coords
-        xidl = xarr * pixelscale + xidl_cen
-        yidl = yarr * pixelscale + yidl_cen
-
-        xv, yv = aper.convert(xidl, yidl, 'idl', to_frame)
-        xmin, xmax = (xv.min(), xv.max())
-        ymin, ymax = (yv.min(), yv.max())
-
-        # Range xnew from 0 to 1
-        xnew = xarr - xarr.min()
-        xnew /= xnew.max()
-        # Set to xmin to xmax
-        xnew = xnew * (xmax - xmin) + xmin
-        # Make sure center value is xnew_cen
-        xnew += xnew_cen - np.median(xnew)
-
-        # Range ynew from 0 to 1
-        ynew = yarr - yarr.min()
-        ynew /= ynew.max()
-        # Set to ymin to ymax
-        ynew = ynew * (ymax - ymin) + ymin
-        # Make sure center value is xnew_cen
-        ynew += ynew_cen - np.median(ynew)
+        raise NotImplementedError('Only transforms to SCI frame are now supported for distortions.')
 
     # Convert requested coordinates to 'idl' coordinates
     xnew_idl, ynew_idl = aper.convert(xnew, ynew, to_frame, 'idl')
 
     # ###############################################
     # Interpolate using Regular Grid Interpolator
-    xvals = xlin * pixelscale + xidl_cen
-    yvals = ylin * pixelscale + yidl_cen
+    # First we compute the coords in Ideal frame for the input PSF sim on a regular grid
+    xvals = xlin_pix * pixelscale + xcen_idl
+    yvals = ylin_pix * pixelscale + ycen_idl
     func = RegularGridInterpolator(
         (yvals, xvals), hdu_list[ext].data, method='linear', bounds_error=False, fill_value=fill_value
     )
 
     # Create an array of (yidl, xidl) values to interpolate onto
     pts = np.array([ynew_idl.flatten(), xnew_idl.flatten()]).transpose()
+    # And then we interpolate from the input sampling onto the desired output sampling
     psf_new = func(pts).reshape(xnew.shape)
 
     if return_coords:
-        return (psf_new, xnew, ynew)
+        return (psf_new, xnew_idl, ynew_idl)
     else:
         return psf_new
 
