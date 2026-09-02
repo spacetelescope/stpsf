@@ -414,6 +414,39 @@ INSTRUMENT_IFU_BROADENING_PARAMETERS = {
     'MIRI': {'sigma': 0.05},
 }
 
+# Alignment information about instrument internal pupil masks
+INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS = {
+    'NIRCAM_SWA_MASKSWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCAM_SWA_MASKLWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCAM_SWA_MASK210R': {'pupil_shift_x': -0.0045, 'pupil_shift_y': -0.0019, 'pupil_rotation': -0.338},  # From M. Perrin, fits to ref star from pid 1411,
+    'NIRCAM_SWA_MASK335R': {'pupil_shift_x': 0.0090, 'pupil_shift_y': 0.0013, 'pupil_rotation': -0.083}, # from K. Lawson, fits to ref star from pid 4050
+    'NIRCAM_SWA_MASK430R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCAM_LWA_MASKSWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCAM_LWA_MASKLWB': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCAM_LWA_MASK210R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    'NIRCAM_LWA_MASK335R': {'pupil_shift_x': -0.0134, 'pupil_shift_y': -0.0076, 'pupil_rotation': -0.56},  # from K. Lawson, fits to ERS progid 1386 data
+    'NIRCAM_LWA_MASK430R': {'pupil_shift_x': None, 'pupil_shift_y': None, 'pupil_rotation': None},
+    # Draft placeholder values for MIRI based on Wright, Sabatke, & Telfer, 2022, Proc. SPIE
+    #    (∆V2, ∆V3) = (0.68%, -1.1%)
+    # note, sign is intentionally flipped in Y compared to that paper, since this is applied at MIRI's
+    # internal exit pupil image, which is flipped in Y relative to the primary entrance pupil
+    # These are *placeholder* values, and are pending refinement
+    'MIRI_MASKFQPM_FQPM1065': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+    'MIRI_MASKFQPM_FQPM1140': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+    'MIRI_MASKFQPM_FQPM1550': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+    'MIRI_MASKLYOT_LYOT2300': {'pupil_shift_x': 0.0068, 'pupil_shift_y': 0.011, 'pupil_rotation': None},
+}
+
+# The coronagraph mask central wavelengths as-built may not precisely match the nominal design wavelengths.
+# In particular there's a measured offset for the F1140C mask
+MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS = {
+        'FQPM1065': 10.65e-6,
+        'FQPM1140': 11.30e-6*1.03,   # priv. comm. A. Boccaletti and P. Baudoz. Empirically the best fit is 1.03 times the
+                                     #   filter central wavelength which is 11.3 microns,  distinct from the mask's
+                                     #   nominal wavelength of 11.40 microns.
+        'FQPM1550': 15.50e-6,
+        }
+
 # Information about the effects on WFE of the IEC thermal variations
 #
 # Table of value for IEC telemetry to WFE model. Coefficients from model fit by Randal Telfer
