@@ -358,7 +358,7 @@ class _RomanInstrumentOptionsDict(dict):
 class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
     """
     RomanInstrument contains data and functionality common to Roman
-    instruments, such as setting the pupil shape
+    instruments, such as setting the pupil shape.
     """
     telescope = 'Roman'
 
@@ -375,6 +375,9 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         self.options['add_distortion'] = 'NA'  # distortion can't be toggled
         self.options = _RomanInstrumentOptionsDict(self.options.copy())
 
+        # then, set defaults for options modifiable by users
+        self.options['add_ipc'] = False
+        # charge_diffusion_sigma set in RomanInstrument._calc_psf_format_output
         self.options['jitter'] = 'gaussian'
         self.options['jitter_sigma'] = constants.ROMAN_TYPICAL_LOS_JITTER_PER_AXIS
         # arcsec/axis, see https://github.com/RomanSpaceTelescope/roman-technical-information/tree/main/data/Observatory/MissionandObservatoryTechnicalOverview#telescope-parameters
@@ -514,6 +517,7 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         Modifies the 'result' HDUList object.
 
         """
+        _log.info('Adding PSF detector effects')
         # Set up new extensions for detector charge transfer model
         n_exts = len(result)
         for ext in np.arange(n_exts):
@@ -522,9 +526,10 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
             result.append(hdu_new)
             ext_new = ext + n_exts
             result[ext_new].header['EXTNAME'] = result[ext].header['EXTNAME'][0:4] + 'DIST'  # change extension name
-            _log.debug('Appending new extension {} with EXTNAME = {}'.format(ext_new, result[ext_new].header['EXTNAME']))
+            _log.info('Appending new extension {} with EXTNAME = {}'.format(ext_new, result[ext_new].header['EXTNAME']))
 
         # apply detector charge transfer model
+        _log.info('WFI: Adding charge diffusion')
         psf_updated = detectors.apply_detector_charge_diffusion(result,
                                                                 options)
 
@@ -536,6 +541,16 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
 
         # Rewrite result variable based on output_mode set:
         stpsf_core.SpaceTelescopeInstrument._calc_psf_format_output(self, result, options)
+
+        add_ipc = options.get('add_ipc', True)
+        if add_ipc and ('DET_DIST' in result):
+            # apply detector IPC model (after binning to detector sampling)
+            _log.info('WFI: Adding interpixel capacitance (IPC) to DET_DIST extension')
+            result = detectors.apply_detector_ipc(result)
+        if add_ipc and ('OVERDIST' in result):
+            # apply detector IPC model to oversampled PSF
+            _log.info('WFI: Adding interpixel capacitance (IPC) to OVERDIST extension')
+            result = detectors.apply_detector_ipc(result, extname='OVERDIST')
 
 
 class WFIPupilController:
