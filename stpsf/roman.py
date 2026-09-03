@@ -376,7 +376,7 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
         self.options = _RomanInstrumentOptionsDict(self.options.copy())
 
         # then, set defaults for options modifiable by users
-        self.options['add_ipc'] = False
+        self.options['add_ipc'] = True
         # charge_diffusion_sigma set in RomanInstrument._calc_psf_format_output
         self.options['jitter'] = 'gaussian'
         self.options['jitter_sigma'] = constants.ROMAN_TYPICAL_LOS_JITTER_PER_AXIS
