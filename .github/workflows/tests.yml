@@ -22,16 +22,18 @@ env:
   PYTHON_VERSIONS: 3.9 3.10 3.11 3.12 3.13 3.14
 
 jobs:
+  retrieve_cache:
+    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@ee1ced313cc7277f07226f03e64d038f3929d7a3 # setup retrieve_cache with development or latest_release
+    with:
+      dataset_type: development   # or latest_release
   check:
+    needs:
+      - retrieve_cache
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@4193751d511425d4edc1d5657c24b2128d49b017 # v2.6.4
     with:
       envs: |
         - name: Check for Sphinx doc build errors
           linux: py312-docbuild
-  retrieve_cache:
-    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@ee1ced313cc7277f07226f03e64d038f3929d7a3 # setup retrieve_cache with development or latest_release
-    with:
-      dataset_type: development   # or latest_release
   supported-pythons:
     runs-on: ubuntu-latest
     steps:
