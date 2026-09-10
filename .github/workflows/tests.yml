@@ -31,6 +31,10 @@ jobs:
       - retrieve_cache
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@4193751d511425d4edc1d5657c24b2128d49b017 # v2.6.4
     with:
+      setenv: |
+        STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
+      cache-path: ${{ needs.retrieve_cache.outputs.cache_path }}
+      cache-key: ${{ needs.retrieve_cache.outputs.cache_key }}
       envs: |
         - name: Check for Sphinx doc build errors
           linux: py312-docbuild
