@@ -71,7 +71,7 @@ def test_WFI_fwhm():
     """
     wfi = roman.WFI()
 
-    wfi.pupilopd = None
+    wfi._pupilopd = None
     wfi.options['jitter'] = None
 
     wfi.filter = 'F062'
@@ -251,8 +251,8 @@ def test_WFI_limits_interpolation_range():
 
     # Get min and max valid wavelengths from aberration file
     zern = Table.read(wfi._aberration_files[wfi.mode], format='ascii.csv')
-    min_wv = zern['wavelength'][0] * 1e-6  # convert from micron to meter
-    max_wv = zern['wavelength'][-1] * 1e-6
+    min_wv = zern['wave'][0] * 1e-9  # convert from nm to meter
+    max_wv = zern['wave'][-1] * 1e-9
 
     # Test that get_aberration_terms() uses an approximated wavelength when
     # called with an out-of-bounds wavelength.
@@ -290,3 +290,15 @@ def test_WFI_auto_aperturename_and_pixelscale():
 
     aperture = wfi.siaf[wfi.aperturename]
     assert wfi.pixelscale == (aperture.XSciScale + aperture.YSciScale)/2, "Pixel scale should match the SIAF for that aperturename"
+
+
+def test_sci_xy_to_fp():
+    """Test corners match expectations"""
+    corner_data = ( ((0,0), 21),  # lower left
+                    ((0, 4096), 25),  # upper left
+                    ((4096, 0), 1),  # lower right
+                    ((4096, 4096), 5)  # upper right
+                  )
+    for (x, y), fp in corner_data:
+        assert roman._wfi_sci_xy_to_fp(x, y) == fp  # test xy->fp
+        assert roman._wfi_sci_xy_to_fp(*roman._wfi_fp_to_sci_xy(fp)) == fp , f'round trip error for fp {fp}'  # test round trip
