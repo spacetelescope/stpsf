@@ -22,16 +22,22 @@ env:
   PYTHON_VERSIONS: 3.9 3.10 3.11 3.12 3.13 3.14
 
 jobs:
-  check:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@4193751d511425d4edc1d5657c24b2128d49b017 # v2.6.4
-    with:
-      envs: |
-        - name: Check for Sphinx doc build errors
-          linux: py312-docbuild
   retrieve_cache:
     uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@ee1ced313cc7277f07226f03e64d038f3929d7a3 # setup retrieve_cache with development or latest_release
     with:
       dataset_type: development   # or latest_release
+  check:
+    needs:
+      - retrieve_cache
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@22ddf09dfabb443adddfb9f861b7d41a787d6b1a # v3.0.3
+    with:
+      setenv: |
+        STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
+      cache-path: ${{ needs.retrieve_cache.outputs.cache_path }}
+      cache-key: ${{ needs.retrieve_cache.outputs.cache_key }}
+      envs: |
+        - name: Check for Sphinx doc build errors
+          linux: py312-docbuild
   supported-pythons:
     runs-on: ubuntu-latest
     steps:
@@ -65,12 +71,12 @@ jobs:
     outputs:
       python-version-json: ${{ steps.versions.outputs.json }}
       oldest: ${{ steps.versions.outputs.oldest }}
-      latest: ${{ steps.versions.outputs.latest }} 
+      latest: ${{ steps.versions.outputs.latest }}
   test:
     needs:
       - retrieve_cache
       - supported-pythons
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@4193751d511425d4edc1d5657c24b2128d49b017 # v2.6.4
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@22ddf09dfabb443adddfb9f861b7d41a787d6b1a # v3.0.3
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -86,7 +92,7 @@ jobs:
           linux: py3-cov-xdist
           python-version: ${{ needs.supported-pythons.outputs.latest }}
           pytest-results-summary: true
-          coverage: codecov
+          coverage: github
         - name: run tests (latest supported Python, ubuntu-latest)
           linux: py3-xdist
           python-version: ${{ needs.supported-pythons.outputs.latest }}
@@ -99,8 +105,6 @@ jobs:
         - name: run tests with poppy dev (latest support Python, ubuntu-latest)
           linux: py3-poppydev-xdist
           python-version: ${{ needs.supported-pythons.outputs.latest }}
-      fill: true
-      fill_platforms: linux
-      fill_factors: xdist
+        - linux: py3*-xdist
       artifact-path: |
         results.xml
