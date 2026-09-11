@@ -105,8 +105,6 @@ jobs:
         - name: run tests with poppy dev (latest support Python, ubuntu-latest)
           linux: py3-poppydev-xdist
           python-version: ${{ needs.supported-pythons.outputs.latest }}
-      fill: true
-      fill_platforms: linux
-      fill_factors: xdist
+        - linux: py3*-xdist
       artifact-path: |
         results.xml
