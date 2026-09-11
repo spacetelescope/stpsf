@@ -29,7 +29,7 @@ jobs:
   check:
     needs:
       - retrieve_cache
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@4193751d511425d4edc1d5657c24b2128d49b017 # v2.6.4
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@22ddf09dfabb443adddfb9f861b7d41a787d6b1a # v3.0.3
     with:
       setenv: |
         STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
@@ -76,7 +76,7 @@ jobs:
     needs:
       - retrieve_cache
       - supported-pythons
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@4193751d511425d4edc1d5657c24b2128d49b017 # v2.6.4
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@22ddf09dfabb443adddfb9f861b7d41a787d6b1a # v3.0.3
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
@@ -92,7 +92,7 @@ jobs:
           linux: py3-cov-xdist
           python-version: ${{ needs.supported-pythons.outputs.latest }}
           pytest-results-summary: true
-          coverage: codecov
+          coverage: github
         - name: run tests (latest supported Python, ubuntu-latest)
           linux: py3-xdist
           python-version: ${{ needs.supported-pythons.outputs.latest }}
