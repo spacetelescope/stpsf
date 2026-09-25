@@ -7,16 +7,17 @@ import stpsf
 
 
 def setup_sim_to_match_file(filename_or_HDUList_or_datamodel, verbose=True, plot=False, choice='closest'):
-    """Setup a stpsf Instrument instance matched to a given dataset
+    """Set up an stpsf Instrument instance matched to a given dataset
 
     The input can flexibly be either:
      - a string filename, either of a JWST FITS file or a Roman ASDF file
      - a FITS HDUList instance, for JWST data
+     - a JwstDataModel instance, for JWST data
      - a roman_datamodels.DataModel instance, for Roman data
 
     Parameters
     ----------
-    filename_or_HDUlist_or_datamodel : str or astropy.io.fits HDUList or Roman Datamodel
+    filename_or_HDUlist_or_datamodel : str, astropy.io.fits HDUList, JwstDataModel, or Roman Datamodel
         file to load
     verbose : bool
         be more verbose?
