@@ -450,9 +450,9 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         # add coord transform from entrance pupil to exit pupil
         # (WFI: invert both axes until pupil orientations fixed in source files)
         if self.name == 'WFI':
-            optsys.add_inversion(axis='both', name='OTE exit pupil', hide=True)
+            optsys.add_inversion(axis='both', name='OTA exit pupil', hide=True)  # for Roman the telescope is called the OT*A*
         else:
-            optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)
+            optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)     # for JWST the telescope is called the OT*E*
 
         # add rotation at this point, if present - needs to be after the
         # exit pupil inversion.

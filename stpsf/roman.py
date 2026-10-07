@@ -301,7 +301,7 @@ def _load_wfi_detector_aberrations(filename):
         field_points = set(single_detector_info[fp_col])
         detector = FieldDependentAberration(
             WFI.NPIXELS, WFI.NPIXELS, radius=constants.ROMAN_PUPIL_DIAMETER/2,
-            name=f"Field Dependent Aberration (WFI{number:02d})"
+            name=f"Field Dependent Aberration, Low+Mid Freq. WFE for WFI{number:02d}"
         )
         for field_id in field_points:
             field_point_rows = single_detector_info[single_detector_info[fp_col] == field_id]
@@ -832,6 +832,13 @@ class WFI(RomanInstrument):
 
         self._detectors = detectors_dict
         self._current_aberration_file = path
+
+    def _get_telescope_pupil_and_aberrations(self):
+        # invoke the superclass function then customize the optic name
+        # no functional impact; this is just cosmetic for display purposes and clarity
+        pupil_optic = super()._get_telescope_pupil_and_aberrations()
+        pupil_optic.name = f"Roman Entrance Pupil, with High Freq. WFE for {self.detector}"
+        return pupil_optic
 
     def _validate_config(self, **kwargs):
         """
