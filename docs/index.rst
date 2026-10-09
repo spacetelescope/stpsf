@@ -25,7 +25,6 @@ STPSF has been developed by Marshall Perrin, Marcio Meléndez, Shannon Osborne, 
 
 Getting Started with STPSF
 ----------------------------
-stsci Roman helpdesk
 
 See `Using STPSF <usage.html>`_.
 
@@ -36,7 +35,9 @@ See `Using STPSF <usage.html>`_.
 
 .. admonition:: Getting Help
 
-   For help using or installing stpsf, you can contact the STScI JWST Help Desk at jwsthelp.stsci.edu, category STPSF/JWST Telescope.
+   For help using or installing stpsf, you can contact the STScI JWST Help Desk at jwsthelp.stsci.edu, category STPSF/JWST Telescope. For support with Roman STPSF, please contact the
+`Roman Help Desk <https://stsci.service-now.com/roman>`_.
+
 
 
 :ref:`What's new in the latest release? <whatsnew>`
