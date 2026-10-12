@@ -68,6 +68,10 @@ def do_test_miri_fqpm(
         psf.writeto(fn, clobber=clobber)
 
     # FIXME - add some assertion tests here.
+    # Check that we have set the pupil shifts based on the default
+    assert psf[0].header['PUPLSHFX'] == stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS['MIRI_MASKFQPM_'+miri.image_mask]['pupil_shift_x']
+    assert psf[0].header['PUPLSHFY'] == stpsf.constants.INSTRUMENT_PUPIL_MASK_DEFAULT_POSITIONS['MIRI_MASKFQPM_'+miri.image_mask]['pupil_shift_y']
+    assert psf[0].header['FQPMWAVE'] == stpsf.constants.MIRI_CORONAGRAPH_CENTRAL_WAVELENGTHS[miri.image_mask]
 
 
 def test_miri_fqpm_centered(*args, **kwargs):
