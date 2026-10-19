@@ -35,7 +35,9 @@ See `Using STPSF <usage.html>`_.
 
 .. admonition:: Getting Help
 
-   For help using or installing stpsf, you can contact the STScI JWST Help Desk at jwsthelp.stsci.edu, category STPSF/JWST Telescope.
+   For help using or installing stpsf, you can contact the STScI JWST Help Desk at jwsthelp.stsci.edu, category STPSF/JWST Telescope. For support with Roman STPSF, please contact the
+`Roman Help Desk <https://stsci.service-now.com/roman>`_.
+
 
 
 :ref:`What's new in the latest release? <whatsnew>`
@@ -75,6 +77,8 @@ Contents
    :caption: Modeling Roman PSFs
 
    roman.rst
+   STPSF_Roman_Multi_Field.ipynb
+   STPSF_Roman_Pupil_Orientation.ipynb
 
 .. toctree::
    :maxdepth: 1
@@ -91,6 +95,7 @@ Contents
    :maxdepth: 1
    :caption: Developer Reference
 
+   STPSF_Roman_Multi_Field.ipynb
    available_opds.rst
    field_dependence/multifield_documentation.ipynb
    references.rst
