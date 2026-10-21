@@ -29,7 +29,7 @@ jobs:
   check:
     needs:
       - retrieve_cache
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.0.3
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
     with:
       setenv: |
         STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
@@ -76,7 +76,7 @@ jobs:
     needs:
       - retrieve_cache
       - supported-pythons
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.0.3
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
