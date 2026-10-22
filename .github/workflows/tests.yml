@@ -29,7 +29,7 @@ jobs:
   check:
     needs:
       - retrieve_cache
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@22ddf09dfabb443adddfb9f861b7d41a787d6b1a # v3.0.3
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
     with:
       setenv: |
         STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
@@ -47,6 +47,8 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3"
+      - name: Set latest pip version
+        run: python -m pip install -U pip
       - run: pip install packaging tomli
       - name: convert Python version(s) into JSON list
         id: versions
@@ -76,7 +78,7 @@ jobs:
     needs:
       - retrieve_cache
       - supported-pythons
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@22ddf09dfabb443adddfb9f861b7d41a787d6b1a # v3.0.3
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:

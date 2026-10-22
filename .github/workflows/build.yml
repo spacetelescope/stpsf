@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3"
+      - name: Set latest pip version
+        run: python -m pip install -U pip
       - run: pip install build
       - run: python -m build --sdist --wheel
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -53,4 +55,4 @@ jobs:
         with:
           subject-path: "dist/*"
       # To upload to PyPI without a token, add this workflow file as a Trusted Publisher in the project settings on the PyPI website
-      - uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
