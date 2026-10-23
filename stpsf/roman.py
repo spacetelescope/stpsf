@@ -460,7 +460,7 @@ class RomanInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     @detector_position.setter
     def detector_position(self, position):
-        """Save new detector pixel position into the each detector's
+        """Save new detector pixel position into each detector's
         FieldDependentAberration instance. Update index of matching field
         point's slice in pupil file data cube."""
         try:

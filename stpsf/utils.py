@@ -912,7 +912,7 @@ def combine_docstrings(cls):
                 # i1: pull WFI-specific params
                 # get first letter in substring starting after "Parameters"
                 ind_i_post_params = ind_i0 + len(params)
-                ind_i_let = re.search('\w',
+                ind_i_let = re.search(r'\w',
                                       inst_doc[ind_i_post_params:]).span()[0]
 
                 # get last newline character before that letter in the substring
