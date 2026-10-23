@@ -10,10 +10,9 @@ import poppy
 import poppy.utils
 from astropy.table import Table
 from scipy.interpolate import RegularGridInterpolator, griddata
-from scipy.ndimage import rotate
-from scipy.ndimage import zoom
+from scipy.ndimage import rotate, zoom
 
-from . import constants, utils, stpsf_core
+from . import constants, stpsf_core, utils
 
 _log = logging.getLogger('stpsf')
 
@@ -92,7 +91,7 @@ class WebbPrimaryAperture(poppy.AnalyticOpticalElement):
     """
 
     def __init__(self, name='WebbPrimaryAperture', label_segments=False, **kwargs):
-        super(WebbPrimaryAperture, self).__init__(name=name, **kwargs)
+        super().__init__(name=name, **kwargs)
         self.label_segments = label_segments
         self.segdata = constants.JWST_PRIMARY_SEGMENTS
         self.strutdata = constants.JWST_PRIMARY_STRUTS
@@ -167,12 +166,12 @@ class WebbOTEPupil(poppy.FITSOpticalElement):
                 utils.get_stpsf_data_path(),
                 self.instr_name,
                 'OPD',
-                'OPD_RevW_ote_for_{}_{}.fits'.format(self.instr_name, level),
+                f'OPD_RevW_ote_for_{self.instr_name}_{level}.fits',
             )
         else:
             raise ValueError('Invalid/unknown wavefront error level')
 
-        super(WebbOTEPupil, self).__init__(name='JWST Primary', transmission=aperture_file, opd=opd_file, **kwargs)
+        super().__init__(name='JWST Primary', transmission=aperture_file, opd=opd_file, **kwargs)
 
         if self.instrument is not None:
             # we need a field point to be able to use this so
@@ -397,7 +396,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # UPDATED NUMBERS 2013-07:
         # See Document FGS_TFI_UdM_035_RevD
 
-        _log.debug('Computing properties for {0} grism'.format(which))
+        _log.debug(f'Computing properties for {which} grism')
         if which == 'Bach':
             # ---- Phase properties ---------------
             # 3.994 microns P-V over 27.02 mm measured (Loic's email)
@@ -476,7 +475,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         x = np.cos(ang) * x - np.sin(ang) * y
         y = np.sin(ang) * x + np.cos(ang) * y
 
-        _log.debug(' Rotating local grism axes by {0} degrees'.format(self.cylinder_rotation_angle))
+        _log.debug(f' Rotating local grism axes by {self.cylinder_rotation_angle} degrees')
 
         # From IDL code by David Lafreniere:
         #  ;the cylindrical defocus
@@ -498,18 +497,16 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         #  * actual chord length across cylinder: 27.02 mm.
         #  * projected primary scale at NIRISS = ?
 
-        _log.debug(' Computing GR700XD cylinder based on RoC: {0:.3g} meters'.format(self.cylinder_radius))
+        _log.debug(f' Computing GR700XD cylinder based on RoC: {self.cylinder_radius:.3g} meters')
         _log.debug(
-            ' Computing GR700XD cylinder based on pupil demagnification: {0:.3g} primary to grism'.format(
-                self.pupil_demagnification
-            )
+            f' Computing GR700XD cylinder based on pupil demagnification: {self.pupil_demagnification:.3g} primary to grism'
         )
 
         # Compute the overall sag of the cylinder lens at its outer edge. This is not actually used, it's
         # just for cross-check of the values
         # the sag will depend on half the pupil size since that's the offset from center to edge
         sag0 = np.sqrt(self.cylinder_radius**2 - (self.prism_size / 2) ** 2) - self.cylinder_radius
-        _log.debug(' Computed GR700XD cylinder sag at lens outer edge (for cross check only): {0:.3g} meters'.format(sag0))
+        _log.debug(f' Computed GR700XD cylinder sag at lens outer edge (for cross check only): {sag0:.3g} meters')
 
         # now compute the spatially dependent sag of the cylinder, as projected onto the primary
 
@@ -524,7 +521,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         # y0=(rpuppix**2+self.cylinder_sag**2)/(2*self.cylinder_sag)
         # wfe1=y0-np.sqrt(y0**2-x**2)
 
-        _log.debug(' Cylinder P-V: {0:.4g} meters physical sag across full array'.format(sag.max() - sag.min()))
+        _log.debug(f' Cylinder P-V: {sag.max() - sag.min():.4g} meters physical sag across full array')
 
         # no OPD in opaque regions (makes no difference in propagation but improves display)
         if self._transmission.shape != sag.shape:
@@ -532,18 +529,16 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         sag[self._transmission == 0] = 0
         wnz = np.where(self._transmission != 0)  # use this just for display of the log messages:
         _log.debug(
-            ' Cylinder P-V: {0:.4g} meters physical sag across clear aperture'.format(sag[wnz].max() - sag[wnz].min())
+            f' Cylinder P-V: {sag[wnz].max() - sag[wnz].min():.4g} meters physical sag across clear aperture'
         )
 
         # scale for index of refraction
         index = self.ZnS_index(wavelength)
         opd = sag * (index - 1)
         lambda_micron = wavelength.to(units.micron).value
-        _log.debug(' Scaling for ZnS index of refraction {0} at {1:.3g} microns'.format(index, lambda_micron))
+        _log.debug(f' Scaling for ZnS index of refraction {index} at {lambda_micron:.3g} microns')
         _log.debug(
-            ' Cylinder P-V: {0:.4g} meters optical sag at {1:.3g} microns across clear aperture'.format(
-                opd[wnz].max() - opd[wnz].min(), lambda_micron
-            )
+            f' Cylinder P-V: {opd[wnz].max() - opd[wnz].min():.4g} meters optical sag at {lambda_micron:.3g} microns across clear aperture'
         )
         return opd
 
@@ -561,7 +556,7 @@ class NIRISS_GR700XD_Grism(poppy.AnalyticOpticalElement):
         x = np.cos(ang) * x - np.sin(ang) * y
         y = np.sin(ang) * x + np.cos(ang) * y
 
-        _log.debug('Rotating local pupil mask axes by {0} degrees'.format(self.cylinder_rotation_angle))
+        _log.debug(f'Rotating local pupil mask axes by {self.cylinder_rotation_angle} degrees')
 
         pupil_halfsize_m = self.pupil_size_mm / 2 / 1000 * self.pupil_demagnification
         pupilmask = np.ones_like(x)
@@ -722,7 +717,7 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
         auto_offset=None,
         **kwargs,
     ):
-        super(NIRCam_BandLimitedCoron, self).__init__(name=name, kind=kind, **kwargs)
+        super().__init__(name=name, kind=kind, **kwargs)
         if module not in ['A', 'B']:
             raise ValueError("module parameter must be 'A' or 'B'.")
         self.module = module
@@ -775,18 +770,18 @@ class NIRCam_BandLimitedCoron(poppy.BandLimitedCoron):
             try:
                 bar_offset = offsets[auto_offset]
                 _log.debug(
-                    'Set bar offset to {} based on requested filter {} on {}.'.format(bar_offset, auto_offset, self.name)
+                    f'Set bar offset to {bar_offset} based on requested filter {auto_offset} on {self.name}.'
                 )
             except (KeyError, IndexError):
                 raise ValueError(
-                    'Filter {} does not have a defined nominal offset position along {}'.format(auto_offset, self.name)
+                    f'Filter {auto_offset} does not have a defined nominal offset position along {self.name}'
                 )
 
         if bar_offset is not None:
             if self.kind == 'nircamcircular':
                 raise ValueError('bar_offset option only makes sense with the bar occulters.')
             self.bar_offset = float(bar_offset)
-            _log.debug('Set offset along {} to {} arcsec.'.format(self.name, self.bar_offset))
+            _log.debug(f'Set offset along {self.name} to {self.bar_offset} arcsec.')
         else:
             self.bar_offset = None
 
@@ -1244,7 +1239,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
     """
 
     def __init__(self, instrument, include_oversize=False, **kwargs):
-        super(WebbFieldDependentAberration, self).__init__(name='Aberrations', **kwargs)
+        super().__init__(name='Aberrations', **kwargs)
 
         self.instrument = instrument
         self.instr_name = instrument.name
@@ -1253,7 +1248,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
         is_nrc_coron = False  # Define NRC coronagraph variable for conciseness
         if instrument.name == 'NIRCam':
             channel = instrument.channel[0].upper()
-            lookup_name = 'NIRCam{channel}W{module}'.format(channel=channel, module=instrument.module)
+            lookup_name = f'NIRCam{channel}W{instrument.module}'
             # Check for coronagraphy; Set is_ncr_coron to True for Lyot pupil mask
             pupil_mask = self.instrument._pupil_mask
             is_nrc_coron = (pupil_mask is not None) and (('LYOT' in pupil_mask.upper()) or ('MASK' in pupil_mask.upper()))
@@ -1276,8 +1271,8 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
 
         if not os.path.exists(zernike_file):
             raise RuntimeError(
-                'Could not find Zernike coefficients file {} \
-                               in STPSF data directory'.format(zfile)
+                f'Could not find Zernike coefficients file {zfile} \
+                               in STPSF data directory'
             )
         else:
             self.ztable_full = Table.read(zernike_file)
@@ -1307,7 +1302,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
         v2_tel, v3_tel = telcoords_am
         coeffs = []
         for i in range(1, 37):
-            zkey = 'Zernike_{}'.format(i)
+            zkey = f'Zernike_{i}'
             zvals = self.ztable[zkey]
 
             # Cubic interpolation of of non-uniform 2D grid
@@ -1451,7 +1446,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
         keywords['SIWFETYP'] = self.si_wfe_type
         keywords['SIWFEFPT'] = (self.row['field_point_name'], 'Closest ISIM CV3 WFE meas. field point')
         for i in range(1, 36):
-            keywords['SIZERN{}'.format(i)] = (self.zernike_coeffs[i - 1], '[m] SI WFE coeff for Zernike term {}'.format(i))
+            keywords[f'SIZERN{i}'] = (self.zernike_coeffs[i - 1], f'[m] SI WFE coeff for Zernike term {i}')
         return keywords
 
     # wrapper just to change default vmax
@@ -1459,7 +1454,7 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
         if 'opd_vmax' not in kwargs:
             kwargs.update({'opd_vmax': 2.5e-7})
 
-        return super(WebbFieldDependentAberration, self).display(*args, **kwargs)
+        return super().display(*args, **kwargs)
 
 
 class NIRSpecFieldDependentAberration(WebbFieldDependentAberration):
@@ -1481,7 +1476,7 @@ class NIRSpecFieldDependentAberration(WebbFieldDependentAberration):
     """
 
     def __init__(self, instrument, where='fore', **kwargs):
-        super(NIRSpecFieldDependentAberration, self).__init__(instrument, **kwargs)
+        super().__init__(instrument, **kwargs)
 
         if where == 'fore':
             self.name = 'NIRSpec fore-optics WFE, near {}'.format(self.row['field_point_name'])
@@ -1508,7 +1503,7 @@ class NIRCamFieldAndWavelengthDependentAberration(WebbFieldDependentAberration):
     """
 
     def __init__(self, instrument, **kwargs):
-        super(NIRCamFieldAndWavelengthDependentAberration, self).__init__(instrument, **kwargs)
+        super().__init__(instrument, **kwargs)
 
         # Polynomial equations fit to defocus model. Wavelength-dependent focus
         # results should correspond to Zernike coefficients in meters.
@@ -1600,7 +1595,7 @@ class NIRCamFieldAndWavelengthDependentAberration(WebbFieldDependentAberration):
             deltafocus = focusmodel(wave_um) - opd_ref_focus
 
         _log.info('  Applying OPD focus adjustment based on NIRCam focus vs wavelength model')
-        _log.info('  Modified focus from {} to {} um: {:.3f} nm wfe'.format(opd_ref_wave, wave_um, -deltafocus * 1e9))
+        _log.info(f'  Modified focus from {opd_ref_wave} to {wave_um} um: {-deltafocus * 1e9:.3f} nm wfe')
 
         # Apply defocus
         mod_opd = self.opd - deltafocus * self.defocus_zern
@@ -1619,13 +1614,13 @@ class NIRCamFieldAndWavelengthDependentAberration(WebbFieldDependentAberration):
 
             tilt_offset = ctilt_model(wave_um) - ctilt_model(ta_ref_wave)
             _log.info('  Applying OPD tilt adjustment based on NIRCam tilt vs wavelength model')
-            _log.info('  Modified tilt from {} to {} um: {:.3f} nm wfe'.format(ta_ref_wave, wave_um, tilt_offset * 1e9))
+            _log.info(f'  Modified tilt from {ta_ref_wave} to {wave_um} um: {tilt_offset * 1e9:.3f} nm wfe')
 
             # Apply tilt offset
             mod_opd = mod_opd + tilt_offset * self.tilt_zern
 
         rms = np.sqrt((mod_opd[mod_opd != 0] ** 2).mean())
-        _log.info('  Resulting OPD has {:.3f} nm rms'.format(rms * 1e9))
+        _log.info(f'  Resulting OPD has {rms * 1e9:.3f} nm rms')
 
         return mod_opd
 
@@ -1643,7 +1638,7 @@ class MIRIFieldDependentAberrationAndObscuration(WebbFieldDependentAberration):
     """
 
     def __init__(self, instrument, include_oversize=True, **kwargs):
-        super(MIRIFieldDependentAberrationAndObscuration, self).__init__(
+        super().__init__(
             instrument, include_oversize=include_oversize, **kwargs
         )
 
@@ -1945,7 +1940,7 @@ class LookupTableFieldDependentAberration(poppy.OpticalElement):
 
         if add_sm_defocus:
             if nwaves:
-                print('ADDING DEFOCUS {:4.1f} WAVES at 2.0 microns'.format(nwaves))
+                print(f'ADDING DEFOCUS {nwaves:4.1f} WAVES at 2.0 microns')
                 self.instrument.options['defocus_waves'] = nwaves
                 self.instrument.options['defocus_wavelength'] = 2.0e-6
             else:

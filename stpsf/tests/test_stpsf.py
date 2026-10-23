@@ -19,7 +19,7 @@ def generic_output_test(iname):
     This is repeated for each SI (probably overkill but let's be thorough.)
     """
 
-    _log.info('Testing image output sizes for %s ' % iname)
+    _log.info(f'Testing image output sizes for {iname} ')
     inst = stpsf_core.instrument(iname)
     pxscale = inst.pixelscale
     fov_arcsec = 5.0
@@ -100,8 +100,8 @@ def do_test_source_offset(iname, distance=0.5, nsteps=1, theta=0.0, tolerance=0.
     center_pix = (psfs[0][0].data.shape[0] - 1) / 2.0
     assert abs(cent0[0] == center_pix) < 1e-3
     assert abs(cent0[1] == center_pix) < 1e-3
-    _log.info('Center of unshifted image: ({0:.3f}, {1:.3f}) pixels measured'.format(*cent0))
-    _log.info(' vs center of the array is ({0}, {0})'.format(center_pix))
+    _log.info('Center of unshifted image: ({:.3f}, {:.3f}) pixels measured'.format(*cent0))
+    _log.info(f' vs center of the array is ({center_pix}, {center_pix})')
 
     if display:
         poppy.display_PSF(psfs[0])
@@ -114,15 +114,15 @@ def do_test_source_offset(iname, distance=0.5, nsteps=1, theta=0.0, tolerance=0.
         cent = poppy.measure_centroid(psfs[i])
         rx = shift_req[i] * (-np.sin(theta * np.pi / 180))
         ry = shift_req[i] * (np.cos(theta * np.pi / 180))
-        _log.info('   Shift_requested:\t(%10.3f, %10.3f) arcsec' % (rx, ry))
+        _log.info(f'   Shift_requested:\t({rx:10.3f}, {ry:10.3f}) arcsec')
         shift = (cent - cent0) * (si.pixelscale / oversample)
-        _log.info('   Shift_achieved: \t(%10.3f, %10.3f) arcsec' % (shift[1], shift[0]))
+        _log.info(f'   Shift_achieved: \t({shift[1]:10.3f}, {shift[0]:10.3f}) arcsec')
 
         deltax = abs(rx - shift[1])
         deltay = abs(ry - shift[0])
-        _log.info('   X offset:\t{0:.3f}\t\tTolerance:\t{1:.3f}'.format(deltax, (si.pixelscale * tolerance)))
+        _log.info(f'   X offset:\t{deltax:.3f}\t\tTolerance:\t{si.pixelscale * tolerance:.3f}')
         assert deltax < (si.pixelscale * tolerance)
-        _log.info('   Y offset:\t{0:.3f}\t\tTolerance:\t{1:.3f}'.format(deltay, (si.pixelscale * tolerance)))
+        _log.info(f'   Y offset:\t{deltay:.3f}\t\tTolerance:\t{si.pixelscale * tolerance:.3f}')
         assert deltay < (si.pixelscale * tolerance)
 
 
@@ -144,7 +144,7 @@ def test_opd_selected_by_default():
     ]
     for InstrumentClass in instruments:
         ins = InstrumentClass()
-        assert ins.pupilopd is not None, 'No pupilopd set for {}'.format(InstrumentClass)
+        assert ins.pupilopd is not None, f'No pupilopd set for {InstrumentClass}'
 
 
 def test_calc_psf_rectangular_FOV():

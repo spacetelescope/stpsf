@@ -1,5 +1,5 @@
-import logging
 import itertools
+import logging
 import os
 from collections import OrderedDict
 
@@ -8,7 +8,6 @@ import numpy as np
 import poppy
 from astropy.io import fits
 from astropy.nddata import NDData
-from photutils.psf import GriddedPSFModel
 
 import stpsf.detectors
 
@@ -179,8 +178,7 @@ class CreatePSFLibrary:
         if 'add_distortion' in kwargs and instrument.telescope == 'Roman':
             _log.warn('Note that the add_distortion argument no longer affects '
                       'Roman instrument simulations. All WFI PSFs natively '
-                      'include distortion effects and all RomanCoronagraph '
-                      'PSFs do not.')
+                      'include distortion effects.')
         elif 'add_distortion' not in kwargs and instrument.telescope != 'Roman':
             self.add_distortion = True
             kwargs['add_distortion'] = self.add_distortion
@@ -308,7 +306,7 @@ class CreatePSFLibrary:
 
         # For every filter
         if self.verbose is True:
-            print('\nRunning instrument: {}, filter: {}'.format(self.instr, self.filter))
+            print(f'\nRunning instrument: {self.instr}, filter: {self.filter}')
 
         # Set filter
         self.webb.filter = self.filter
@@ -317,7 +315,7 @@ class CreatePSFLibrary:
         model_list = []
         for k, det in enumerate(self.detector_list):
             if self.verbose is True:
-                print('  Running detector: {}'.format(det))
+                print(f'  Running detector: {det}')
 
             # Create an array to fill ([i, y, x])
             psf_size = self.fov_pixels * self.oversample
@@ -330,7 +328,7 @@ class CreatePSFLibrary:
                 self.webb.detector_position = loc  # (X,Y) - line 286 in stpsf_core.py
 
                 if self.verbose is True:
-                    print('    Position {}/{}: {} pixels'.format(i + 1, len(self.location_list), loc))
+                    print(f'    Position {i + 1}/{len(self.location_list)}: {loc} pixels')
 
                 add_ipc_gridded = (
                     False  # add variable to keep track of if this function locally changed the user's IPC input
@@ -344,7 +342,7 @@ class CreatePSFLibrary:
                 psf = self.webb.calc_psf(**self._kwargs)
                 if self.verbose is True:
                     cntrd = poppy.measure_centroid(psf)
-                    print('    Position {}/{} centroid: {}'.format(i + 1, len(self.location_list), cntrd))
+                    print(f'    Position {i + 1}/{len(self.location_list)} centroid: {cntrd}')
 
                 # Convolve PSF with a square kernel for the detector pixel response function
                 psf[ext].data = astropy.convolution.convolve(psf[ext].data, kernel)
@@ -393,9 +391,9 @@ class CreatePSFLibrary:
                 if self.fov_pixels % 2 == 0:
                     loc += 0.5  # even arrays must be at a half pixel
 
-                meta['DET_YX{}'.format(h)] = (
+                meta[f'DET_YX{h}'] = (
                     str((float(loc[1]), float(loc[0]))),
-                    "The #{} PSF's (y,x) detector pixel position".format(h),
+                    f"The #{h} PSF's (y,x) detector pixel position",
                 )
 
             meta['NUM_PSFS'] = (self.num_psfs, 'The total number of fiducial PSFs')
@@ -407,7 +405,7 @@ class CreatePSFLibrary:
 
                 for key in list(psf[ext].header.keys()):
                     if 'COEF_' in key:
-                        meta[key] = (psf[ext].header[key], 'SIAF distortion coefficient for {}'.format(key))
+                        meta[key] = (psf[ext].header[key], f'SIAF distortion coefficient for {key}')
 
                 if self.instr in ['NIRCam', 'NIRISS', 'FGS']:
                     meta['ROTATION'] = (psf[ext].header['ROTATION'], 'PSF rotated to match detector rotation')
@@ -545,17 +543,15 @@ class CreatePSFLibrary:
         # Set file information
         if self.filename is None:
             # E.g. filename: nircam_nrca1_f090w_fovp1000_samp4_npsf16.fits
-            file = '{}_{}_{}_fovp{}_samp{}_npsf{}.fits'.format(
-                self.instr.lower(), detector.lower(), self.filter.lower(), self.fov_pixels, self.oversample, self.num_psfs
-            )
+            file = f'{self.instr.lower()}_{detector.lower()}_{self.filter.lower()}_fovp{self.fov_pixels}_samp{self.oversample}_npsf{self.num_psfs}.fits'
         else:
-            file = self.filename.split('.fits')[0] + '_{}.fits'.format(detector.lower())
+            file = self.filename.split('.fits')[0] + f'_{detector.lower()}.fits'
 
         if self.outdir is not None:
             file = os.path.join(self.outdir, file)
 
         if self.verbose is True:
-            print('  Saving file: {}'.format(file))
+            print(f'  Saving file: {file}')
 
         hdu.writeto(file, overwrite=self.overwrite)
 
@@ -613,7 +609,7 @@ def display_psf_grid(grid, zoom_in=True, figsize=(14, 12), scale_range=1e-4, dif
                 im = axes[n - 1 - iy, ix].imshow(data[i], norm=norm, cmap=cmap, origin='lower')
                 axes[n - 1 - iy, ix].xaxis.set_visible(False)
                 axes[n - 1 - iy, ix].yaxis.set_visible(False)
-                axes[n - 1 - iy, ix].set_title('{}'.format(array_to_int(grid.grid_xypos[i])))
+                axes[n - 1 - iy, ix].set_title(f'{array_to_int(grid.grid_xypos[i])}')
                 if zoom_in:
                     axes[n - 1 - iy, ix].use_sticky_edges = False
                     axes[n - 1 - iy, ix].margins(x=-0.25, y=-0.25)

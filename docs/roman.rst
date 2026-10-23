@@ -3,11 +3,9 @@ Roman Instrument Model Details
 *******************************
 
 
-STPSF provides a framework for instrument PSF calculations that is extensible
-to other instruments and observatories. For example, the :py:mod:`stpsf.roman`
-module enables simulations of Roman's instruments,
-the :ref:`Wide Field Instrument (WFI) <roman_wfi>` and :ref:`Coronagraph Instrument <roman_coronagraph>`.
-
+The :py:mod:`stpsf.roman`
+module enables simulations of Roman's
+:ref:`Wide Field Instrument (WFI) <roman_wfi>`.
 
 .. _roman_wfi:
 
@@ -196,57 +194,13 @@ The pupil and pupil mask are dynamically selected as needed whenever the detecto
 Coronagraph Instrument
 ======================
 
-We have begun developing a Coronagraph Instrument simulation module.
-The goal is to provide
-an open source modeling package for the Coronagraph Instrument for use by the science centers and
-science teams, to complement the existing in-house optical modeling
-capabilities at JPL.
+.. admonition:: Quickstart Jupyter Notebook
 
-Currently a prototype implementation is available for the shaped pupil
-coronagraph modes only, for both the Coronagraph imager and IFS. Future releases will incorporate realistic aberrations, both
-static and dynamic, to produce realistic speckle fields.  We also plan to
-add the hybrid Lyot modes.
+    Roman's :ref:`Coronagraph Instrument <roman_coronagraph>` is not modeled within
+    STPSF. Users interested in CGI models should see the `corgisim <https://github.com/roman-corgi/corgisim>`_ package
+    developed by the Roman Coronagraph's community team.
 
-.. warning::
-    The Coronagraph model has not been actively updated or developed since circa 2017.
-    It does not well represent the current PDR-level state of the instrument. There are plans
-    to refresh this model. Interested users should contact Ewan Douglas.
-
-.. warning::
-    Current functionality is limited to the Shaped Pupil Coronagraph (SPC)
-    observing modes, and these modes are only simulated with static, unaberrated
-    wavefronts, without relay optics and without DM control. The design
-    represented here is an approximation to a baseline concept, and will be
-    subject to change based on ongoing trades studies and technology development.
-
-
-A hands-on tutorial in using the RomanCoronagraph class is available in this
-`Jupyter Notebook <http://nbviewer.ipython.org/github/spacetelescope/stpsf/blob/stable/notebooks/roman_coronagraph_demo.ipynb>`_.
-Here we briefly summarize the key points, but see that for more detail.
-
-
-The RomanCoronagraph class has attributes for  ``filter``, etc., like other instrument classes, but since these masks are designed to be
-used in specific combinations, a ``mode`` attribute exists that allows easy specification of all those attributes at once. For example, setting ::
-
-    >>> cor = roman.RomanCoronagraph()
-    >>> cor.mode = "CHARSPC_F770"
-
-is equivalent to::
-
-    >>> cor.camera = 'IFS'
-    >>> cor.filter = 'F770'
-    >>> cor.apodizer = 'CHARSPC'
-    >>> cor.fpm = 'CHARSPC_F770_BOWTIE'
-    >>> cor.lyotstop = 'LS30D88'
-
-There are ``_list`` attributes that tell you the allowed values for each attribute, including a ``mode_list`` for all the available meta-modes.
-
-
-Calculations are invoked similarly to any other instrument class::
-
-    >> mono_char_spc_psf = cor.calc_psf(nlambda=1, fov_arcsec=1.6, display=True)
-
-.. figure:: ./roman_figures/fig_coronagraph_spc_f770.png
-   :alt: Example Coronagraph PSF calculation.
+There was previously in STPSF an initial/prototype model of early versions of the Roman Coronagraph, but this
+was deprecated and the code has been removed.
 
 

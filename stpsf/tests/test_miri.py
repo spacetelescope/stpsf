@@ -6,6 +6,7 @@ import numpy as np
 import pysiaf
 
 import stpsf
+
 from .. import stpsf_core
 from .test_stpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
@@ -63,7 +64,7 @@ def do_test_miri_fqpm(
 
             outputdir = tempfile.gettempdir()
 
-        fn = os.path.join(outputdir, 'test_miri_fqpm_t{0}_r{1:.2f}.fits'.format(angle, offset))
+        fn = os.path.join(outputdir, f'test_miri_fqpm_t{angle}_r{offset:.2f}.fits')
         psf.writeto(fn, clobber=clobber)
 
     # FIXME - add some assertion tests here.
@@ -240,8 +241,8 @@ def test_miri_ifu_broadening():
     assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
 
     fwhm_detsamp = stpsf.measure_fwhm(psf, ext='DET_SAMP')
-    fwhm_detdist = stpsf.measure_fwhm(psf, ext='DET_DIST')
-    assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
+    fwhm_detdist= stpsf.measure_fwhm(psf, ext='DET_DIST')
+    assert fwhm_detdist > fwhm_detsamp, "IFU broadening model should increase the FWHM for the distorted extensions"
 
     # Now test that we can also optionally turn off that effect
     miri.options['ifu_broadening'] = None

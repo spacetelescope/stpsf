@@ -26,7 +26,7 @@ _Strehl_perfect_cache = {}  # dict for caching perfect images used in Strehl cal
 # Helper routines for logging: ###
 
 
-class FilterLevelRange(object):
+class FilterLevelRange:
     def __init__(self, min_level, max_level):
         self.min_level = min_level
         self.max_level = max_level
@@ -59,12 +59,12 @@ def restart_logging(verbose=True):
         level_id = getattr(logging, level)  # obtain one of the DEBUG, INFO, WARN,
         # or ERROR constants
         if verbose:
-            print('STPSF log messages of level {0} and above will be shown.'.format(level))
+            print(f'STPSF log messages of level {level} and above will be shown.')
     elif level == 'NONE':
         root_logger.handlers = []  # n.b. this will clear any handlers other libs/users configured
         return
     else:
-        raise ValueError('Invalid logging level: {}'.format(level))
+        raise ValueError(f'Invalid logging level: {level}')
 
     for name in lognames:
         logger = logging.getLogger(name)
@@ -97,7 +97,7 @@ def restart_logging(verbose=True):
         root_logger.addHandler(hdlr)
 
         if verbose:
-            print('STPSF log outputs will also be saved to file {}'.format(filename))
+            print(f'STPSF log outputs will also be saved to file {filename}')
 
 
 def setup_logging(level='INFO', filename=None):
@@ -215,7 +215,7 @@ def auto_download_stpsf_data():
                 warnings.warn(f"STPSF data files downloaded and installed to {default_path}.")
 
         if not any(default_path.iterdir()):
-            raise IOError(f"Failed to get and extract STPSF data files to {default_path}")
+            raise OSError(f"Failed to get and extract STPSF data files to {default_path}")
 
     return default_path
 
@@ -256,7 +256,7 @@ def get_stpsf_data_path(data_version_min=None, return_version=False):
 
     # at minimum, the path must be a valid directory
     if not path.is_dir():
-        raise IOError(f'STPSF_PATH ({path}) is not a valid directory path!\n{MISSING_STPSF_DATA_MESSAGE}')
+        raise OSError(f'STPSF_PATH ({path}) is not a valid directory path!\n{MISSING_STPSF_DATA_MESSAGE}')
 
     if data_version_min is not None:
         # Check if the data in STPSF_PATH meet the minimum data version
@@ -267,8 +267,8 @@ def get_stpsf_data_path(data_version_min=None, return_version=False):
                 # keep only first 3 elements for comparison (allows "0.3.4.dev" or similar)
                 parts = version_contents.split('.')[:3]
             version_tuple = tuple(map(int, parts))
-        except (IOError, ValueError):
-            raise EnvironmentError(
+        except (OSError, ValueError):
+            raise OSError(
                 f"Couldn't read the version number from {version_file_path}. (Do you need to update the STPSF "
                 'data? See https://stpsf.readthedocs.io/en/stable/installation.html#data-install '
                 'for a link to the latest version.)'
@@ -277,7 +277,7 @@ def get_stpsf_data_path(data_version_min=None, return_version=False):
 
         if not version_tuple >= data_version_min:
             min_ver = '{}.{}.{}'.format(*data_version_min)
-            raise EnvironmentError(
+            raise OSError(
                 f'STPSF data package has version {version_contents}, but {min_ver} is needed. '
                 'See https://stpsf.readthedocs.io/en/stable/installation.html#data-install '
                 'for a link to the latest version.'
@@ -435,22 +435,17 @@ def system_diagnostic():
     try:
         import psutil
 
-        cpu_info = """
-  Hardware cores: {hw}
-  Logical core: {logical}
-  Frequency: {freq} GHz
-  Currently {percent}% utilized.
-""".format(
-            hw=psutil.cpu_count(logical=False),
-            logical=psutil.cpu_count(logical=True),
-            freq=psutil.cpu_freq()[0] / 1000,
-            percent=psutil.cpu_percent(),
-        )
+        cpu_info = f"""
+  Hardware cores: {psutil.cpu_count(logical=False)}
+  Logical core: {psutil.cpu_count(logical=True)}
+  Frequency: {psutil.cpu_freq()[0] / 1000} GHz
+  Currently {psutil.cpu_percent()}% utilized.
+"""
     except ImportError:
         try:
             import multiprocessing
 
-            cpu_info = '  Cores: {}'.format(multiprocessing.cpu_count())
+            cpu_info = f'  Cores: {multiprocessing.cpu_count()}'
         except ImportError:
             cpu_info = 'No CPU info available'
 
@@ -468,7 +463,7 @@ def system_diagnostic():
             v = str(v)
             if k == 'sources' and len(v) > 200:
                 v = v[:60] + ' ...\n... ' + v[-60:]
-            numpyconfig += '    %s = %s\n' % (k, v)
+            numpyconfig += f'    {k} = {v}\n'
 
     result = DIAGNOSTIC_REPORT.format(
         os=platform.platform(),
@@ -608,12 +603,12 @@ def measure_strehl(HDUlist_or_filename=None, ext=0, slice=0, center=None, displa
         display_psf(HDUlist, title='Observed PSF')
         plt.subplot(122)
         display_psf(comparison_psf, title='Perfect PSF')
-        plt.gcf().suptitle('Strehl ratio = %.3f' % strehl)
+        plt.gcf().suptitle(f'Strehl ratio = {strehl:.3f}')
 
     if verbose:
-        print('Measured peak:  {0:.3g}'.format(meas_peak))
-        print('Reference peak: {0:.3g}'.format(ref_peak))
-        print('  Strehl ratio: {0:.3f}'.format(strehl))
+        print(f'Measured peak:  {meas_peak:.3g}')
+        print(f'Reference peak: {ref_peak:.3g}')
+        print(f'  Strehl ratio: {strehl:.3f}')
 
     return strehl
 
@@ -800,13 +795,13 @@ def _run_benchmark(timer, iterations=1):
     print('Timing performance in plain numpy:')
     poppy.conf.use_fftw, poppy.conf.use_numexpr, poppy.conf.use_cuda, poppy.conf.use_opencl = (False, False, False, False)
     time_numpy = timer.timeit(number=iterations) / iterations
-    print('  {:.2f} s'.format(time_numpy))
+    print(f'  {time_numpy:.2f} s')
 
     if poppy.accel_math._FFTW_AVAILABLE:
         print('Timing performance with FFTW:')
         poppy.conf.use_fftw = True
         time_fftw = timer.timeit(number=iterations) / iterations
-        print('  {:.2f} s'.format(time_fftw))
+        print(f'  {time_fftw:.2f} s')
     else:
         time_fftw = np.nan
 
@@ -815,7 +810,7 @@ def _run_benchmark(timer, iterations=1):
         poppy.conf.use_fftw = False
         poppy.conf.use_numexpr = True
         time_numexpr = timer.timeit(number=iterations) / iterations
-        print('  {:.2f} s'.format(time_numexpr))
+        print(f'  {time_numexpr:.2f} s')
     else:
         time_numexpr = np.nan
 
@@ -824,7 +819,7 @@ def _run_benchmark(timer, iterations=1):
         poppy.conf.use_cuda = True
         poppy.conf.use_opencl = False
         time_cuda = timer.timeit(number=iterations) / iterations
-        print('  {:.2f} s'.format(time_cuda))
+        print(f'  {time_cuda:.2f} s')
     else:
         time_cuda = np.nan
 
@@ -833,7 +828,7 @@ def _run_benchmark(timer, iterations=1):
         poppy.conf.use_opencl = True
         poppy.conf.use_cuda = False
         time_opencl = timer.timeit(number=iterations) / iterations
-        print('  {:.2f} s'.format(time_opencl))
+        print(f'  {time_opencl:.2f} s')
     else:
         time_opencl = np.nan
 
@@ -847,14 +842,14 @@ def benchmark_imaging(iterations=1, nlambda=1, add_distortion=True):
     import timeit
 
     timer = timeit.Timer(
-        'psf = nc.calc_psf(nlambda=nlambda, add_distortion={})'.format(add_distortion),
-        setup="""
+        f'psf = nc.calc_psf(nlambda=nlambda, add_distortion={add_distortion})',
+        setup=f"""
 import stpsf
 nc = stpsf.NIRCam()
 nc.filter='F360M'
-nlambda={nlambda:d}""".format(nlambda=nlambda),
+nlambda={nlambda:d}""",
     )
-    print('Timing performance of NIRCam F360M with {} wavelengths, {} iterations'.format(nlambda, iterations))
+    print(f'Timing performance of NIRCam F360M with {nlambda} wavelengths, {iterations} iterations')
 
     return _run_benchmark(timer, iterations=iterations)
 
@@ -864,16 +859,16 @@ def benchmark_nircam_coronagraphy(iterations=1, nlambda=1, add_distortion=True):
     import timeit
 
     timer = timeit.Timer(
-        'psf = nc.calc_psf(nlambda=nlambda, add_distortion={})'.format(add_distortion),
-        setup="""
+        f'psf = nc.calc_psf(nlambda=nlambda, add_distortion={add_distortion})',
+        setup=f"""
 import stpsf
 nc = stpsf.NIRCam()
 nc.filter='F335M'
 nc.image_mask='MASK335R'
 nc.pupil_mask='MASKRND'
-nlambda={nlambda:d}""".format(nlambda=nlambda),
+nlambda={nlambda:d}""",
     )
-    print('Timing performance of NIRCam MASK335R with {} wavelengths, {} iterations'.format(nlambda, iterations))
+    print(f'Timing performance of NIRCam MASK335R with {nlambda} wavelengths, {iterations} iterations')
 
     return _run_benchmark(timer, iterations=iterations)
 
@@ -884,15 +879,15 @@ def benchmark_miri_coronagraphy(iterations=1, nlambda=1):
 
     timer = timeit.Timer(
         'psf = miri.calc_psf(nlambda=nlambda)',
-        setup="""
+        setup=f"""
 import stpsf
 miri = stpsf.MIRI()
 miri.filter='F1065C'
 miri.image_mask='FQPM1065'
 miri.pupil_mask='MASKFQPM'
-nlambda={nlambda:d}""".format(nlambda=nlambda),
+nlambda={nlambda:d}""",
     )
-    print('Timing performance of MIRI F1065C with {} wavelengths, {} iterations'.format(nlambda, iterations))
+    print(f'Timing performance of MIRI F1065C with {nlambda} wavelengths, {iterations} iterations')
 
     return _run_benchmark(timer, iterations=iterations)
 
@@ -1090,9 +1085,9 @@ def label_wavelength(nwavelengths, wavelength_slices):
     # Allow up to 10,000 wavelength slices. The number matters because FITS
     # header keys can only have up to 8 characters. Backward-compatible.
     if nwavelengths < 100:
-        label = 'WAVELN{:02d}'.format(wavelength_slices)
+        label = f'WAVELN{wavelength_slices:02d}'
     elif nwavelengths < 10000:
-        label = 'WVLN{:04d}'.format(wavelength_slices)
+        label = f'WVLN{wavelength_slices:04d}'
     else:
         raise ValueError('Maximum number of wavelengths exceeded. ' 'Cannot be more than 10,000.')
     return label

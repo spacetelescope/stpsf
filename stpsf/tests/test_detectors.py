@@ -1,8 +1,8 @@
-import pytest
 import numpy as np
+import poppy
+import pytest
 from astropy.io import fits
 
-import poppy
 import stpsf.detectors as detectors
 import stpsf.stpsf_core as stpsf_core
 
@@ -85,10 +85,10 @@ def test_apply_miri_scattering():
             "should have lower values because the scattering shouldn't be adding much to this region."
             " It's too far away from where the cross is"
         )
-        assert np.all(square1 < value), 'The LLCorner of the array {}'.format(assert_statement)
-        assert np.all(square2 < value), 'The LRCorner of the array {}'.format(assert_statement)
-        assert np.all(square3 < value), 'The ULCorner of the array {}'.format(assert_statement)
-        assert np.all(square4 < value), 'The URCorner of the array {}'.format(assert_statement)
+        assert np.all(square1 < value), f'The LLCorner of the array {assert_statement}'
+        assert np.all(square2 < value), f'The LRCorner of the array {assert_statement}'
+        assert np.all(square3 < value), f'The ULCorner of the array {assert_statement}'
+        assert np.all(square4 < value), f'The URCorner of the array {assert_statement}'
 
         # Test that there is a cross in the box which has a higher value than the surrounding area
         xcen = int(xlen / 2)

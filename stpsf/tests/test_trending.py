@@ -1,14 +1,18 @@
 import astropy
 import astropy.time
 import astropy.units as u
+import pytest
+
 import stpsf
 
 
+@pytest.mark.remote_data
 def test_monthly_trending_plot_auto_opdtable():
     trend_table = stpsf.trending.monthly_trending_plot(2023, 6, instrument='NIRISS', filter='F380M')
     assert len(trend_table) == 15
 
 
+@pytest.mark.remote_data
 def test_monthly_trending_plot_opdtable_param():
     # Get broad range opdtable to verify our internal filtering works
     start_date, end_date = stpsf.trending.get_month_start_end(2023, 5)
@@ -24,6 +28,7 @@ def test_monthly_trending_plot_opdtable_param():
     assert len(trend_table) == 15
 
 
+@pytest.mark.remote_data
 def test_delta_wfe_around_time():
     """Very basic test - does this hand back something that could be an OPD array
     Does not check the value in any significant way.

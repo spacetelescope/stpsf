@@ -5,6 +5,7 @@ import numpy as np
 import pysiaf
 
 import stpsf
+
 from .. import stpsf_core
 from .test_stpsf import do_test_set_position_from_siaf, do_test_source_offset, generic_output_test
 
@@ -130,7 +131,7 @@ def test_nrs_ifu_broadening():
 
     fwhm_detsamp = stpsf.measure_fwhm(psf, ext='DET_SAMP')
     fwhm_detdist = stpsf.measure_fwhm(psf, ext='DET_DIST')
-    assert fwhm_overdist > fwhm_oversamp, "IFU broadening model should increase the FWHM for the distorted extensions"
+    assert fwhm_detdist > fwhm_detsamp, "IFU broadening model should increase the FWHM for the distorted extensions"
 
     # Now test that we can also optionally turn off that effect
     nrs.options['ifu_broadening'] = None

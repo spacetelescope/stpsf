@@ -646,7 +646,7 @@ def query_wfsc_images_by_program(prog, obs, detector='NRCA3', productlevel=3):
     return tab
 
 
-def query_wfsc_images_latest(detector='NRCA1', productlevel='2b'):
+def query_wfsc_images_latest(detector='NRCA1', productlevel='2b', date_range_ndays=7):
     """MAST query to get filenames of the most recent WFSC images
 
     Returns table of MAST query results
@@ -658,7 +658,7 @@ def query_wfsc_images_latest(detector='NRCA1', productlevel='2b'):
     keywords = {
         'template': ['WFSC NIRCam Fine Phasing'],
         'detector': [detector],
-        'date_obs_mjd': [{'min': now.mjd - 7, 'max': now.mjd}],
+        'date_obs_mjd': [{'min': now.mjd - date_range_ndays, 'max': now.mjd}],
         'productLevel': [str(productlevel)],
     }
 
@@ -672,7 +672,10 @@ def query_wfsc_images_latest(detector='NRCA1', productlevel='2b'):
     tab.sort(keys=['date_obs_mjd'], reverse=True)
 
     # some sanity checking:
-    if tab[0]['visit_id'] != tab[1]['visit_id']:
+    if len(tab) == 0:
+        raise RuntimeError(f'No NIRCam WFS data found within {date_range_ndays} of the current time. Consider re-running with larger date_range_ndays parameter.')
+
+    elif tab[0]['visit_id'] != tab[1]['visit_id']:
         raise RuntimeError('The latest two images in MAST are not from the same visit')
         # these are indeed two files from the same visi
     else:
@@ -750,6 +753,12 @@ def get_visit_nrc_ta_image(visitid, verbose=True, kind='cal'):
 
     if verbose:
         print(f'TA filename: {filename}')
+    return get_mast_filename(filename)
+
+def get_mast_filename(filename):
+    """ Retrieve a specified file from MAST
+    Returns a FITS HDUList object in memory, without writing to disk
+    """
     mast_file_url = f'https://mast.stsci.edu/api/v0.1/Download/file?uri=mast:JWST/product/{filename}'
     import urllib
 

@@ -1,0 +1,112 @@
+name: tests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  PYTHON_VERSIONS: 3.9 3.10 3.11 3.12 3.13 3.14
+
+jobs:
+  retrieve_cache:
+    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@ee1ced313cc7277f07226f03e64d038f3929d7a3 # setup retrieve_cache with development or latest_release
+    with:
+      dataset_type: development   # or latest_release
+  check:
+    needs:
+      - retrieve_cache
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
+    with:
+      setenv: |
+        STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
+      cache-path: ${{ needs.retrieve_cache.outputs.cache_path }}
+      cache-key: ${{ needs.retrieve_cache.outputs.cache_key }}
+      envs: |
+        - name: Check for Sphinx doc build errors
+          linux: py312-docbuild
+  supported-pythons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3"
+      - name: Set latest pip version
+        run: python -m pip install -U pip
+      - run: pip install packaging tomli
+      - name: convert Python version(s) into JSON list
+        id: versions
+        shell: python
+        run: |
+          import os
+          import json
+
+          import tomli
+          from packaging.specifiers import SpecifierSet
+          from packaging.version import Version
+
+          with open("pyproject.toml", "rb") as pyproject_toml_file:
+            version_requirements = SpecifierSet(tomli.load(pyproject_toml_file)["project"]["requires-python"])
+
+          versions = [str(version) for version in sorted([Version(version) for version in os.environ["PYTHON_VERSIONS"].split() if version in version_requirements])]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as github_output:
+              print(f"json={json.dumps(versions)}", file=github_output)
+              print(f"oldest={versions[0]}", file=github_output)
+              print(f"latest={versions[-1]}", file=github_output)
+    outputs:
+      python-version-json: ${{ steps.versions.outputs.json }}
+      oldest: ${{ steps.versions.outputs.oldest }}
+      latest: ${{ steps.versions.outputs.latest }}
+  test:
+    needs:
+      - retrieve_cache
+      - supported-pythons
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      setenv: |
+        STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
+      cache-path: ${{ needs.retrieve_cache.outputs.cache_path }}
+      cache-key: ${{ needs.retrieve_cache.outputs.cache_key }}
+      envs: |
+        - name: run tests (oldest supported Python, ubuntu-latest)
+          linux: py3-legacy-xdist
+          python-version: ${{ needs.supported-pythons.outputs.oldest }}
+        - name: run tests with coverage (latest supported Python, ubuntu-latest)
+          linux: py3-cov-xdist
+          python-version: ${{ needs.supported-pythons.outputs.latest }}
+          pytest-results-summary: true
+          coverage: github
+        - name: run tests (latest supported Python, ubuntu-latest)
+          linux: py3-xdist
+          python-version: ${{ needs.supported-pythons.outputs.latest }}
+        - name: run tests with Astropy dev (latest support Python, ubuntu-latest)
+          linux: py3-astropydev-xdist
+          python-version: ${{ needs.supported-pythons.outputs.latest }}
+        - name: run tests with pysiaf dev (latest support Python, ubuntu-latest)
+          linux: py3-pysiafdev-xdist
+          python-version: ${{ needs.supported-pythons.outputs.latest }}
+        - name: run tests with poppy dev (latest support Python, ubuntu-latest)
+          linux: py3-poppydev-xdist
+          python-version: ${{ needs.supported-pythons.outputs.latest }}
+        - linux: py3*-xdist
+      artifact-path: |
+        results.xml

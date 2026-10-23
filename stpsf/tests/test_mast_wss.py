@@ -1,6 +1,7 @@
 import pytest
-import stpsf
 from astropy.table import Table
+
+import stpsf
 
 
 @pytest.mark.remote_data
@@ -45,7 +46,11 @@ def test_query_wfsc_images(test_download=False):
     necessary to test that we can download a large file in every CI run.
     """
 
-    filetable = stpsf.mast_wss.query_wfsc_images_latest()
+    try:
+        filetable = stpsf.mast_wss.query_wfsc_images_latest()
+    except RuntimeError:
+        filetable = stpsf.mast_wss.query_wfsc_images_latest(date_range_ndays=30)
+
     assert len(filetable) > 0, "Query should have nonzero results"
     assert isinstance(filetable, Table), "Query should return a table"
 
@@ -54,4 +59,4 @@ def test_query_wfsc_images(test_download=False):
     assert isinstance(filetable2, Table), "Query should return a table"
 
     if test_download:
-        file_list = download_wfsc_images(1160, 1)
+        stpsf.mast_wss.download_wfsc_images(1160, 1)

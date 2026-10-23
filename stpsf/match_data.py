@@ -6,93 +6,135 @@ import pysiaf
 import stpsf
 
 
-def setup_sim_to_match_file(filename_or_HDUList, verbose=True, plot=False, choice='closest'):
-    """Setup a stpsf Instrument instance matched to a given dataset
+def setup_sim_to_match_file(filename_or_HDUList_or_datamodel, verbose=True, plot=False, choice='closest'):
+    """Set up an stpsf Instrument instance matched to a given dataset
+
+    The input can flexibly be either:
+     - a string filename, either of a JWST FITS file or a Roman ASDF file
+     - a FITS HDUList instance, for JWST data
+     - a JwstDataModel instance, for JWST data
+     - a roman_datamodels.DataModel instance, for Roman data
 
     Parameters
     ----------
-    filename_or_HDUlist : str or astropy.io.fits HDUList
+    filename_or_HDUlist_or_datamodel : str, astropy.io.fits HDUList, JwstDataModel, or Roman Datamodel
         file to load
     verbose : bool
         be more verbose?
     plot : bool
         plot?
     choice : string
-        Method to choose which OPD file to use, e.g. 'before', 'after', or 'closest'
+        Method to choose which OPD file to use, e.g. 'before', 'after', or 'closest', for
+        JWST data. Not currently relevant for Roman.
+
+    Returns
+    -------
+    an STSPF instrument instance for one of JWST NIRCam, NIRISS, NIRSpec, MIRI, FGS, or Roman WFI,
+    configured with filter, detector, and other relevant properties configured to match the input data.
+
     """
-    if isinstance(filename_or_HDUList, str):
-        if verbose:
-            print(f'Setting up sim to match {filename_or_HDUList}')
-        header = fits.getheader(filename_or_HDUList)
+
+    # Handle checking for JWST and Roman data in a flexible way that allows optional dependencies to be absent
+    # we may not be running in an environment that has both the JWST and Roman package collections installed
+
+    try:
+        import roman_datamodels as rdm
+        _HAVE_ROMAN = True
+    except ImportError:
+        _HAVE_ROMAN = False
+        rdm = None
+    try:
+        import jwst.datamodels
+        _HAVE_JWST = True
+    except ImportError:
+        _HAVE_JWST = False
+
+    # If the input is a Roman data model, or a filename for an ASDF file, then try to set up a Roman sim
+    if (_HAVE_ROMAN and (isinstance(filename_or_HDUList_or_datamodel, rdm.DataModel) or
+        (isinstance(filename_or_HDUList_or_datamodel, str) and filename_or_HDUList_or_datamodel.endswith('asdf')))):
+        return _setup_sim_to_match_file_roman(filename_or_HDUList_or_datamodel, verbose=verbose, plot=plot, choice=choice)
+    elif _HAVE_JWST:
+        return _setup_sim_to_match_file_jwst(filename_or_HDUList_or_datamodel, verbose=verbose, plot=plot, choice=choice)
     else:
-        header = filename_or_HDUList[0].header
-        if verbose:
-            print('Setting up sim to match provided FITS HDUList object')
+        raise ImportError("Neither Roman nor JWST data models are available.")
 
-    inst = stpsf.instrument(header['INSTRUME'])
 
-    if inst.name == 'MIRI' and header['EXP_TYPE'] == 'MIR_MRS':
+def _setup_sim_to_match_file_jwst(model, verbose=True, plot=False, choice='closest'):
+    """JWST implementation for setup_sim_to_match_file
+    """
+    import jwst.datamodels as jdm
+    model = jdm.JwstDataModel(model)
+
+    exptype = model.meta.exposure.type
+    filt = model.meta.instrument.filter
+    pupil = model.meta.instrument.pupil
+    apername = model.meta.aperture.name
+    channel = model.meta.instrument.channel
+    band = model.meta.instrument.band
+    inst = stpsf.instrument(model.meta.instrument.name)
+
+    if inst.name == 'MIRI' and exptype == 'MIR_MRS':
         print("MIRI MRS exposure detected; configuring for IFU mode")
         inst.mode = 'IFU'
         # There is no FILTER keyword for MRS, so don't set filter to anything.
-    elif inst.name == 'MIRI' and header['FILTER'] == 'P750L':
+    elif inst.name == 'MIRI' and filt == 'P750L':
         # stpsf doesn't model the MIRI LRS prism spectral response
         print('Please note, stpsf does not currently model the LRS spectral response. Setting filter to F770W instead.')
         inst.filter = 'F770W'
-    elif (inst.name == 'NIRCam') and (header['PUPIL'][0] == 'F') and (header['PUPIL'][-1] in ['N', 'M']):
+    elif (inst.name == 'NIRCam') and (pupil[0] == 'F') and (pupil[-1] in ['N', 'M']):
         # These NIRCam filters are physically in the pupil wheel, but still act as filters.
         # Grab the filter name from the PUPIL keyword in this case.
-        inst.filter = header['PUPIL']
-    elif (inst.name == 'NIRISS') and (header['FILTER'] == 'CLEAR'):
+        inst.filter = pupil
+    elif (inst.name == 'NIRISS') and (filt == 'CLEAR'):
         # For NIRISS, 6 out of 12 filters are in the pupil wheel, which mean if FILTER=CLEAR,
         # PUPIL keyword will point to the actual filter. [S. T. Sohn Feb 13, 2025]
-        inst.filter = header['PUPIL']
+        inst.filter = pupil
     else:
-        inst.filter = header['filter']
-    inst.set_position_from_aperture_name(header['APERNAME'])
+        inst.filter = filt
+    inst.set_position_from_aperture_name(apername)
 
-    dateobs = astropy.time.Time(header['DATE-OBS'] + 'T' + header['TIME-OBS'])
+    dateobs = astropy.time.Time(model.meta.observation.date + 'T' + model.meta.observation.time)
     inst.load_wss_opd_by_date(dateobs, verbose=verbose, plot=plot, choice=choice)
 
     # per-instrument specializations
     if inst.name == 'NIRCam':
-        if header['PUPIL'].startswith('MASK'):
-            if header['PUPIL'] == 'MASKBAR':
+        if pupil.startswith('MASK'):
+            if pupil == 'MASKBAR':
                 # the FITS header is just 'BAR' but the value needed in stpsf is either
                 # 'MASKLWB' or "MASKSWB' depending on channel.
-                inst.pupil_mask = 'MASKLWB' if header['CHANNEL'] == 'LONG' else 'MASKSWB'
+                inst.pupil_mask = 'MASKLWB' if channel == 'LONG' else 'MASKSWB'
             else:
-                inst.pupil_mask = header['PUPIL']
-            if 'CORONMSK' in header:
-                inst.image_mask = header['CORONMSK'].replace('MASKA', 'MASK')  # note, have to modify the value slightly for
+                inst.pupil_mask = pupil
+            if 'CORONMSK' in model.meta.instrument:
+                inst.image_mask = model.meta.instrument.coronmsk.replace('MASKA', 'MASK')  # note, have to modify the value slightly for
                 # consistency with the labels used in stpsf
             # The apername keyword is not always correct for cases with dual-channel coronagraphy
             # in some such cases, APERNAME != PPS_APER. Let's ensure we have the proper apername for this channel:
-            apername = get_nrc_coron_apname(header)
+            apername = get_nrc_coron_apname(model)
             inst.set_position_from_aperture_name(apername)
 
-        elif header['PUPIL'] != 'CLEAR' and not header['PUPIL'].startswith('F'):  # no action needed for these
+        elif pupil != 'CLEAR' and not pupil.startswith('F'):  # no action needed for these
             # note that filters in the pupil wheel were handled already above
-            inst.pupil_mask = header['PUPIL']
+            inst.pupil_mask = pupil
 
     elif inst.name == 'MIRI':
-        if header['EXP_TYPE'] == 'MIR_MRS':
-            ch = header['CHANNEL']
+        if exptype == 'MIR_MRS':
+            ch = channel
             band_lookup = {'SHORT': 'A', 'MEDIUM': 'B', 'LONG': 'C'}
-            inst.band = str(ch) + band_lookup[header['BAND']]
+            inst.band = str(ch) + band_lookup[band]
 
         elif inst.filter in ['F1065C', 'F1140C', 'F1550C']:
             inst.image_mask = 'FQPM' + inst.filter[1:5]
         elif inst.filter == 'F2300C':
             inst.image_mask = 'LYOT2300'
-        elif header['FILTER'] == 'P750L':
+        elif filt == 'P750L':
             inst.pupil_mask = 'P750L'
 
-        if header['APERNAME'] == 'MIRIM_SLIT':
+        if apername == 'MIRIM_SLIT':
             inst.image_mask = 'LRS slit'
 
     elif inst.name == 'NIRISS':
-        if header['PUPIL'] == 'NRM': # else could be CLEARP for KPI observations
+        if pupil == 'NRM': # else could be CLEARP for KPI observations
             inst.pupil_mask = 'MASK_NRM'
 
     # TODO add other per-instrument keyword checks
@@ -108,6 +150,46 @@ Configured simulation instrument for:
     Det. Pos.: {inst.detector_position} {'in subarray' if "FULL" not in inst.aperturename else ""}
     Image plane mask: {inst.image_mask}
     Pupil plane mask: {inst.pupil_mask}
+    """
+        )
+
+    return inst
+
+
+def _setup_sim_to_match_file_roman(filename_or_datamodel, verbose=True, plot=False, choice='closest'):
+    """Roman implementation for setup_sim_to_match_file
+    """
+    import roman_datamodels as rdm
+    if isinstance(filename_or_datamodel, str):
+        if verbose:
+            print(f'Setting up sim to match {filename_or_datamodel}')
+        datamodel = rdm.open(filename_or_datamodel)
+    elif isinstance(filename_or_datamodel, rdm.DataModel):
+        datamodel = filename_or_datamodel
+        if verbose:
+            print('Setting up sim to match provided Roman Datamodel object')
+    else:
+        raise ValueError("Don't know how to load a Roman data model from that type of input")
+
+    inst = stpsf.WFI()
+    inst.detector = datamodel.meta.instrument.detector
+
+    filter_or_disperser = datamodel.meta.instrument.optical_element
+    # special case: STPSF has both  'GRISM0' and 'GRISM1' to handle the 0th undispersed light and 1st order spectra.
+    # if we are given a grism file, by default let's assume the user wants to model the 1st order spectra
+    if filter_or_disperser.upper() == 'GRISM':
+        filter_or_disperser = 'GRISM1'
+    inst.filter = filter_or_disperser
+
+    if verbose:
+        print(
+            f"""
+Configured simulation instrument for:
+    Instrument: {inst.name}
+    Filter: {inst.filter}
+    Detector: {inst.detector}
+    Apername: {inst.aperturename}
+    Det. Pos.: {inst.detector_position} {'in subarray' if "FULL" not in inst.aperturename else ""}
     """
         )
 

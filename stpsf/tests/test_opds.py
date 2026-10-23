@@ -285,7 +285,7 @@ def test_move_sur(plot=False):
     oldstate = ote.segment_state.copy()
 
     for igrp in range(1, ngroups + 1):
-        print('Group {} should move segment {}'.format(igrp, 2 * igrp + 6))
+        print(f'Group {igrp} should move segment {2 * igrp + 6}')
         ote.move_sur(s, group=igrp)
 
         movedsegs = np.abs((ote.segment_state - oldstate).sum(axis=1))
@@ -297,9 +297,9 @@ def test_move_sur(plot=False):
         if plot:
             psf = nrc.calc_psf(fov_pixels=256, add_distortion=False)
             plt.figure()
-            ote.display_opd(title='After Group {}'.format(igrp))
+            ote.display_opd(title=f'After Group {igrp}')
             plt.figure()
-            stpsf.display_psf(psf, ext=1, title='After Group {}'.format(igrp))
+            stpsf.display_psf(psf, ext=1, title=f'After Group {igrp}')
 
 
 def test_single_seg_psf(segmentid=1):
@@ -547,7 +547,7 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
             axs[i, 1].imshow(ote.opd, vmin=-4e-6, vmax=4e-6, origin='lower')
             axs[i, 1].set_title('OPD (yellow +)')
             axs[i, 2].imshow(psfx[0].data, norm=matplotlib.colors.LogNorm(vmax=1e-2, vmin=1e-5), origin='lower')
-            axs[i, 2].set_title(iseg + ': xtilt {} um'.format(tilt))
+            axs[i, 2].set_title(iseg + f': xtilt {tilt} um')
             axs[i, 2].axhline(y=fov_pix / 2)
             axs[i, 2].axvline(x=fov_pix / 2)
 
@@ -572,7 +572,7 @@ def test_segment_tilt_signs(fov_pix=50, plot=False, npix=1024):
             axs[i, 3].imshow(ote.opd, vmin=-4e-6, vmax=4e-6, origin='lower')
             axs[i, 3].set_title('OPD (yellow +)')
             axs[i, 4].imshow(psfy[0].data, norm=matplotlib.colors.LogNorm(vmax=1e-2, vmin=1e-5), origin='lower')
-            axs[i, 4].set_title(iseg + ': ytilt {} um'.format(tilt))
+            axs[i, 4].set_title(iseg + f': ytilt {tilt} um')
             axs[i, 4].axhline(y=fov_pix / 2)
             axs[i, 4].axvline(x=fov_pix / 2)
 
@@ -653,8 +653,12 @@ def test_get_rms_per_segment():
 
         assert np.isclose(rms_per_seg[seg], ote.rms(seg))
 
+
+@pytest.mark.remote_data
 def test_iec_wfe_model():
     jwst = pytest.importorskip('jwst')  # The IEC telemetry retrieval functionality requires the JWST pipeline
+                                        # Note that jwst isn't used directly in this function, but *is* used
+                                        # down in the call stack within stpsf.opds.estimate_iec_induced_wfe_at_time
     import astropy.time
     ote = stpsf.opds.OTE_Linear_Model_WSS()
 

@@ -78,7 +78,7 @@ def test_nircam_SAMC(oversample=4):
     psf_fft = nc.calc_psf(oversample=oversample, nlambda=1)
 
     maxdiff = np.abs(psf_fft[0].data - psf_sam[0].data).max()
-    _log.info('Max difference between results: {0} cts/pixel'.format(maxdiff))
+    _log.info(f'Max difference between results: {maxdiff} cts/pixel')
     assert maxdiff < 1e-7
 
     # The pixel by pixel difference should be small:
@@ -156,7 +156,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
             # Updated 2018-02-20 for recoded MASKSWB - changes from 0.0219 to 0.0220; 0.1176 to 0.1192 ??
             # Updated 2019-05-02 for coron WFE - changes from [2.09e-6, 0.0220, 0.1192] to [3.71e-6, 0.0221, 0.1192]
         else:
-            raise ValueError("Don't know how to check fluxes for angle={0}".format(angle))
+            raise ValueError(f"Don't know how to check fluxes for angle={angle}")
 
     # we also verify that the SI WFE has been flipped in the Y axis in this case, as needed for NIRCam coronagraphy
     osys = nc.get_optical_system()
@@ -181,7 +181,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
         nc.options['source_offset_theta'] = angle
         nc.options['source_offset_r'] = offset
 
-        fnout = os.path.join(outputdir, 'test_nircam_%s_t%d_r%.2f.fits' % (fn, angle, offset))
+        fnout = os.path.join(outputdir, f'test_nircam_{fn}_t{angle:d}_r{offset:.2f}.fits')
 
         # We can save the outputs; this is not recommended or useful for general testing but is
         # helpful when/if debugging this test routine itself.
@@ -208,7 +208,7 @@ def do_test_nircam_blc(clobber=False, kind='circular', angle=0, save=False, disp
             abs(totflux - exp_flux) < 1e-4
         ), assert_string
         # assert( abs(totflux - exp_flux) < 1e-2 )
-        _log.info('File {0} has the expected total flux based on prior reference calculation: {1}'.format(fnout, totflux))
+        _log.info(f'File {fnout} has the expected total flux based on prior reference calculation: {totflux}')
 
     # _log.info("Lots of test files output as test_nircam_*.fits")
 
@@ -406,7 +406,7 @@ def test_ways_to_specify_weak_lenses():
 
         assert expected in [
             p.name for p in nrc.get_optical_system().planes
-        ], 'Optical system did not contain expected plane {} for {}, {}'.format(expected, filt, pup)
+        ], f'Optical system did not contain expected plane {expected} for {filt}, {pup}'
 
 
 def test_nircam_coron_wfe_offset(fov_pix=15, oversample=2, fit_gaussian=True):
@@ -472,16 +472,12 @@ def test_nircam_coron_wfe_offset(fov_pix=15, oversample=2, fit_gaussian=True):
     diff_25_33 = np.abs(yloc[0] - yloc[1])
     assert np.allclose(
         diff_25_33, 0.030, rtol=rtol
-    ), 'PSF shift between {:.2f} and {:.2f} um of {:.3f} mm does not match expected value (~0.025 mm).'.format(
-        warr[1], warr[0], diff_25_33
-    )
+    ), f'PSF shift between {warr[1]:.2f} and {warr[0]:.2f} um of {diff_25_33:.3f} mm does not match expected value (~0.025 mm).'
     # Difference from 3.3 to 5.0 um should be ~0.020mm
     diff_50_33 = np.abs(yloc[2] - yloc[1])
     assert np.allclose(
         diff_50_33, 0.021, rtol=rtol
-    ), 'PSF shift between {:.2f} and {:.2f} um of {:.3f} mm does not match expected value (~0.021 mm).'.format(
-        warr[1], warr[2], diff_50_33
-    )
+    ), f'PSF shift between {warr[1]:.2f} and {warr[2]:.2f} um of {diff_50_33:.3f} mm does not match expected value (~0.021 mm).'
 
 
 def test_nircam_auto_aperturename():
