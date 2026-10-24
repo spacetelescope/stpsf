@@ -95,7 +95,7 @@ Contents
    :maxdepth: 1
    :caption: Developer Reference
 
-   STPSF_Roman_Multi_Field.ipynb
+   STPSF_Roman_PostSCIPA.ipynb
    available_opds.rst
    field_dependence/multifield_documentation.ipynb
    references.rst
