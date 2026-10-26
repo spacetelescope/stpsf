@@ -13,7 +13,7 @@ Wide Field Instrument (WFI)
 ===========================
 
 
-.. figure:: ./roman_figures/stpsf_roman_page_header.png
+.. figure:: ./roman_figures/base/stpsf_roman_page_header.png
    :alt: Sample PSFs for the filters in the Roman WFI.
 
    Sample PSFs for the filters in the Roman WFI on detector WFI01. Angular
@@ -96,7 +96,7 @@ has a default detector and position. ::
    >>> wfi.detector_position
    (2048, 2048)
 
-.. figure:: ./roman_figures/field_layout.png
+.. figure:: ./roman_figures/base/field_layout.png
    :alt: The Wide Field Instrument's field of view, as projected on the sky.
 
    The Wide Field Instrument's field of view, as projected on the sky.
@@ -189,7 +189,7 @@ the PSF differs between the two extreme edges of the instrument field of view.
    >>> stpsf.display_psf_difference(psf_wfi09, psf_wfi17, ax=ax_diff,
                                     vmax=5e-3, title='WFI09 - WFI17', imagecrop=2.0)
 
-.. figure:: ./roman_figures/compare_wfi09_wfi17.png
+.. figure:: ./roman_figures/base/compare_wfi09_wfi17.png
    :alt: Oversampled PSFs in the F129 filter at two different field points, and the intensity difference image between the two.
 
    Oversampled PSFs in the F129 filter at two different field
@@ -212,7 +212,7 @@ assigns them a common pupil mask named "GRISM". The "PRISM" filter operates
 without obstruction, so it is only assigned a same-named pupil mask in STPSF
 for the sake of consistency with other optical elements.
 
-.. figure:: ./roman_figures/pupil_mask_by_detector.gif
+.. figure:: ./roman_figures/base/pupil_mask_by_detector.gif
    :alt: A GIF that cycles through the pupil images associated with the center pixel (field point 13 of 25) of each WFI detector across the F062, F213, grism, and prism filters.
 
    Pupil images associated with the center pixel (field point 13 of 25) of each
