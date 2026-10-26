@@ -122,7 +122,7 @@ terms of Zernike polynomial coefficients from :math:`Z_1` to :math:`Z_{45}`.
 We reconstruct Zernike coefficients :math:`Z_{46}` to :math:`Z_{210}` and the
 joint contribution of all higher-order terms past :math:`Z_{210}` following the
 procedure detailed in
-`our developer documentation <STPSF_Roman_Multi_Field.html>`_.
+`our developer documentation <STPSF_Roman_PostSCIPA.html>`_.
 (Reconstructing these higher-order terms allows STPSF to use WFI-specific optical path difference maps instead of the Hubble approximation used in
 releases prior to v2.3.0.)
 
