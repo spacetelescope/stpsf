@@ -97,9 +97,15 @@ has a default detector and position. ::
    (2048, 2048)
 
 .. figure:: ./roman_figures/base/field_layout.png
-   :alt: The Wide Field Instrument's field of view, as projected on the sky.
+   :alt: The Wide Field Instrument's field of view, as projected on the sky in various coordinate systems.
 
-   The Wide Field Instrument's field of view, as projected on the sky.
+   The Wide Field Instrument's field of view, as projected on the sky in
+   various coordinate systems. The physical focal plane area is 280 mm wide
+   (`Cromey et al., 2025 <https://ui.adsabs.harvard.edu/link_gateway/2025JATIS..11d4001C/doi:10.1117/1.JATIS.11.4.044001>`_),
+   while the on-sky field of view is 0.8 by 0.4 degrees, or,
+   excluding gaps, 0.281 square degrees
+   (NASA's `"WFI Reference Information" <https://science.nasa.gov/mission/roman-space-telescope/wfi-technical/>`_).
+   (Image from `RDox's "PySIAF for Roman" <https://roman-docs.stsci.edu/simulation-tools/additional-simulation-tools/pysiaf-for-roman#PySIAFforRoman-PySIAF>`_ page.)
 
 
 The WFI field of view is laid out as shown in the figure above. To select a
@@ -123,7 +129,8 @@ We reconstruct Zernike coefficients :math:`Z_{46}` to :math:`Z_{210}` and the
 joint contribution of all higher-order terms past :math:`Z_{210}` following the
 procedure detailed in
 `our developer documentation <STPSF_Roman_PostSCIPA.html>`_.
-(Reconstructing these higher-order terms allows STPSF to use WFI-specific optical path difference maps instead of the Hubble approximation used in
+(Reconstructing these higher-order terms allows STPSF to use WFI-specific
+optical path difference maps instead of the Hubble approximation used in
 releases prior to v2.3.0.)
 
 These coefficients were calculated for 25 field points on each of the 18

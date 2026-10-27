@@ -11,7 +11,7 @@ STPSF is a Python package that computes simulated point spread functions (PSFs) 
 
    Sample PSFs for JWST's instrument suite, all on the same angular scale and display stretch.
 
-.. figure:: ./roman_figures/stpsf_roman_page_header.png
+.. figure:: ./roman_figures/base/stpsf_roman_page_header.png
    :scale: 70 %
    :align: center
    :alt: Sample PSFs for the filters in the Roman WFI.
