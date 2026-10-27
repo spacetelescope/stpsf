@@ -71,7 +71,7 @@ abstract: >-
   its Wide Field Instrument and a preliminary version of the
   Coronagraph Instrument.
 license: BSD-3-Clause
-version: 2.2.0
+version: 2.3.0
 references:
   - type: article
     authors:
