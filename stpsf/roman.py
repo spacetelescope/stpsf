@@ -759,7 +759,7 @@ class WFI(RomanInstrument):
 
     def __init__(self):
         # pixel scale is from Roman-AFTA SDT report final version (p. 91)
-        # https://roman.ipac.caltech.edu/sims/Param_db.html
+        # https://roman.ipac.caltech.edu/page/param-db#wfi_imaging
         pixelscale = 110e-3  # arcsec/px
 
         # Initialize the aberrations for parent SpaceTelescopeInstrument class
