@@ -27,16 +27,27 @@ Version 2.3.0
 =============
 *2026 October*
 
+**This version of STPSF requires a new data package.**
+
+**STScI users should no longer use the internal data path; this release drops
+support for this method of accessing the required data.** The `STPSF_PATH`
+environment variable is now required.
+
 This release updates the Roman instrument model for use with the final
 prelaunch optical models of WFI wavefront error from Goddard Space Flight
-Center (Spring 2026).
+Center (Spring 2026). It also includes accumulated JWST updates as of October
+2026.
 
-Upgrade to the latest reference data to access these optical models. The
-updated Roman reference files are significantly more detailed, introducing:
+The updated Roman reference files are significantly more detailed, introducing:
 
 a) Expanded Zernike coefficients over a greater number of field points,
 b) WFI-specific, per-detector high-frequency optical path difference maps,
 c) Intra-detector, field point-dependent pupil images.
+
+Interested users can read more about the updated reference files and their
+effects on Roman PSF simulations in the new "Characterization of Roman PSF
+across the focal plane" and "Roman Wavefront Model in STPSF" documentation
+pages.
 
 **What's Changed**
 
