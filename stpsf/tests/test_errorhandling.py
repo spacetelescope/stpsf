@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from .. import conf, utils, stpsf_core
+from .. import conf, stpsf_core, utils
 
 _log = logging.getLogger('test_stpsf')
 _log.addHandler(logging.NullHandler())

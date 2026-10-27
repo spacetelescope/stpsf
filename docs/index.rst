@@ -11,7 +11,7 @@ STPSF is a Python package that computes simulated point spread functions (PSFs) 
 
    Sample PSFs for JWST's instrument suite, all on the same angular scale and display stretch.
 
-.. figure:: ./roman_figures/stpsf_roman_page_header.png
+.. figure:: ./roman_figures/base/stpsf_roman_page_header.png
    :scale: 70 %
    :align: center
    :alt: Sample PSFs for the filters in the Roman WFI.
@@ -35,7 +35,9 @@ See `Using STPSF <usage.html>`_.
 
 .. admonition:: Getting Help
 
-   For help using or installing stpsf, you can contact the STScI JWST Help Desk at jwsthelp.stsci.edu, category STPSF/JWST Telescope.
+   For help using or installing stpsf, you can contact the STScI JWST Help Desk at jwsthelp.stsci.edu, category STPSF/JWST Telescope. For support with Roman STPSF, please contact the
+`Roman Help Desk <https://stsci.service-now.com/roman>`_.
+
 
 
 :ref:`What's new in the latest release? <whatsnew>`
@@ -75,6 +77,8 @@ Contents
    :caption: Modeling Roman PSFs
 
    roman.rst
+   STPSF_Roman_Multi_Field.ipynb
+   STPSF_Roman_Pupil_Orientation.ipynb
 
 .. toctree::
    :maxdepth: 1
@@ -91,6 +95,7 @@ Contents
    :maxdepth: 1
    :caption: Developer Reference
 
+   STPSF_Roman_PostSCIPA.ipynb
    available_opds.rst
    field_dependence/multifield_documentation.ipynb
    references.rst

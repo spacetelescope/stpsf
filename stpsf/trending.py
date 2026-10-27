@@ -1,6 +1,7 @@
 import calendar
 import functools
 import os
+import glob
 
 import astropy
 import astropy.io.fits as fits
@@ -126,45 +127,44 @@ def wavefront_time_series_plot(
         4509,
     ]  # Cycle 2
     routine_pids += list(range(6689, 6699))  # Cycle 3
+    routine_pids += [4430, 7052, 7126, 7127, 7344, 7464]  # Cycle 4
 
     is_routine = np.asarray([int(v[1:6]) in routine_pids for v in opdtable[where_pre]['visitId']])
 
     # Plot all, with connecting line
-    plt.plot_date(
+    ax = plt.gca()
+    ax.xaxis.axis_date()
+    ax.plot(
         dates.plot_date,
         rms_nm,
         ls='-',
+        marker='o',
         color='gray',
     )
     # Plot maintenance visits
-    plt.plot_date(
+    ax.plot(
         dates[where_pre][is_routine].plot_date,
         rms_nm[where_pre][is_routine],
         'o',
-        xdate=True,
         label='WF Maintenance Sensing',
         color='C0',
     )
     # Plot other visits (MIMF etc)
-    plt.plot_date(
+    ax.plot(
         dates[where_pre][~is_routine].plot_date,
         rms_nm[where_pre][~is_routine],
         'o',
-        xdate=True,
         label='Other Sensing (MIMF etc)',
         color='purple',
     )
     # Plot corrections.
-    plt.plot_date(
+    ax.plot(
         dates[where_post].plot_date,
         rms_nm[where_post],
         'v',
-        xdate=True,
         label='Wavefront Corrections',
         color='C2',
     )
-
-    ax = plt.gca()
     ax.set_ylabel('Observatory WFE (OTE+NRC)\n[nm rms]', fontweight='bold', fontsize=15)
     ax.set_xlabel('Date, UTC', fontweight='bold', fontsize=15)
 
@@ -239,7 +239,8 @@ def wfe_histogram_plot(
     thresh=None,
     pid=None,
     download_opds=True,
-    mark_corrections='lines',
+    mark_corrections='arrows',
+    mark_expected=True,
     ote_only=False,
     min_wfe=60,
     max_wfe=None
@@ -265,6 +266,12 @@ def wfe_histogram_plot(
         extreme values. I.e. any fraction of time above max_wfe will show up in the histogram as if extra time right
         at the max_wfe value. This is intentional such that the fraction of time shown in the histogram always sums
         to 100%.
+    mark_corrections : str
+        How to visually indicate mirror correction moves. 'arrows', 'lines', 'triangles'. This is mostly vestigial
+        from earlier development. 'arrows' is the recommended choice.
+    mark_expected : bool
+        Should the expected post-correction WFE be shown? This is retrieved from the 'EXPECTED' FITS extension in the
+        WSS output OPD file.
 
     Returns
     -------
@@ -296,6 +303,7 @@ def wfe_histogram_plot(
     # Retrieve all RMSes, from the FITS headers.
     # These are observatory WFE (OTE + NIRCam), at the WFS sensing field point
     rmses = []
+    rmses_predicted_ifcorrected = []  # WAS 'Expected' phase, if a correction were to be performed.
 
     if 'rms_wfe' in opdtable1.colnames:
         rmses = opdtable1['rms_wfe']
@@ -310,6 +318,7 @@ def wfe_histogram_plot(
         if 'rms_wfe' not in opdtable1.colnames:
             if ote_only is False:
                 rmses.append(fits.getheader(full_file_path, ext=1)['RMS_WFE'])
+                rmses_predicted_ifcorrected.append(fits.getheader(full_file_path, ext=3)['RMS_WFE'])
             elif ote_only is True:
                 opd_data = fits.getdata(full_file_path, ext=1)
                 mask = opd_data != 0
@@ -325,6 +334,9 @@ def wfe_histogram_plot(
                 wf_si = target_256 * mask  # Nircam target phase map at FP1
 
                 rmses.append(stpsf.utils.rms(opd_data - wf_si, mask=mask))
+
+                opd_expected_data = fits.getdata(full_file_path, ext=3)
+                rmses_predicted_ifcorrected.append(stpsf.utils.rms(opd_expected_data - wf_si, mask=mask))
 
         mjds = opdtable1['date_obs_mjd']
         pre_or_post.append(stpsf.mast_wss.infer_pre_or_post_correction(row))
@@ -350,8 +362,14 @@ def wfe_histogram_plot(
 
     ms = 14  # markersize
 
-    sensing_markers, = axes[0].plot_date(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-',
+    axes[0].xaxis.axis_date()
+    sensing_markers, = axes[0].plot(dates.plot_date, np.asarray(rmses) * 1e3, '.', ms=ms, ls='-',
                                          label='Sensing visit')
+    if mark_expected:  # Plot expected post-correction RMS "floor"
+        expected_markers, = axes[0].plot(dates.plot_date, np.asarray(rmses_predicted_ifcorrected) * 1e3,
+                                              'none', ls='-', zorder=-10, color='0.7',
+                                              label='Expected post correction')
+
     if end_date - start_date < 3*u.year:
         axes[0].xaxis.set_major_locator(matplotlib.dates.DayLocator(bymonthday=[1]))
         axes[0].xaxis.set_minor_locator(matplotlib.dates.DayLocator(interval=1))
@@ -398,7 +416,10 @@ def wfe_histogram_plot(
                 )
         arrow_placeholder = matplotlib.lines.Line2D([], [], color='limegreen', marker='v', ls='none',
                                                     markersize=10, label='Corrections')
-        axes[0].legend(handles=[sensing_markers, arrow_placeholder])
+        handles = [sensing_markers, arrow_placeholder, ]
+        if mark_expected:
+            handles.append(expected_markers)
+        axes[0].legend(handles=handles)
 
     if pid:
         axes[0].set_ylim(0.975 * axes[0].get_ylim()[0], 1.025 * axes[0].get_ylim()[1])
@@ -1395,9 +1416,10 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
     fig.suptitle(f'WF Trending for {year}-{month:02d}{title_extra}', fontsize=fs * 1.5, fontweight='bold')
 
     # Plot 1: Wavefront Error
+    axes[0].xaxis.axis_date()
+    axes[0].plot(dates_array.plot_date, rms_obs * 1e9, color='C1', ls='-', marker='o', label='Observatory WFE at NIRCam NRCA3')
+    axes[0].plot(dates_array.plot_date, rms_ote * 1e9, color='C0', ls='-', marker='o', label='Telescope WFE')
 
-    axes[0].plot_date(dates_array.plot_date, rms_obs * 1e9, color='C1', ls='-', label='Observatory WFE at NIRCam NRCA3')
-    axes[0].plot_date(dates_array.plot_date, rms_ote * 1e9, color='C0', ls='-', label='Telescope WFE')
     for ax in axes:
         for corr_date in correction_times:
             if (start_date < corr_date) and (corr_date < end_date):
@@ -1433,13 +1455,13 @@ def monthly_trending_plot(year, month, verbose=True, instrument='NIRCam', filter
             [ee_ax_ylim, np.abs((ees_at_rad - median_ee) / median_ee).max() * 1.1]
         )  # display tweak: adjust the plot Y scale sensibly to its contents
 
-        axes[1].plot_date(
-            dates_array.plot_date,
+        axes[1].xaxis.axis_date()
+        axes[1].plot(dates_array.plot_date,
             (ees_at_rad - median_ee) / median_ee,
             ls='-',
+            marker='o', 
             color=color,
-            label=f'$\\Delta$EE within {ee_rad:.2f} arcsec ({ee_npix} pix)',
-        )
+            label=f'$\\Delta$EE within {ee_rad:.2f} arcsec ({ee_npix} pix)',)
 
         axes[1].text(
             0.01,
@@ -1832,7 +1854,8 @@ def show_wfs_around_obs(filename, verbose='True'):
     ax4 = fig.add_subplot(gs[1, 3])
 
     # Plot and annotate timeline at top
-    ax_t.plot_date([wfe_before_dateobs.plot_date, dateobs.plot_date, wfe_after_dateobs.plot_date], [0, 0, 0])
+    ax_t.xaxis.axis_date()
+    ax_t.plot([wfe_before_dateobs.plot_date, dateobs.plot_date, wfe_after_dateobs.plot_date], [0, 0, 0], ls='none', marker='o')
     ax_t.axhline(0, ls=':')
 
     ax_t.xaxis.set_major_locator(matplotlib.dates.DayLocator(interval=1))
@@ -2024,10 +2047,11 @@ def show_wfs_during_program(
     if ax is None:
         fig, ax = plt.subplots(figsize=(12, 6), ncols=1, nrows=1)
 
-    ax.plot_date(
+    ax.xaxis.axis_date()
+    ax.plot(
         wfs_dates_array.plot_date, rms_obs, '+', color='C1', ls='-', label='Measured RMS Wavefront Error at NIRCam NRCA3'
     )
-    ax.plot_date(
+    ax.plot(
         wfs_dates_array.plot_date,
         delta_rmses,
         'none',
@@ -2292,3 +2316,157 @@ def nrc_ta_image_comparison(visitid, verbose=False, show_centroids=False):
     outname = f'nrc_ta_comparison_{visitid}.pdf'
     plt.savefig(outname)
     print(f' => {outname}')
+
+
+def display_wfs_visit(visitid=None, wl='WLM8', overwrite=False, save=True, verbose=True):
+    """Display a big-picture view of the data from a given WFS visit, including both SW and LW
+
+	Parameters
+	----------
+	visitid : string or None
+		either a visit ID, like "V01234005006", or None.
+        If None, then the most recent WFS visit will be displayed.
+	wl : string
+		Which weak lens image to display in the SW channel. Should be either 'WLM8' or 'WLP8'
+        or 'both' to plot both WLM8 and WLP8
+	save : bool
+		Save plot as a PDF?
+	overwrite : bool
+		If plot file already exists, shoult it be overwritten?
+	verbose : bool
+		Be more verbose in text output?
+    """
+
+
+    if visitid is None:
+        # get most recent visit ID
+        visitid = stpsf.mast_wss.retrieve_mast_opd_table()[-1]['visitId']
+        print(f"Most recent WFS visit was {visitid}.")
+
+    if wl not in ['WLM8', 'WLP8', 'both']:
+        raise ValueError("The parameter wl must be one of 'WLM8', 'WLP8', or 'both'")
+
+    if wl=='both':
+        # recursion: display both the minus and plus wave images
+        display_wfs_visit(visitid, wl='WLM8', overwrite=overwrite, save=save, verbose=verbose)
+        display_wfs_visit(visitid, wl='WLP8', overwrite=overwrite, save=save, verbose=verbose)
+        return
+
+    # If we are being asked to save the plot, and not overwrite, don't do anything if such a file already exists
+    outname_pattern = f'wfs_images_*_{visitid}_{wl}.pdf'
+    patternmatches = glob.glob(outname_pattern)
+    if save and len(patternmatches)>0 and not overwrite:
+        print(f'Already exists: {patternmatches[0]}')
+        return
+
+
+    # MAST query
+    if verbose:
+        print(f"Querying MAST about {visitid} to find {wl} images")
+    service = 'Mast.Jwst.Filtered.NIRCam'
+    parameters = {'columns': 'filename, pupil, filter, vststart, act_id, detector',
+                  'filters': [{'paramName': 'visit_id', 'values': [visitid[1:]]}]}
+    from astroquery.mast import Mast
+    tab = Mast.service_request(service, parameters)
+    unix_date_strings = [s[6:-2] for s in tab['vststart'].value] #  these are strings like '/Date(1679095623534)/'; extract just the numeric part
+    times = astropy.time.Time(np.asarray(unix_date_strings, float)/1000, format='unix')
+    times.format = 'iso'
+    tab['vststart'] = astropy.table.Column(times)
+
+    vststart = tab['vststart'][0].isot[0:10]
+    outname = f'wfs_images_{vststart}_{visitid}.pdf'
+
+    tab.sort(keys=['act_id', 'filename'])
+
+    # find the desired SW and LW files
+    mask_wl = (tab['pupil']==wl) & (tab['filter'] == 'F212N')
+    mask_long = ['LONG' in d for d in tab['detector']]
+
+
+    wl_filenames = tab[mask_wl]['filename']
+    lw_filenames = tab[mask_long]['filename']
+
+    if verbose:
+        print(wl_filenames)
+
+    if len(wl_filenames) >4:
+        if verbose:
+            print(f"Found {len(wl_filenames)} images for {wl}. Only displaying the first 4")
+            print(wl_filenames)
+
+        wl_filenames = wl_filenames[0:4]
+    elif len(wl_filenames) < 4:
+        print(f"Found too few images for {wl}. Cannot display.")
+        raise RuntimeError()
+
+    # get from MAST
+    if verbose:
+        print(f"Retrieving data files from {visitid}")
+    wlm_hduls = [stpsf.mast_wss.get_mast_filename(f) for f in wl_filenames]
+    lw_hdul = stpsf.mast_wss.get_mast_filename(lw_filenames[0])
+
+    assert 'nrca1' in wl_filenames[0]
+    assert 'nrca2' in wl_filenames[1]
+    assert 'nrca3' in wl_filenames[2]
+    assert 'nrca4' in wl_filenames[3]
+
+
+    # Pack the NIRCam module A images together, approximating a mosaic
+    approx_gap_npix = int(5//0.032)  # 5 arcsec expressed in NRC SW pixels
+    approx_gap_npix
+
+    npix=2048
+    combined_nrca = np.full((npix*2 + approx_gap_npix, npix*2+approx_gap_npix),  np.nan, dtype=float)
+
+    combined_nrca[0:npix, 0:npix] = wlm_hduls[0]['SCI'].data  # NRCA1
+    combined_nrca[npix+approx_gap_npix:, 0:npix] = wlm_hduls[1]['SCI'].data  # NRCA2
+    combined_nrca[0:npix, npix+approx_gap_npix:] = wlm_hduls[2]['SCI'].data  # NRCA3
+    combined_nrca[npix+approx_gap_npix:, npix+approx_gap_npix:] = wlm_hduls[3]['SCI'].data  # NRCA4
+
+    lwhdr = lw_hdul[0].header
+
+    # Make an image 
+    if verbose:
+        print(f"Displaying images from {visitid}")
+
+    fig, axes = plt.subplots(figsize=(16,9), ncols=2)
+
+    cmap = matplotlib.cm.viridis
+    cmap.set_bad('black')
+
+    norm_sw = matplotlib.colors.AsinhNorm(vmin=0, vmax=1e4, linear_width=2)
+    norm_lw = matplotlib.colors.AsinhNorm(vmin=0, vmax=1e2, linear_width=.2)
+
+    axes[0].imshow(combined_nrca, norm=norm_sw, cmap=cmap, origin='lower')
+    axes[1].imshow(lw_hdul['SCI'].data, norm=norm_lw, cmap=cmap, origin='lower')
+    axes[0].text(0.03, 0.97, 'NRC A SW\nF212N, WLM8',
+                 transform=axes[0].transAxes, verticalalignment='top', color='yellow',
+                fontsize='large', fontweight='bold')
+
+    if lwhdr['PUPIL'].startswith('F') and lwhdr['PUPIL'][-1] in ['N', 'M']:  # These LW filters are physically in the pupil wheel
+        lwfilt = lwhdr['PUPIL']
+    else:
+        lwfilt = lwhdr['FILTER']
+    axes[1].text(0.03, 0.97, f"NRC A LW\n{lwfilt}",
+                 transform=axes[1].transAxes, verticalalignment='top', color='yellow',
+                fontsize='large', fontweight='bold')
+
+    coo = astropy.coordinates.SkyCoord(lwhdr['TARG_RA'], lwhdr['TARG_DEC'], unit='deg')
+    rahmsstr = coo.ra.to_string(unit=u.hour, sep=':', precision=2, pad=True)
+    decdmsstr = coo.dec.to_string(unit=u.degree, sep=':', alwayssign=True, precision=2, pad=True)
+
+    coo_gal = coo.transform_to('galactic')
+    axes[0].text(0.03, 0.03, f"{lwhdr['TARGPROP']}\n$\\alpha, \\delta$ = {rahmsstr} {decdmsstr}\n$l, b$  = {coo_gal.l.deg:.3f}, {coo_gal.b.deg:.3f}",
+                 transform=axes[0].transAxes, color='cyan',
+                 fontsize='large', fontweight='bold')
+
+    for ax in axes:
+        ax.set_xticks(())
+        ax.set_yticks(())
+    plt.tight_layout()
+
+    fig.suptitle(f"WFS visit {visitid} starting {lw_hdul[0].header['VSTSTART'][0:16]}", fontsize='x-large', fontweight='bold')
+
+    if save:
+        # Save the image
+        plt.savefig(outname)

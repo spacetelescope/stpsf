@@ -3,7 +3,7 @@ import logging
 import astropy.io.fits as fits
 import numpy as np
 
-from .. import conf, utils, stpsf_core
+from .. import conf, stpsf_core, utils
 from .test_errorhandling import _exception_message_starts_with
 
 _log = logging.getLogger('test_stpsf')
@@ -33,7 +33,7 @@ def test_logging_setup():
     utils.setup_logging(level=None, filename=None)
     _log.debug('Setting logging to WARN, and writing to file')
     utils.setup_logging(level='WARN', filename='test_log_file.txt')
-    _log.debug('Setting logging to previous settings: {0}, {1}'.format(loglevel, logfn))
+    _log.debug(f'Setting logging to previous settings: {loglevel}, {logfn}')
     utils.setup_logging(level=loglevel, filename=logfn)
 
     try:
@@ -84,5 +84,5 @@ def test_measure_strehl(npix=100):
     meas_perf_strehl = utils.measure_strehl(perfpsf, display=False, verbose=False)
     assert (
         np.abs(meas_perf_strehl - 1.0) < 0.01
-    ), 'measured Strehl for perfect PSF is insufficiently close to 1.0: {}'.format(meas_perf_strehl)
+    ), f'measured Strehl for perfect PSF is insufficiently close to 1.0: {meas_perf_strehl}'
     assert meas_perf_strehl <= 1.0, 'measured Strehl cannot be > 1, even for a perfect PSF'

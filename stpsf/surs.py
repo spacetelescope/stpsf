@@ -12,7 +12,7 @@ try:
     def iterchildren(element, tag=None):
         return element.iterchildren(tag)
 except ImportError:
-    import xml.etree.cElementTree as etree
+    import xml.etree.ElementTree as etree
 
     # The ElementTree implementation in xml.etree does not support
     # Element.iterchildren, so provide this wrapper instead
@@ -30,7 +30,7 @@ except ImportError:
         return _iterchildren()
 
 
-class SegmentUpdate(object):
+class SegmentUpdate:
     """
     Class for representing one single mirror update (will be inside of groups in SURs)
     Allowable units: "id", "meters", "none", "radians", "sag", "steps"
@@ -63,16 +63,15 @@ class SegmentUpdate(object):
             self.stage_type = None
 
     def __str__(self):
-        return (
-            'Update %d, move %s, %s, %s: ' % (self.id, self.segment, 'absolute' if self.absolute else 'relative', self.coord)
-        ) + str(self.moves)
+        return (f"Update {self.id}, move {self.segment}, {'absolute' if self.absolute else 'relative'}, {self.coord}: "
+                + str(self.moves))
 
     def shortstr(self):
         outstr = 'Update %d: %s, %s, %s {' % (self.id, self.segment, 'absolute' if self.absolute else 'relative', self.coord)
 
         outstr += ', '.join(
             [
-                coordname + '=%.3g' % self.moves[coordname]
+                coordname + f'={self.moves[coordname]:.3g}'
                 for coordname in ['PISTON', 'X_TRANS', 'Y_TRANS', 'CLOCK', 'X_TILT', 'Y_TILT']
             ]
         )
@@ -83,14 +82,12 @@ class SegmentUpdate(object):
     def xmltext(self):
         """The XML text representation of a given move"""
         text = (
-            '        <UPDATE id="{0.id}" type="{0.type}" seg_id="{0.segment}" absolute="{absolute}" '
-            'coord="{0.coord}" stage_type="{0.stage_type}">\n'.format(self, absolute=str(self.absolute).lower())
+            f'        <UPDATE id="{self.id}" type="{self.type}" seg_id="{self.segment}" absolute="{str(self.absolute).lower()}" '
+            f'coord="{self.coord}" stage_type="{self.stage_type}">\n'
         )
         for key in ['X_TRANS', 'Y_TRANS', 'PISTON', 'X_TILT', 'Y_TILT', 'CLOCK']:
             if key in self.moves:
-                text += '            <{key}  units="{unit}">{val:E}</{key}>\n'.format(
-                    key=key, unit=self.units[key], val=self.moves[key]
-                )
+                text += f'            <{key}  units="{self.units[key]}">{self.moves[key]:E}</{key}>\n'
         text += '        </UPDATE>\n'
         return text
 
@@ -111,7 +108,7 @@ class SegmentUpdate(object):
             # or the code in ./segment_control/mcs_hexapod_obj__define.pro
 
 
-class SUR(object):
+class SUR:
     """Class for parsing/manipulating Segment Update Request files"""
 
     def __init__(self, filename=None):
@@ -149,7 +146,7 @@ class SUR(object):
             self.groups.append([])
 
     def __str__(self):
-        outstr = 'SUR %s\n' % self.filename
+        outstr = f'SUR {self.filename}\n'
         for igrp, grp in enumerate(self.groups):
             outstr += '\tGroup %d\n' % (igrp + 1)
             for update in grp:
@@ -170,17 +167,15 @@ class SUR(object):
     @property
     def xmltext(self):
         """The XML text representation of a given move"""
-        text = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        text = f"""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
                 <SEGMENT_UPDATE_REQUEST creator="?" date="{self.date}" time="{self.time}" version="0.0.1" operational="false"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../setup_files/
                 schema/segment_update_request.xsd">
                 <CONFIGURATION_NAME>{self.configuration_name}</CONFIGURATION_NAME>
-                <CORRECTION_ID>{self.correction_id}</CORRECTION_ID>\n""".format(
-            self=self, date='YYYY-MM-DD', time='HH:MM:SS'
-        )
+                <CORRECTION_ID>{self.correction_id}</CORRECTION_ID>\n"""
         # FIXME add date and time keywords for real
         for igrp, grp in enumerate(self.groups):
-            text += '    <GROUP id="{id}">\n'.format(id=igrp + 1)
+            text += f'    <GROUP id="{igrp + 1}">\n'
             for update in grp:
                 text += update.xmltext
             text += '    </GROUP>\n'

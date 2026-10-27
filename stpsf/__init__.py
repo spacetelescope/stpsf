@@ -40,7 +40,7 @@ if sys.version_info < tuple(
 # required. If changes to the code and data mean STPSF won't work
 # properly with an old data package, increment this version number.
 # (It's checked against $STPSF_DATA/version.txt)
-DATA_VERSION_MIN = (2, 1, 0)
+DATA_VERSION_MIN = (2, 3, 0)
 
 
 class Conf(_config.ConfigNamespace):
@@ -126,6 +126,6 @@ from .stpsf_core import (  # noqa
 
 from .opds import enable_adjustable_ote  # noqa
 
-from .roman import WFI, RomanCoronagraph  # noqa
+from .roman import WFI  # noqa
 
 from .match_data import setup_sim_to_match_file  # noqa

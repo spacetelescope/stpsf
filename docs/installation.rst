@@ -77,17 +77,11 @@ You should now be able to successfully ``import stpsf`` in a Python session.
    If you have previously installed the data files for an earlier version of STPSF, and then update to a newer version, the
    software may prompt you that you must download and install a new updated version of the data files.
 
-.. Note::
-
-   **For STScI Users Only:** Users at STScI may access the required data files from the Central Storage network. Set the following environment variables in your ``bash`` shell. (You will probably want to add this to your ``.bashrc``.) ::
-
-      export STPSF_PATH="/grp/stpsf/stpsf-data"
-      export PYSYN_CDBS="/grp/hst/cdbs"
 
 Software Requirements
 ---------------------
 
-See `the requirements.txt specification file <https://github.com/spacetelescope/stpsf/blob/develop/requirements.txt>`_ for the required package dependencies.
+See `project.dependencies in pyproject.toml <https://github.com/spacetelescope/stpsf/blob/develop/pyproject.toml>`_ for the required package dependencies.
 
 **Required Python version**: STPSF 2.0 and above require Python 3.10 or higher.
 
@@ -131,12 +125,14 @@ Using Specific Data Versions
 If you need a specific version of the STPSF data you can download it directly
 
 | Full Versions:
+| `stpsf-data-2.3.0.tar.gz <https://stsci.box.com/shared/static/6bddlzcocmty1fsvfgpxrbo2s836z90j.gz>`_
 | `stpsf-data-2.2.0.tar.gz <https://stsci.box.com/shared/static/mjst9j056ibf2uph4gxy8qxmi89tjzwk.gz>`_
 | `stpsf-data-2.1.0.tar.gz <https://stsci.box.com/shared/static/ybp9cupdgxicsn3yj7p9ru9ivuyzcyfw.gz>`_
 | `stpsf-data-2.0.0.tar.gz <https://stsci.box.com/shared/static/i3ui9gfypnhmu5ocec47ooci2ehwf9xf.gz>`_
 
 
 | Min Versions:
+| `minimal-stpsf-data-2.3.0.tar.gz <https://stsci.box.com/shared/static/2fkkcrbkap6qj0qe3f8ru2y8us5iqxnj.gz>`_
 | `minimal-stpsf-data-2.2.0.tar.gz <https://stsci.box.com/shared/static/994a5c7uxc9u9w2li9cwwh440cumbklm.gz>`_
 | `minimal-stpsf-data-2.1.0.tar.gz <https://stsci.box.com/shared/static/z4wt613tg9txgfo5gc4qkvco1jzg74xe.gz>`_
 | `minimal-stpsf-data-2.0.0.tar.gz <https://stsci.box.com/shared/static/4f0jrt20l1tagsmz9s3juxfacu4kgigm.gz>`_

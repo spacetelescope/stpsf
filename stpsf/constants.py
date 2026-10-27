@@ -373,6 +373,8 @@ JWST_SEGMENT_RADIUS = 1.517 / 2
 JWST_CIRCUMSCRIBED_DIAMETER = 6.603464  # meters. Outer corners of B segments
 JWST_INSCRIBED_DIAMETER = 5.47334  # meters. Middle corners of C segments
 
+ROMAN_PUPIL_DIAMETER = 2.36312  # meters
+
 JWST_TYPICAL_LOS_JITTER_PER_AXIS = 0.0008  # milliarcseconds jitter, 1 sigma per axis. = approx 1 mas rms radial, typically
 
 ROMAN_TYPICAL_LOS_JITTER_PER_AXIS = 0.0060  # milliarcseconds jitter, 1 sigma per axis. See https://github.com/spacetelescope/stpsf/issues/111
@@ -391,7 +393,6 @@ INSTRUMENT_DETECTOR_CHARGE_DIFFUSION_DEFAULT_PARAMETERS = {
     'MIRI': 0.001,  # Fit by Marshall + Marcio to ePSFs, after adding IPC
     #  0.070 Based on user reports, see issue #674. However, this was before adding IPC effects
     'WFI': 0.033,  # 20250919 Value from Goddard recommendation (stpsf issue #111)
-    'ROMANCORONAGRAPH': 0.0
 }
 # add Interpixel capacitance (IPC) effects. These are the parameters for each detector kernel
 # For NIRCam we  use CV3/Flight convolution kernels from Jarron Leisenring, see detectors.apply_detector_ipc for details

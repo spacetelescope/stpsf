@@ -1,15 +1,11 @@
 import os
 
 import astropy.convolution
-from astropy.io import fits
 import numpy as np
 import pytest
+from astropy.io import fits
 
-from .. import gridded_library
-from .. import stpsf_core
-from .. import roman
-from .. import utils
-from .. import detectors
+from .. import detectors, gridded_library, roman, stpsf_core, utils
 
 
 def test_compare_to_calc_psf_oversampled():

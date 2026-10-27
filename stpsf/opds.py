@@ -122,7 +122,7 @@ class OPD(poppy.FITSOpticalElement):
             _log.debug('Neither a pupil mask nor OPD were specified. Using the default JWST pupil.')
             transmission = os.path.join(utils.get_stpsf_data_path(), f'jwst_pupil_RevW_npix{self.npix}.fits.gz')
 
-        super(OPD, self).__init__(
+        super().__init__(
             name=name,
             opd=opd,
             transmission=transmission,
@@ -337,13 +337,13 @@ class OPD(poppy.FITSOpticalElement):
 
         plot = ax.imshow(self.opd * mask * scalefact, vmin=-vmax, vmax=vmax, cmap=cmap, extent=extent, origin=origin)
 
-        _log.debug('Displaying OPD. Vmax is %f, data max is %f ' % (vmax, self.opd.max()))
+        _log.debug(f'Displaying OPD. Vmax is {vmax:f}, data max is {self.opd.max():f} ')
 
         if title is None:
             title = self.name
         ax.set_title(title)
         if show_rms:
-            ax.set_xlabel('RMS WFE = %.1f nm' % self.rms())
+            ax.set_xlabel(f'RMS WFE = {self.rms:.1f} nm')
         if show_v2v3:
             utils.annotate_ote_pupil_coords(None, ax, orientation=pupil_orientation)
 
@@ -354,7 +354,7 @@ class OPD(poppy.FITSOpticalElement):
             if cbpad is None:
                 cbpad = 0.05 if colorbar_orientation == 'vertical' else 0.15
             cb = plt.colorbar(plot, ax=ax, pad=cbpad, orientation=colorbar_orientation)
-            cb.set_label('WFE [%s]' % unit)
+            cb.set_label(f'WFE [{unit}]')
         else:
             cb = None
         plt.draw()
@@ -463,10 +463,10 @@ class OPD(poppy.FITSOpticalElement):
         zerns = np.zeros(nzerns)
         if segment + '-decenter' in self.state.keys():
             zerns += self._move(segment, type='decenter', vector=self.state[segment + '-decenter'], return_zernikes=True)
-            title += ', displacement=[%.2e, %.2e, %.2e] um' % tuple(self.state[segment + '-decenter'])
+            title += ', displacement=[{:.2e}, {:.2e}, {:.2e}] um'.format(*tuple(self.state[segment + '-decenter']))
         if segment + '-tilt' in self.state.keys():
             zerns += self._move(segment, type='tilt', vector=self.state[segment + '-tilt'], return_zernikes=True)
-            title += ', tilts =[%.5f, %.5f, %.5f] urad' % tuple(self.state[segment + '-tilt'])
+            title += ', tilts =[{:.5f}, {:.5f}, {:.5f}] urad'.format(*tuple(self.state[segment + '-tilt']))
 
         _log.info('Zerns: ' + str(zerns))
         fig = plt.gcf()
@@ -484,22 +484,21 @@ class OPD(poppy.FITSOpticalElement):
             # n, m = zernike.noll_indices(j)
             Z = zernike.zernike1(j, npix=npix)
             ax.imshow(Z * zerns[j - 1] * hexap * scalefact, vmin=-1 * vmax, vmax=vmax, cmap=cmap, origin='lower')
-            ax.text(npix * 0.95, npix * 0.8, '$Z{:d}$'.format(j), fontsize=20, horizontalalignment='right')
-            ax.text(npix * 0.95, npix * 0.1, '{:.2e}'.format(zerns[j - 1]), fontsize=15, horizontalalignment='right')
+            ax.text(npix * 0.95, npix * 0.8, f'$Z{j:d}$', fontsize=20, horizontalalignment='right')
+            ax.text(npix * 0.95, npix * 0.1, f'{zerns[j - 1]:.2e}', fontsize=15, horizontalalignment='right')
 
         fig.text(0.5, 0.95, title, horizontalalignment='center', fontsize=15)
         fig.text(
             0.95,
             0.15,
-            'Segment RMS WFE = {:.2f} {} '.format(self.rms(segment) * (scalefact / 1000), unit),
+            f'Segment RMS WFE = {self.rms(segment) * (scalefact / 1000):.2f} {unit} ',
             fontsize=10,
             horizontalalignment='right',
         )
-        # fig.text(0.95, 0.05, 'OPDs scaled from %.2e - %.2e um' % (-vmax, vmax), horizontalalignment='right', fontsize=10)
         fig.text(
             0.95,
             0.05,
-            'OPDs scaled from {:.2f} - {:.2f} {}'.format(-vmax, vmax, unit),
+            f'OPDs scaled from {-vmax:.2f} - {vmax:.2f} {unit}',
             horizontalalignment='right',
             fontsize=10,
         )
@@ -564,9 +563,7 @@ class OPD(poppy.FITSOpticalElement):
         strehl = np.exp(-((rms * 2 * np.pi / wavelength) ** 2))
         if verbose:
             print(
-                'For wavelength = {0} meters, estimated Strehl = {1} for {2} nm rms WFE'.format(
-                    wavelength, strehl, rms * 1e9
-                )
+                f'For wavelength = {wavelength} meters, estimated Strehl = {strehl} for {rms * 1e9} nm rms WFE'
             )
         return strehl
 
@@ -649,7 +646,7 @@ class OTE_Linear_Model_Elliott(OPD):
         else:
             print('state = {')
             for k in keys:
-                print("    '%s' : %s," % (k, repr(self.state[k])))
+                print(f"    '{k}' : {repr(self.state[k])},")
             print('    }')
 
     def print_state(self, type='local'):
@@ -722,7 +719,7 @@ class OTE_Linear_Model_Elliott(OPD):
 
     def _record(self, segment='A1', type='decenter', values=np.zeros(3)):
         """update the state structure with the current segment positions"""
-        key = '%s-%s' % (segment, type)
+        key = f'{segment}-{type}'
         if key in self.state.keys():
             self.state[key] += values
         else:
@@ -735,7 +732,7 @@ class OTE_Linear_Model_Elliott(OPD):
             print('No perturbations')
         else:
             for k in keys:
-                print('%s\t%s' % (k, str(self.state[k])))
+                print(f'{k}\t{str(self.state[k])}')
 
     def _apply_zernikes_to_seg(self, segment, zernike_coeffs, coordsys='local', debug=False):
         """Apply Zernike perturbations to a given segment
@@ -775,7 +772,7 @@ class OTE_Linear_Model_Elliott(OPD):
         seg_radius = np.ceil(R.max())
 
         _log.debug(
-            'Segment {} is centered at pixel loc ({:.1f}, {:.1f}) with radius {:.1f} pix'.format(segment, cx, cy, seg_radius)
+            f'Segment {segment} is centered at pixel loc ({cx:.1f}, {cy:.1f}) with radius {seg_radius:.1f} pix'
         )
 
         # Ah hell, this already does the rotations here??
@@ -831,7 +828,7 @@ class OTE_Linear_Model_Elliott(OPD):
             zern = zernike.zernike1(i + 1, rho=Rw, theta=theta) * zernike_coeffs[i]
             self.opd[wseg] += zern
 
-        outtxt = 'Zs=[' + ', '.join(['%.1e' % z for z in zernike_coeffs]) + ']'
+        outtxt = 'Zs=[' + ', '.join([f'{z:.1e}' for z in zernike_coeffs]) + ']'
         _log.debug('     ' + outtxt)
 
     def _move(self, segment, type='tilt', vector=None, display=False, return_zernikes=False):
@@ -866,8 +863,8 @@ class OTE_Linear_Model_Elliott(OPD):
         if return_zernikes:
             return zernike_coeffs
         else:
-            _log.info('Segment %s requested %s: %s in %s' % (segment, type, str(vector), units))
-            _log.debug('    local %s: %s' % (type, str(local_vector)))
+            _log.info(f'Segment {segment} requested {type}: {str(vector)} in {units}')
+            _log.debug(f'    local {type}: {str(local_vector)}')
             self._record(segment, type, vector)
             self._apply_zernikes_to_seg(segment, zernike_coeffs)
 
@@ -905,7 +902,7 @@ class OTE_Linear_Model_Elliott(OPD):
 
         tilts = np.array([tiltX, tiltY, tiltZ]).astype(float)
 
-        self.opd_header.add_history('Rotation: %s %s' % (str(tuple(tilts)), unit))
+        self.opd_header.add_history(f'Rotation: {str(tuple(tilts))} {unit}')
 
         # new sensitivity matrices are in urad for  alpha and beta, mrad for gamma.
         # first just convert all to urad.
@@ -967,7 +964,7 @@ class OTE_Linear_Model_Elliott(OPD):
 
         vector = np.array([distX, distY, distZ])
 
-        self.opd_header.add_history('Displacement: %s %s' % (str(tuple(vector)), unit))
+        self.opd_header.add_history(f'Displacement: {str(tuple(vector))} {unit}')
         if unit.endswith('s'):
             unit = unit[:-1]
         unit = unit.lower()
@@ -978,7 +975,7 @@ class OTE_Linear_Model_Elliott(OPD):
         elif unit == 'nm' or unit == 'nanometer' or unit == 'nanometers':
             vector /= 1000
         else:
-            raise ValueError('Unknown unit for length: %s' % unit)
+            raise ValueError(f'Unknown unit for length: {unit}')
 
         self._move(segment, 'decenter', vector, display=display)
 
@@ -1019,7 +1016,7 @@ class OTE_Linear_Model_Elliott(OPD):
 
         # self.opd[wsegs] = 0.2 # debug
 
-        _log.info('added sine wave: (%.2f, %.2f, %.2f)' % (cyclesX, cyclesY, amplitude))
+        _log.info(f'added sine wave: ({cyclesX:.2f}, {cyclesY:.2f}, {amplitude:.2f})')
 
         if display:
             self.display()
@@ -1080,7 +1077,7 @@ class OTE_Linear_Model_Elliott(OPD):
         self.tilt(segment, steps[3], steps[4], steps[5])
 
         rms = self.rms(segment)
-        print('After perturbation, segment %s has RMS WFE = %.1f nm' % (segment, rms))
+        print(f'After perturbation, segment {segment} has RMS WFE = {rms:.1f} nm')
 
 
 class OTE_Linear_Model_WSS(OPD):
@@ -1325,7 +1322,7 @@ class OTE_Linear_Model_WSS(OPD):
             if table[i]['control_mode'] != self._control_modes[i]:
                 raise RuntimeError('Influence function table has unexpected ordering')
             for h in range(nhexike):
-                coeffs[i, h] = table[i]['Hexike_{}'.format(h)]
+                coeffs[i, h] = table[i][f'Hexike_{h}']
 
         # the coefficients are in the table natively in units of microns,
         # as preferred by most Ball code. STPSF works natively in meters
@@ -1352,7 +1349,7 @@ class OTE_Linear_Model_WSS(OPD):
             if table[i]['control_mode'] != self._sm_control_modes[i]:
                 raise RuntimeError('Influence function table has unexpected ordering')
             for h in range(nhexike):
-                coeffs[i, h] = table[i]['Hexike_{}'.format(h)]
+                coeffs[i, h] = table[i][f'Hexike_{h}']
 
         # the coefficients are in the table natively in units of microns,
         # as preferred by most Ball code. STPSF works natively in meters
@@ -1387,7 +1384,7 @@ class OTE_Linear_Model_WSS(OPD):
 
         seg_radius = (X[wseg].max() - X[wseg].min()) / 2.0
 
-        _log.debug('Segment %s is centered at pixel loc (%.1f, %.1f) with radius %.1f pix' % (segment, cx, cy, seg_radius))
+        _log.debug(f'Segment {segment} is centered at pixel loc ({cx:.1f}, {cy:.1f}) with radius {seg_radius:.1f} pix')
 
         # These are the BATC "Control" coordinates for each segment
         Y = (Y - cy) / seg_radius
@@ -1534,7 +1531,7 @@ class OTE_Linear_Model_WSS(OPD):
 
         # NOW, WE SUM UP THE ALPHAS AND BETAS FOR EACH HEXIKE,
         # AS DESCRIBED IN THE DOC STRING ABOVE.
-        coeffs = np.zeros((6))
+        coeffs = np.zeros(6)
         for i, icol in enumerate(smif.colnames[2:]):
             coeffs[i] = np.sum((alphas[icol] * dx + betas[icol] * dy) * sm_errors)
 
@@ -1575,11 +1572,9 @@ class OTE_Linear_Model_WSS(OPD):
 
         for i in range(3, 9):
             self.opd_header[f'SMIF_H{i}'] = (z_coeffs[i], 'Hexike coeff from S.M. influence fn model')
-        self.opd_header['HISTORY'] = 'Field point (x,y): ({})'.format(v2v3)
-        self.opd_header['HISTORY'] = 'Control point: {} ({})'.format(
-            self.control_point_fieldpoint.upper(), self.ote_control_point
-        )
-        self.opd_header['HISTORY'] = 'Delta x/y: {} {} (radians))'.format(dx, dy)
+        self.opd_header['HISTORY'] = f'Field point (x,y): ({v2v3})'
+        self.opd_header['HISTORY'] = f'Control point: {self.control_point_fieldpoint.upper()} ({self.ote_control_point})'
+        self.opd_header['HISTORY'] = f'Delta x/y: {dx} {dy} (radians))'
 
         return perturbation * (1e-6 * wfe_sign)
 
@@ -1893,7 +1888,7 @@ class OTE_Linear_Model_WSS(OPD):
         # Handle tilts and clocking
         tilts = np.array([xtilt, ytilt, clocking], dtype=float)
         if np.abs(tilts).sum() > 0:
-            self.opd_header.add_history('Rotation: %s %s' % (str(tuple(tilts)), rot_unit))
+            self.opd_header.add_history(f'Rotation: {str(tuple(tilts))} {rot_unit}')
 
             # sensitivity matrices are in microns per microradian
             # so convert all to urad.
@@ -1945,9 +1940,9 @@ class OTE_Linear_Model_WSS(OPD):
             elif trans_unit == 'm' or trans_unit == 'meter':
                 vector *= 1e6
             else:
-                raise ValueError('Unknown trans_unit for length: %s' % trans_unit)
+                raise ValueError(f'Unknown trans_unit for length: {trans_unit}')
 
-            self.opd_header.add_history('Displacement: %s %s' % (str(tuple(vector)), trans_unit))
+            self.opd_header.add_history(f'Displacement: {str(tuple(vector))} {trans_unit}')
 
         # Handle ROC. ROC doesn't support any units conversions
         if np.abs(roc) != 0:
@@ -1955,7 +1950,7 @@ class OTE_Linear_Model_WSS(OPD):
                 pass
             elif trans_unit == 'sag':
                 roc *= 1e6
-            self.opd_header.add_history('ROC: %s %s' % (roc, 'micron'))
+            self.opd_header.add_history('ROC: {} {}'.format(roc, 'micron'))
 
         iseg = np.where(self.segnames == segment)[0][0]
 
@@ -2050,7 +2045,7 @@ class OTE_Linear_Model_WSS(OPD):
         # FIXME - need to complete this fn!
 
         if np.abs(tilts).sum() > 0:
-            self.opd_header.add_history('Rotation: %s %s' % (str(tuple(tilts)), rot_unit))
+            self.opd_header.add_history(f'Rotation: {str(tuple(tilts))} {rot_unit}')
 
             # sensitivity matrices are in microns per microradian
             # so convert all to urad.
@@ -2102,13 +2097,13 @@ class OTE_Linear_Model_WSS(OPD):
             elif trans_unit == 'm' or trans_unit == 'meter':
                 vector *= 1e6
             else:
-                raise ValueError('Unknown trans_unit for length: %s' % trans_unit)
+                raise ValueError(f'Unknown trans_unit for length: {trans_unit}')
 
-            self.opd_header.add_history('Displacement: %s %s' % (str(tuple(vector)), trans_unit))
+            self.opd_header.add_history(f'Displacement: {str(tuple(vector))} {trans_unit}')
 
         # Handle ROC. ROC doesn't support any units conversions
         if np.abs(roc) != 0:
-            self.opd_header.add_history('ROC: %s %s' % (roc, 'micron'))
+            self.opd_header.add_history('ROC: {} {}'.format(roc, 'micron'))
 
         iseg = np.where(self.segnames == segment)[0][0]
 
@@ -2162,7 +2157,7 @@ class OTE_Linear_Model_WSS(OPD):
         # Handle tilts and clocking (which is always 0)
         tilts = np.array([xtilt, ytilt, 0]).astype(float)
         if np.abs(tilts).sum() > 0:
-            self.opd_header.add_history('Rotation: %s %s' % (str(tuple(tilts)), rot_unit))
+            self.opd_header.add_history(f'Rotation: {str(tuple(tilts))} {rot_unit}')
 
             # sensitivity matrices are in microns per microradian
             # so convert all to urad.
@@ -2199,9 +2194,9 @@ class OTE_Linear_Model_WSS(OPD):
             elif trans_unit == 'meter':
                 vector *= 1000000
             else:
-                raise ValueError('Unknown trans_unit for length: %s' % trans_unit)
+                raise ValueError(f'Unknown trans_unit for length: {trans_unit}')
 
-            self.opd_header.add_history('Displacement: %s %s' % (str(tuple(vector)), trans_unit))
+            self.opd_header.add_history(f'Displacement: {str(tuple(vector))} {trans_unit}')
 
         iseg = 18
 
@@ -2249,7 +2244,7 @@ class OTE_Linear_Model_WSS(OPD):
         elif unit == 'm' or unit == 'meter':
             pass
         else:
-            raise ValueError('Unknown unit for Zernike wavefront RMS: %s' % unit)
+            raise ValueError(f'Unknown unit for Zernike wavefront RMS: {unit}')
 
         if absolute:
             self._global_zernike_coeffs *= 0
@@ -2306,10 +2301,10 @@ class OTE_Linear_Model_WSS(OPD):
 
         for igrp, grp in zip(groupnum, groups):
             if verbose:
-                print('Moving segments for group {}'.format(igrp))
+                print(f'Moving segments for group {igrp}')
             for update in grp:
                 if verbose:
-                    print('Move seg {} by {}'.format(update.segment, str(update)))
+                    print(f'Move seg {update.segment} by {str(update)}')
                 if update.type == 'pose':
                     if update.coord != 'local':
                         raise NotImplementedError('Only local moves supported!')
@@ -2494,10 +2489,10 @@ class OTE_Linear_Model_WSS(OPD):
                 hexike_coeffs_combined = hexike_coeffs + hexike_coeffs_from_sm + hexike_coeffs_from_thermal
 
                 if verbose:
-                    print('Need to move segment {} by {} '.format(segname, pose_coeffs.flatten()))
-                    print('plus SM moved by {} '.format(sm_pose_coeffs.flatten()))
-                    print('plus segment moved by {} due to thermal contribution'.format(hexike_coeffs_from_thermal))
-                    print('   Hexike coeffs for {}: {}'.format(segname, hexike_coeffs))
+                    print(f'Need to move segment {segname} by {pose_coeffs.flatten()} ')
+                    print(f'plus SM moved by {sm_pose_coeffs.flatten()} ')
+                    print(f'plus segment moved by {hexike_coeffs_from_thermal} due to thermal contribution')
+                    print(f'   Hexike coeffs for {segname}: {hexike_coeffs}')
 
                 self._apply_hexikes_to_seg(segname, hexike_coeffs_combined)
 
@@ -2890,7 +2885,7 @@ def random_unstack(ote, radius=1, verbose=False):
 
 # -------------------------------------------------------------------------------
 # Thermal
-class OteThermalModel(object):
+class OteThermalModel:
     """
     Create an object for a delta_time that predicts the WSS Hexike coefficients
     for an OPD that represents the impact of thermal variation caused by a change
@@ -3113,7 +3108,7 @@ def estimate_iec_induced_wfe_at_time(times, plot=False):
 # WFE decomposition
 
 
-class JWST_WAS_PTT_Basis(object):
+class JWST_WAS_PTT_Basis:
     def __init__(self):
         """Segment piston/tip/tilt basis using the same conventions as JWST WAS
         i.e. local mechanical control coordinates per each segment and its local
@@ -3159,7 +3154,7 @@ class JWST_WAS_PTT_Basis(object):
         if nterms is None:
             nterms = 3 * self.nsegments
         elif nterms > 3 * self.nsegments:
-            raise ValueError('nterms must be <= {} for the specified segment aperture.'.format(3 * self.nsegments))
+            raise ValueError(f'nterms must be <= {3 * self.nsegments} for the specified segment aperture.')
 
         # Re-use the machinery inside the OTE Linear model class class to set up the
         # arrays defining the segment and zernike geometry.
@@ -3197,7 +3192,7 @@ class JWST_WAS_PTT_Basis(object):
         return basis[0:nterms]
 
 
-class JWST_WAS_Full_Basis(object):
+class JWST_WAS_Full_Basis:
     def __init__(self):
         """Segment pose full basis using the same conventions as JWST WAS
         i.e. local mechanical control coordinates per each segment and its local
@@ -3247,7 +3242,7 @@ class JWST_WAS_Full_Basis(object):
         if nterms is None:
             nterms = ndof * self.nsegments
         elif nterms > ndof * self.nsegments:
-            raise ValueError('nterms must be <= {} for the specified segment aperture.'.format(3 * self.nsegments))
+            raise ValueError(f'nterms must be <= {3 * self.nsegments} for the specified segment aperture.')
 
         # Re-use the machinery inside the OTE Linear model class class to set up the
         # arrays defining the segment and zernike geometry.

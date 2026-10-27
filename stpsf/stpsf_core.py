@@ -203,7 +203,7 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         fits.HDUList object corresponding to such a file. If the file contains a
         datacube, you may set this to a tuple (filename, slice) to select a
         given slice, or else the first slice will be used."""
-        self.pupil_radius = None  # Set when loading FITS file in get_optical_system
+        self.pupil_radius = None  # Set in subclass for JWST or Roman
 
         self.options = {}  # dict for storing other arbitrary options.
 
@@ -447,10 +447,12 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         if hasattr(pupil_optic, 'header_keywords'):
             self._extra_keywords.update(pupil_optic.header_keywords())
 
-        self.pupil_radius = pupil_optic.pupil_diam / 2.0
-
         # add coord transform from entrance pupil to exit pupil
-        optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)
+        # (WFI: invert both axes until pupil orientations fixed in source files)
+        if self.name == 'WFI':
+            optsys.add_inversion(axis='both', name='OTA exit pupil', hide=True)  # for Roman the telescope is called the OT*A*
+        else:
+            optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)     # for JWST the telescope is called the OT*E*
 
         # add rotation at this point, if present - needs to be after the
         # exit pupil inversion.
@@ -591,10 +593,15 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
                 pupil_transmission = self.pupil
             else:
                 raise TypeError('Not sure what to do with a pupil of ' 'that type: {}'.format(type(self.pupil)))
+            # ---- check if we have an index into a datacube; this is used for Roman
+            transmission_index = (self._pupil_datacube_index
+                                  if hasattr(self, '_pupil_datacube_index')
+                                  else None)
             # ---- apply pupil intensity and OPD to the optical model
             pupil_optic = poppy.FITSOpticalElement(
                 name='{} Entrance Pupil'.format(self.telescope),
                 transmission=pupil_transmission,
+                transmission_index=transmission_index,
                 opd=opd_map,
                 planetype=poppy.poppy_core.PlaneType.pupil,
                 # rotation=self._rotation
@@ -826,6 +833,8 @@ class JWInstrument(SpaceTelescopeInstrument):
 
         self.pupil = os.path.abspath(os.path.join(self._STPSF_basepath, 'jwst_pupil_RevW_npix1024.fits.gz'))
         'Filename *or* fits.HDUList for JWST pupil mask. Usually there is no need to change this.'
+
+        self.pupil_radius = constants.JWST_CIRCUMSCRIBED_DIAMETER / 2 * units.meter
 
         self._aperturename = None
         self._detector = None
