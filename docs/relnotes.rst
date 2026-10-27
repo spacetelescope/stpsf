@@ -23,6 +23,60 @@ See https://github.com/spacetelescope/stpsf/issues for currently open issues and
 Version History and Change Log
 -------------------------------
 
+Version 2.3.0
+=============
+*2026 October*
+
+This release updates the Roman instrument model for use with the final
+prelaunch optical models of WFI wavefront error from Goddard Space Flight
+Center (Spring 2026).
+
+Upgrade to the latest reference data to access these optical models. The
+updated Roman reference files are significantly more detailed, introducing:
+
+a) Expanded Zernike coefficients over a greater number of field points,
+b) WFI-specific, per-detector high-frequency optical path difference maps,
+c) Intra-detector, field point-dependent pupil images.
+
+**What's Changed**
+
+* STPSF Dependency Updates by @york-stsci in https://github.com/spacetelescope/stpsf/pull/134
+* [SCSB-225] migrate `[tool.pytest.ini_options]` to native TOML by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/132
+* Trending time series - add program IDs for cycle 4 maintenance programs by @mperrin in https://github.com/spacetelescope/stpsf/pull/136
+* Update installation.rst by @marcio-melendez in https://github.com/spacetelescope/stpsf/pull/137
+* Consider all available Zernike terms for WFI by @ojustino in https://github.com/spacetelescope/stpsf/pull/140
+* Add display_wfs_visit function to easily display SW and LW data from a WFS visit by @mperrin in https://github.com/spacetelescope/stpsf/pull/142
+* use local workflow so we can publish wheels to PyPI without needing a token (using Trusted Publishers) by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/141
+* remove `requirements.txt` and switch automated tests to reusable OpenAstronomy workflow by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/135
+* update test workflow with job names and dynamic Python versions by @zacharyburnett in https://github.com/spacetelescope/stpsf/pull/149
+* Fix astrometric distortion, cleanup code, and test better by @mperrin in https://github.com/spacetelescope/stpsf/pull/150
+* Set Roman pupil radius correctly, even if pupil files have zero padding by @mperrin in https://github.com/spacetelescope/stpsf/pull/152
+* changing plot_date to plot due to matplotlib3.11 update by @sbetti22 in https://github.com/spacetelescope/stpsf/pull/154
+* exclude tests using remote data (e.g. MAST) from CI builds by @mperrin in https://github.com/spacetelescope/stpsf/pull/159
+* Make stpsf.mast_wss.query_wfsc_images_latest handle more gracefully big gaps in NIRCam data availability by @mperrin in https://github.com/spacetelescope/stpsf/pull/160
+* build(deps): update synphot requirement from <1.7.0,>=1.4.0 to >=1.4.0,<1.8.0 by @dependabot[bot] in https://github.com/spacetelescope/stpsf/pull/139
+* fix #122 by removing a deprecated email address by @mperrin in https://github.com/spacetelescope/stpsf/pull/158
+* Add display of expected ("floor") RMS WFEs to wfe_histogram_plot by @mperrin in https://github.com/spacetelescope/stpsf/pull/156
+* Fix broken API links in Roman notebook by @ojustino in https://github.com/spacetelescope/stpsf/pull/161
+* Linting with ruff by @mperrin in https://github.com/spacetelescope/stpsf/pull/163
+* remove deprecated/unsupported Roman Coronagraph model by @mperrin in https://github.com/spacetelescope/stpsf/pull/165
+* Update minimum dependency versions according to SPEC0 by @mperrin in https://github.com/spacetelescope/stpsf/pull/164
+* Adapt Roman code to new required data files by @ojustino in https://github.com/spacetelescope/stpsf/pull/162
+* Implement IPC for WFI by @ojustino in https://github.com/spacetelescope/stpsf/pull/166
+* fix stale link to ePSF docs in Photutils. Fixes #171 by @mperrin in https://github.com/spacetelescope/stpsf/pull/172
+* Extend setup_sim_to_match_file to support Roman data files by @mperrin in https://github.com/spacetelescope/stpsf/pull/173
+* Allow handling of jwst datamodels in setup_sim_to_match_file by @emolter in https://github.com/spacetelescope/stpsf/pull/174
+* update optical plane names for WFI, for clarity by @mperrin in https://github.com/spacetelescope/stpsf/pull/176
+* Roman 2 3 0 doc 1 by @marcio-melendez in https://github.com/spacetelescope/stpsf/pull/170
+* Cert Security Update by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/177
+* update readthedocs python version by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/180
+* Update Roman docs and figures by @ojustino in https://github.com/spacetelescope/stpsf/pull/181
+* minor change to proper index on develop for post scipa methods by @marcio-melendez in https://github.com/spacetelescope/stpsf/pull/182
+* Update Roman docs and figures (v2) by @ojustino in https://github.com/spacetelescope/stpsf/pull/183
+* Fix horizontal WFI orientation in Roman docs by @ojustino in https://github.com/spacetelescope/stpsf/pull/184
+
+**Full Changelog**: https://github.com/spacetelescope/stpsf/compare/2.2.0...2.3.0
+
 Version 2.2.0
 =============
 *2025 December*
