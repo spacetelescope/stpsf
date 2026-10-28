@@ -422,21 +422,42 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         optsys = poppy.OpticalSystem(
             name='{telescope}+{instrument}'.format(telescope=self.telescope, instrument=self.name), oversample=fft_oversample
         )
-        # For convenience offsets can be given in cartesian or radial coords
-        if 'source_offset_x' in options or 'source_offset_y' in options:
+        # For convenience offsets can be in pixel, cartesian, or radial coords
+        pixel_keys = {'source_offset_pixel_x', 'source_offset_pixel_y'}
+        cartesian_keys = {'source_offset_x', 'source_offset_y'}
+        radial_keys = {'source_offset_r', 'source_offset_theta'}
+        options_keys = set(options.keys())
+
+        found_pixel_keys = bool(pixel_keys & options_keys)
+        found_cartesian_keys = bool(cartesian_keys & options_keys)
+        found_radial_keys = bool(radial_keys & options_keys)
+
+        if found_pixel_keys + found_cartesian_keys + found_radial_keys > 1:
+            # could be a warning or an error?
+            _log.warning("Offset specified in multiple coordinates: "
+                         f"{"pixel, " if found_pixel_keys else ""}"
+                         f"{"cartesian" if found_cartesian_keys else ""}"
+                         f"{", " if found_cartesian_keys and found_radial_keys else ""}"
+                         f"{"radial" if found_radial_keys else ""}. "
+                         "Check source_offset related keys of <instrument>.options dict.")
+
+        if found_pixel_keys:
+            offx = options.get('source_offset_pixel_x', 0) * self.pixelscale
+            offy = options.get('source_offset_pixel_y', 0) * self.pixelscale
+        elif found_cartesian_keys:
             offx = options.get('source_offset_x', 0)
             offy = options.get('source_offset_y', 0)
+
+        if found_radial_keys:
+            optsys.source_offset_r = options.get('source_offset_r', 0)  # OK to assume 0?
+            optsys.source_offset_theta = options.get('source_offset_theta', 0)  # OK to assume 0?
+        elif found_pixel_keys or found_cartesian_keys:
             optsys.source_offset_r = np.sqrt(offx**2 + offy**2)
             optsys.source_offset_theta = np.rad2deg(np.arctan2(-offx, offy))
-            _log.debug(
-                'Source offset from X,Y = ({}, {}) is (r,theta) = {},{}'.format(
-                    offx, offy, optsys.source_offset_r, optsys.source_offset_theta
-                )
-            )
-        if 'source_offset_r' in options:
-            optsys.source_offset_r = options['source_offset_r']
-        if 'source_offset_theta' in options:
-            optsys.source_offset_theta = options['source_offset_theta']
+            _log.debug("Source offset from "
+                       f"{"pixels " if found_pixel_keys else ""}"
+                       f"X,Y = ({offx}, {offy}) is "
+                       f"({optsys.source_offset_r}, {optsys.source_offset_theta})")
 
         # Telescope entrance pupil
         pupil_optic = self._get_telescope_pupil_and_aberrations()
