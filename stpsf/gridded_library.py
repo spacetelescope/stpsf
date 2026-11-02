@@ -14,6 +14,12 @@ import stpsf.detectors
 _log = logging.getLogger('stpsf')
 
 
+def _det_yx_card(index, xy):
+    """Header card (value, comment) of the DET_YX{index} keyword for a PSF at detector position xy = (x, y)."""
+    x, y = xy
+    return (str((float(y), float(x))), f"The #{index} PSF's (y,x) detector pixel position")
+
+
 class CreatePSFLibrary:
     # Class variables for NIRCam short vs long wave information:
     nrca_short_filters = [
@@ -391,10 +397,7 @@ class CreatePSFLibrary:
                 if self.fov_pixels % 2 == 0:
                     loc += 0.5  # even arrays must be at a half pixel
 
-                meta[f'DET_YX{h}'] = (
-                    str((float(loc[1]), float(loc[0]))),
-                    f"The #{h} PSF's (y,x) detector pixel position",
-                )
+                meta[f'DET_YX{h}'] = _det_yx_card(h, loc)
 
             meta['NUM_PSFS'] = (self.num_psfs, 'The total number of fiducial PSFs')
 
@@ -445,6 +448,13 @@ class CreatePSFLibrary:
 
             # Create GriddedPSFModel object
             model = self.to_model(psf_arr, meta)
+
+            # GriddedPSFModel sorts its planes and its grid_xypos by (y, x), so model.data is no
+            # longer in the order of self.location_list.  Number the DET_YX keywords in the order
+            # of the planes, so that plane i of the saved file is the PSF at DET_YX{i}.
+            for h, xy in enumerate(model.grid_xypos):
+                meta[f'DET_YX{h}'] = _det_yx_card(h, xy)
+                model.meta[f'det_yx{h}'] = meta[f'DET_YX{h}']
 
             # Append data/objects to lists as needed
             model_list.append(model)

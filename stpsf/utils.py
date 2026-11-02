@@ -951,6 +951,33 @@ def combine_docstrings(cls):
     return cls
 
 
+def _plane_positions(meta):
+    """The (x, y) detector position of each plane of a saved PSF grid.
+
+    ``meta`` maps the header keywords of the file to (value, comment) pairs.  Each ``DET_YX{i}``
+    keyword holds the (y, x) position of the PSF that plane ``i`` should contain.
+
+    Files written by webbpsf 1.3.0 up to and including stpsf 2.3.0 store the planes sorted by (y, x)
+    (the order of ``GriddedPSFModel.data``) but number the ``DET_YX`` keywords in the order in which
+    the PSFs were computed (x slowest).  For a square grid this swaps the planes at (x, y) and (y, x),
+    for all x != y.  The keyword order of such a file is not (y, x) sorted, and the planes are, so the
+    positions are sorted the same way.  Files written by earlier versions store the planes in keyword
+    order, and files written since the fix number the keywords in plane order; both are read as they are.
+    """
+    xypos = [
+        (float(meta[key][0].split(',')[1].split(')')[0]), float(meta[key][0].split(',')[0].split('(')[1]))
+        for key in meta.keys()
+        if 'DET_YX' in key
+    ]  # from (y,x) to (x,y)
+
+    order = np.lexsort(([x for x, y in xypos], [y for x, y in xypos]))  # y primary, x secondary
+    if not np.array_equal(order, np.arange(len(xypos))):
+        match = re.match(r'(\d+)\.(\d+)', str(meta['VERSION'][0])) if 'VERSION' in meta else None
+        if match is not None and (int(match.group(1)), int(match.group(2))) >= (1, 3):
+            xypos = [xypos[i] for i in order]
+    return xypos
+
+
 def to_griddedpsfmodel(HDUlist_or_filename=None, ext_data=0, ext_header=0):
     """
     Create a photutils GriddedPSFModel object from either a FITS file or
@@ -1011,11 +1038,7 @@ def to_griddedpsfmodel(HDUlist_or_filename=None, ext_data=0, ext_header=0):
     ndd = NDData(data, meta=meta, copy=True)
 
     # Edit meta dictionary for GriddedPSFLibrary specifics
-    ndd.meta['grid_xypos'] = [
-        ((float(ndd.meta[key][0].split(',')[1].split(')')[0])), (float(ndd.meta[key][0].split(',')[0].split('(')[1])))
-        for key in ndd.meta.keys()
-        if 'DET_YX' in key
-    ]  # from (y,x) to (x,y)
+    ndd.meta['grid_xypos'] = _plane_positions(ndd.meta)
 
     if 'oversampling' not in ndd.meta:
         ndd.meta['oversampling'] = ndd.meta['OVERSAMP'][0]  # pull the value
