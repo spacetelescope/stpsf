@@ -447,20 +447,19 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         if hasattr(pupil_optic, 'header_keywords'):
             self._extra_keywords.update(pupil_optic.header_keywords())
 
-        # add coord transform from entrance pupil to exit pupil
-        # (WFI: invert both axes until pupil orientations fixed in source files)
-        if self.name == 'WFI':
-            optsys.add_inversion(axis='both', name='OTA exit pupil', hide=True)  # for Roman the telescope is called the OT*A*
-        else:
-            optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)     # for JWST the telescope is called the OT*E*
+        # JWST: add coord transform from entrance pupil to exit pupil + rotate
+        if self.name != 'WFI':
+            # for JWST the telescope is called the OT*E*
+            optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)
 
-        # add rotation at this point, if present - needs to be after the
-        # exit pupil inversion.
-        # Sign convention: Here we are rotating the *wavefront* so the sign is opposite the _rotation attribute,
-        # which gives the V3IdlYangle for the detector rotation.
-        if self._rotation is not None:
-            optsys.add_rotation(-self._rotation, hide=True)
-            optsys.planes[-1].wavefront_display_hint = 'intensity'
+            # add rotation at this point, if present - needs to be after the
+            # exit pupil inversion.
+            # Sign convention: Here we are rotating the *wavefront* so the sign
+            # is opposite the _rotation attribute,
+            # which gives the V3IdlYangle for the detector rotation.
+            if self._rotation is not None:
+                optsys.add_rotation(-self._rotation, hide=True)
+                optsys.planes[-1].wavefront_display_hint = 'intensity'
 
         # Allow instrument subclass to add field-dependent aberrations
         aberration_optic = self._get_aberrations()
@@ -479,6 +478,24 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
 
             if hasattr(aberration_optic, 'header_keywords'):
                 self._extra_keywords.update(aberration_optic.header_keywords())
+
+        # WFI: add coord transform from entrance pupil to exit pupil + rotate
+        # NOTE: must *follow* addition of field-dependent aberration until
+        # coordinate convention of source Zernike files is flipped. do so in
+        # future release for better agreement with JWST order of operations
+        if self.name == 'WFI':
+            # (invert both axes until pupil orientations fixed in source files)
+            # for Roman the telescope is called the OT*A*
+            optsys.add_inversion(axis='both', name='OTA exit pupil', hide=True)
+
+            # add rotation at this point, if present - needs to be after the
+            # exit pupil inversion.
+            # Sign convention: Here we are rotating the *wavefront* so the sign
+            # is opposite the _rotation attribute,
+            # which gives the V3IdlYangle for the detector rotation.
+            if self._rotation is not None:
+                optsys.add_rotation(-self._rotation, hide=True)
+                optsys.planes[-1].wavefront_display_hint = 'intensity'
 
         # ---- Add defocus if requested
         if 'defocus_waves' in options:
