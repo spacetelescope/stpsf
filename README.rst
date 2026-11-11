@@ -37,8 +37,9 @@ including its Wide Field Instrument and a preliminary version of the Coronagraph
 
 .. note::
 
-   The current (Cycle 10) Roman WFI optical model was calculated by Goddard
-   Space Flight Center in September 2024.
+   The current Roman WFI optical model (Phase C, or the final iteration before
+   Roman's launch) was calculated by Goddard Space Flight Center in February
+   and March 2026.
 
 Documentation can be found online at https://stpsf.readthedocs.io
 
