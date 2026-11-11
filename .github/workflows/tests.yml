@@ -23,13 +23,13 @@ env:
 
 jobs:
   retrieve_cache:
-    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@ee1ced313cc7277f07226f03e64d038f3929d7a3 # setup retrieve_cache with development or latest_release
+    uses: spacetelescope/stpsf/.github/workflows/retrieve_cache.yml@2b1798d0171e9c307825e5e42dc889fa46d0eef4 # setup retrieve_cache with development or latest_release
     with:
       dataset_type: development   # or latest_release
   check:
     needs:
       - retrieve_cache
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@1285b95e32c783cfa40eb2ffbd6ca4cd023fb884 # v3.2.2
     with:
       setenv: |
         STPSF_PATH: ${{ needs.retrieve_cache.outputs.cache_path }}/stpsf-data/
@@ -41,10 +41,10 @@ jobs:
   supported-pythons:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3"
       - name: Set latest pip version
@@ -78,7 +78,7 @@ jobs:
     needs:
       - retrieve_cache
       - supported-pythons
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@8d5ad7efc8e84a051639373f6ea0d10441eafee1 # v3.2.1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@1285b95e32c783cfa40eb2ffbd6ca4cd023fb884 # v3.2.2
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
