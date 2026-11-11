@@ -315,15 +315,32 @@ def _plane_label_grid(version, planes_in_key_order):
         ('1.3.0', False),  # webbpsf 1.3.0 to stpsf 2.3.0: planes sorted by (y, x), keywords not
         ('2.3.0', False),
         ('2.3.1.dev12+gabcdef0', False),
+        ('0.1.dev12+gabcdef0', False),  # a fork or editable install can record a leading-zero version
     ],
 )
 def test_to_griddedpsfmodel_pairs_planes_with_positions(version, planes_in_key_order):
-    """to_griddedpsfmodel assigns each plane to the position it was computed at, for every file layout"""
+    """to_griddedpsfmodel assigns each plane to the position it was computed at, for every file layout
+
+    The VERSION keyword plays no role.  Files with planes in keyword order (webbpsf < 1.3.0) are read
+    with check_order=False.
+    """
     hdulist, label = _plane_label_grid(version, planes_in_key_order)
-    model = utils.to_griddedpsfmodel(hdulist)
+    model = utils.to_griddedpsfmodel(hdulist, check_order=not planes_in_key_order)
     assert len(model.grid_xypos) == 4
     for i, (x, y) in enumerate(model.grid_xypos):
         assert model.data[i, 2, 2] == label[(int(x), int(y))], f'Plane {i} does not belong to (x, y) = ({x}, {y})'
+
+
+def test_to_griddedpsfmodel_check_order_default_is_on():
+    """Without check_order, a file with keywords out of (y, x) order has its positions sorted to match the planes"""
+    hdulist, label = _plane_label_grid('1.3.0', planes_in_key_order=False)
+    model = utils.to_griddedpsfmodel(hdulist)
+    unchecked = utils.to_griddedpsfmodel(hdulist, check_order=False)
+    for i, (x, y) in enumerate(model.grid_xypos):
+        assert model.data[i, 2, 2] == label[(int(x), int(y))]
+    # With the check off, the positions keep keyword order and the off-diagonal planes are swapped
+    swapped = [i for i, (x, y) in enumerate(unchecked.grid_xypos) if unchecked.data[i, 2, 2] != label[(int(x), int(y))]]
+    assert len(swapped) == 2
 
 
 def test_to_griddedpsfmodel_sorted_keywords():
