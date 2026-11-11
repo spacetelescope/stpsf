@@ -106,7 +106,7 @@ jobs:
         run: echo "cache_key=stpsf-data-$DATASET_TYPE-$VERSION" >> $GITHUB_OUTPUT
 
       - name: Save cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ runner.temp }}/data/
           key: ${{ steps.cache_key.outputs.cache_key }}

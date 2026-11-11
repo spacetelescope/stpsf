@@ -904,6 +904,7 @@ class WFI(RomanInstrument):
         # to exclude call to setter by SpaceTelescopeInstrument.__init__()
         if self._detector is not None:
             self._update_pupil(detector=self._detector)
+            self._pupilopd = self._opd_file_dict[self._detector]
 
         # Update throughput file directory
         self._update_aperturename()

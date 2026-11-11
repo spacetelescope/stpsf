@@ -22,7 +22,7 @@
 #     needs: [ stpsf_data_cache ]
 #     steps:
 #       - name: Retrieve STPSF data cache
-#         uses: actions/cache@v4
+#         uses: actions/cache@v6
 #         with:
 #           path: ${{ runner.temp }}/stpsf-data
 #           key: ${{ needs.stpsf_data_cache.outputs.cache_key }}
@@ -83,7 +83,7 @@ jobs:
           echo "cache_key=stpsf-data-${{ inputs.dataset_type }}-$VERSION" >> $GITHUB_OUTPUT
 
       - name: Restore or save cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.download.outputs.cache_path }}
           key: ${{ steps.download.outputs.cache_key }}

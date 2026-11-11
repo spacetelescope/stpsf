@@ -167,8 +167,8 @@ def test_WFI_includes_aberrations():
     wfi = roman.WFI()
     wfi.detector = 'WFI01'
     osys = wfi.get_optical_system()
-    assert isinstance(osys[2], roman.FieldDependentAberration), (
-        'Third plane of Roman WFI optical system should be the ' 'field dependent aberration virtual optic'
+    assert roman.FieldDependentAberration in [type(o) for o in osys], (
+        'Roman WFI optical system should include plane for field dependent aberration virtual optic'
     )
 
 
