@@ -89,6 +89,18 @@ if on_rtd:
 
 numpydoc_show_class_members = False
 
+# npsphinx: remove input and output execution prompts
+nbsphinx_prolog = """
+.. raw:: html
+
+    <style>
+        .nbinput .prompt,
+        .nboutput .prompt {
+            display: none;
+        }
+    </style>
+"""
+
 autosummary_generate = True
 graphviz_dot = "dot"
 # Add any paths that contain templates here, relative to this directory.
