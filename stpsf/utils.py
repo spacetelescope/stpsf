@@ -951,7 +951,47 @@ def combine_docstrings(cls):
     return cls
 
 
-def to_griddedpsfmodel(HDUlist_or_filename=None, ext_data=0, ext_header=0):
+def _plane_positions(meta, check_order=True):
+    """The (x, y) detector position of each plane of a saved PSF grid.
+
+    ``meta`` maps the header keywords of the file to (value, comment) pairs.  Each ``DET_YX{i}``
+    keyword holds the (y, x) position of the PSF that plane ``i`` should contain.
+
+    Files written by webbpsf 1.3.0 up to and including stpsf 2.3.0 store the planes sorted by (y, x)
+    (the order of ``GriddedPSFModel.data``) but number the ``DET_YX`` keywords in the order in which
+    the PSFs were computed (x slowest).  For a square grid this swaps the planes at (x, y) and (y, x),
+    for all x != y.  When ``check_order`` is True and the keywords are not in (y, x) order, the
+    positions are sorted the same way as the planes.  Files written since the fix number the keywords
+    in plane order, and are read as they are.
+
+    Parameters
+    ----------
+    meta : dict
+        Header keywords of the file, as (value, comment) pairs.
+    check_order : bool
+        If False, the positions are returned in keyword order without checking it against (y, x)
+        order.  This is the layout of files written by webbpsf < 1.3.0, which store the planes
+        in keyword order.  Default True.
+
+    Returns
+    -------
+    xypos : list of (float, float)
+        The (x, y) position of each plane.
+    """
+    xypos = [
+        (float(meta[key][0].split(',')[1].split(')')[0]), float(meta[key][0].split(',')[0].split('(')[1]))
+        for key in meta.keys()
+        if 'DET_YX' in key
+    ]  # from (y,x) to (x,y)
+
+    if check_order:
+        order = np.lexsort(([x for x, y in xypos], [y for x, y in xypos]))  # y primary, x secondary
+        if not np.array_equal(order, np.arange(len(xypos))):
+            xypos = [xypos[i] for i in order]
+    return xypos
+
+
+def to_griddedpsfmodel(HDUlist_or_filename=None, ext_data=0, ext_header=0, check_order=True):
     """
     Create a photutils GriddedPSFModel object from either a FITS file or
     an HDUlist object. The input must have header keywords "DET_YX{}" and
@@ -966,6 +1006,13 @@ def to_griddedpsfmodel(HDUlist_or_filename=None, ext_data=0, ext_header=0):
         Extension of the data in the FITS file
     ext_header : int
         Extension of the header in the FITS file
+    check_order : bool
+        If True (default), the planes are assumed to be sorted by (y, x), the order of
+        ``GriddedPSFModel.data``, and the ``DET_YX{}`` positions are sorted to match when they are
+        not already in that order.  This is the layout of every file written by webbpsf 1.3.0 or
+        later, including those whose ``DET_YX{}`` keywords are numbered in the order in which the PSFs
+        were computed (x slowest).  Set to False for files written by webbpsf < 1.3.0, whose planes
+        are stored in the order of the ``DET_YX{}`` keywords.
 
     Returns
     -------
@@ -1011,11 +1058,7 @@ def to_griddedpsfmodel(HDUlist_or_filename=None, ext_data=0, ext_header=0):
     ndd = NDData(data, meta=meta, copy=True)
 
     # Edit meta dictionary for GriddedPSFLibrary specifics
-    ndd.meta['grid_xypos'] = [
-        ((float(ndd.meta[key][0].split(',')[1].split(')')[0])), (float(ndd.meta[key][0].split(',')[0].split('(')[1])))
-        for key in ndd.meta.keys()
-        if 'DET_YX' in key
-    ]  # from (y,x) to (x,y)
+    ndd.meta['grid_xypos'] = _plane_positions(ndd.meta, check_order=check_order)
 
     if 'oversampling' not in ndd.meta:
         ndd.meta['oversampling'] = ndd.meta['OVERSAMP'][0]  # pull the value

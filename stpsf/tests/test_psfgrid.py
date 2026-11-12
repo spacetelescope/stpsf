@@ -270,6 +270,123 @@ def test_saving(tmpdir):
     tmpdir.remove()
 
 
+def test_saving_pairs_planes_with_positions(tmpdir):
+    """The planes of a saved grid belong to the positions given by their DET_YX keywords.
+
+    GriddedPSFModel sorts its planes by (y, x), while the PSFs are computed with x slowest; for a
+    square grid the two orders differ, so the keywords have to be numbered in plane order.
+    """
+    oversample = 2
+    fov_pixels = 11  # odd: no half-pixel shift of the positions
+    nlambda = 1
+    directory = str(tmpdir)
+
+    fgs = stpsf_core.FGS()
+    fgs.detector = 'FGS2'
+    grid = fgs.psf_grid(
+        all_detectors=False,
+        num_psfs=4,
+        oversample=oversample,
+        fov_pixels=fov_pixels,
+        nlambda=nlambda,
+        save=True,
+        outdir=directory,
+        outfile='test_pairs.fits',
+        overwrite=True,
+        verbose=False,
+    )
+    assert not np.allclose(grid.data[1], grid.data[2]), 'Planes at (x,y) and (y,x) must differ for this test'
+
+    with fits.open(os.path.join(directory, 'test_pairs_fgs2.fits')) as infile:
+        header = infile[0].header
+        for i, (x, y) in enumerate(grid.grid_xypos):
+            assert header[f'DET_YX{i}'] == str((float(y), float(x)))
+
+        # The saved file read back gives the same planes at the same positions
+        model = utils.to_griddedpsfmodel(infile)
+    assert np.array_equal(model.grid_xypos, grid.grid_xypos)
+    assert np.array_equal(model.data, grid.data)
+
+    # Each saved plane is the PSF calculated at its position
+    kernel = astropy.convolution.Box2DKernel(width=oversample)
+    for i, (x, y) in enumerate(model.grid_xypos):
+        fgs.detector_position = (int(x), int(y))
+        calcpsf = fgs.calc_psf(oversample=oversample, fov_pixels=fov_pixels, nlambda=nlambda)['OVERDIST'].data
+        convpsf = astropy.convolution.convolve(calcpsf, kernel) * oversample**2
+        assert np.allclose(model.data[i], convpsf), f'Plane {i} is not the PSF at (x, y) = ({x}, {y})'
+
+
+def _plane_label_grid(version, planes_in_key_order):
+    """A 2x2 grid file whose plane at (x, y) is a delta function of height 1 + (x > 0) + 2 (y > 0).
+
+    The keywords are numbered in the order in which STPSF computes the PSFs (x slowest).  The planes
+    are stored in that order (``planes_in_key_order``, written by webbpsf < 1.3.0), or sorted by
+    (y, x) (webbpsf 1.3.0 to stpsf 2.3.0).
+    """
+    positions = [(x, y) for x in (0, 2047) for y in (0, 2047)]
+    label = {(x, y): 1.0 + (x > 0) + 2.0 * (y > 0) for x, y in positions}
+    stored = positions if planes_in_key_order else sorted(positions, key=lambda p: (p[1], p[0]))
+    data = np.zeros((4, 5, 5))
+    for i, xy in enumerate(stored):
+        data[i, 2, 2] = label[xy]
+    hdu = fits.PrimaryHDU(data)
+    hdu.header['OVERSAMP'] = (1, 'oversampling value')
+    hdu.header['VERSION'] = (version, 'STPSF software version')
+    for i, (x, y) in enumerate(positions):
+        hdu.header[f'DET_YX{i}'] = (str((float(y), float(x))), f"The #{i} PSF's (y,x) detector pixel position")
+    return fits.HDUList(hdu), label
+
+
+@pytest.mark.parametrize(
+    'version, planes_in_key_order',
+    [
+        ('1.2.1', True),  # webbpsf <= 1.2.1: planes in keyword order
+        ('1.3.0', False),  # webbpsf 1.3.0 to stpsf 2.3.0: planes sorted by (y, x), keywords not
+        ('2.3.0', False),
+        ('2.3.1.dev12+gabcdef0', False),
+        ('0.1.dev12+gabcdef0', False),  # a fork or editable install can record a leading-zero version
+    ],
+)
+def test_to_griddedpsfmodel_pairs_planes_with_positions(version, planes_in_key_order):
+    """to_griddedpsfmodel assigns each plane to the position it was computed at, for every file layout
+
+    The VERSION keyword plays no role.  Files with planes in keyword order (webbpsf < 1.3.0) are read
+    with check_order=False.
+    """
+    hdulist, label = _plane_label_grid(version, planes_in_key_order)
+    model = utils.to_griddedpsfmodel(hdulist, check_order=not planes_in_key_order)
+    assert len(model.grid_xypos) == 4
+    for i, (x, y) in enumerate(model.grid_xypos):
+        assert model.data[i, 2, 2] == label[(int(x), int(y))], f'Plane {i} does not belong to (x, y) = ({x}, {y})'
+
+
+def test_to_griddedpsfmodel_check_order_default_is_on():
+    """Without check_order, a file with keywords out of (y, x) order has its positions sorted to match the planes"""
+    hdulist, label = _plane_label_grid('1.3.0', planes_in_key_order=False)
+    model = utils.to_griddedpsfmodel(hdulist)
+    unchecked = utils.to_griddedpsfmodel(hdulist, check_order=False)
+    for i, (x, y) in enumerate(model.grid_xypos):
+        assert model.data[i, 2, 2] == label[(int(x), int(y))]
+    # With the check off, the positions keep keyword order and the off-diagonal planes are swapped
+    swapped = [i for i, (x, y) in enumerate(unchecked.grid_xypos) if unchecked.data[i, 2, 2] != label[(int(x), int(y))]]
+    assert len(swapped) == 2
+
+
+def test_to_griddedpsfmodel_sorted_keywords():
+    """Keywords already numbered in (y, x) order (written since the fix) are read in that order"""
+    positions = sorted(((x, y) for x in (0, 2047) for y in (0, 2047)), key=lambda p: (p[1], p[0]))
+    data = np.zeros((4, 5, 5))
+    data[:, 2, 2] = [1, 2, 3, 4]
+    hdu = fits.PrimaryHDU(data)
+    hdu.header['OVERSAMP'] = 1
+    hdu.header['VERSION'] = '2.4.0'
+    for i, (x, y) in enumerate(positions):
+        hdu.header[f'DET_YX{i}'] = str((float(y), float(x)))
+    model = utils.to_griddedpsfmodel(fits.HDUList(hdu))
+    assert [tuple(p) for p in model.grid_xypos] == [(float(x), float(y)) for x, y in positions]
+    assert np.array_equal(model.data[:, 2, 2], [1, 2, 3, 4])
+
+
 def test_2d_to_griddedpsfmodel():
     """Test that utils.to_griddedpsfmodel function works for a 2D HDUList input"""
 
