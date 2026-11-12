@@ -114,10 +114,12 @@ pages.
 Version 2.2.0
 =============
 *2025 December*
+
 This release includes updates for the Roman WFI PSF to synchronize with the Roman ETC
 release in January 2026. It also includes accumulated JWST updates as of December 2025.
 
-## What's Changed
+**What's Changed**
+
 * Docs update by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/109
 * Docs update by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/110
 * update mast_wss.query_wfsc_images_latest for cycle 4 by @mperrin in https://github.com/spacetelescope/stpsf/pull/112
@@ -142,16 +144,22 @@ release in January 2026. It also includes accumulated JWST updates as of Decembe
 Version 2.1.0
 =============
 *2025 June*
+
 This release updates the Roman instrument model for use with the Cycle 10 optical models of
 WFI wavefront error from Goddard Space Flight Center (Fall 2024).
+
 Note that accessing these optical models requires an upgrade to the latest reference data.
+
 The updated Roman reference files introduce
+
 a) Zernike coefficients specific to each filter for modeling wavefront error,
 b) throughputs specific to each filter *and* detector, and
 c) pupil masks specific to each of the imaging and prism filters. (The zeroth and first order grism filters continue to share a pupil mask.)
+
 The `add_distortion` flag now has no effect on Roman simulations since our input WFI pupil masks natively include distortion effects.
 
 **What's Changed**
+
 * release 2.0.0 by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/48
 * example notebook on how to transition from webbpsf to stpsf by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/57
 * new information added to our transition documentation by @obi-wan76 in https://github.com/spacetelescope/stpsf/pull/58
@@ -186,9 +194,13 @@ The `add_distortion` flag now has no effect on Roman simulations since our input
 Version 2.0.0
 =============
 *2024 December*
+
 Ready for Production Release
+
 All versions before 1.5.1 were part of the WebbPSF repository
+
 **What's Changed**
+
 * Final migration before version 2.0.0 by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/46
 * Test readthedocs by @BradleySappington in https://github.com/spacetelescope/stpsf/pull/47
 
