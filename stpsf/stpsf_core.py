@@ -422,42 +422,77 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
         optsys = poppy.OpticalSystem(
             name='{telescope}+{instrument}'.format(telescope=self.telescope, instrument=self.name), oversample=fft_oversample
         )
-        # For convenience offsets can be in pixel, cartesian, or radial coords
-        pixel_keys = {'source_offset_pixel_x', 'source_offset_pixel_y'}
+
+        # Source offsets: for convenience, can be in cartesian or radial coords
         cartesian_keys = {'source_offset_x', 'source_offset_y'}
         radial_keys = {'source_offset_r', 'source_offset_theta'}
         options_keys = set(options.keys())
 
-        found_pixel_keys = bool(pixel_keys & options_keys)
         found_cartesian_keys = bool(cartesian_keys & options_keys)
         found_radial_keys = bool(radial_keys & options_keys)
 
-        if found_pixel_keys + found_cartesian_keys + found_radial_keys > 1:
-            # could be a warning or an error?
-            _log.warning("Offset specified in multiple coordinates: "
-                         f"{'pixel, ' if found_pixel_keys else ''}"
-                         f"{'cartesian' if found_cartesian_keys else ''}"
-                         f"{', ' if found_cartesian_keys and found_radial_keys else ''}"
-                         f"{'radial' if found_radial_keys else ''}. "
-                         "Check source_offset related keys of <instrument>.options dict.")
+        if found_cartesian_keys + found_radial_keys > 1:
+            raise ValueError("Offset specified in both cartesian and pixel "
+                             "coordinates. Check source_offset related keys of "
+                             "<instrument>.options dict.")
 
-        if found_pixel_keys:
-            offx = options.get('source_offset_pixel_x', 0) * self.pixelscale
-            offy = options.get('source_offset_pixel_y', 0) * self.pixelscale
-        elif found_cartesian_keys:
-            offx = options.get('source_offset_x', 0)
-            offy = options.get('source_offset_y', 0)
+        if found_cartesian_keys:
+            off_x = options.get('source_offset_x', 0)
+            off_y = options.get('source_offset_y', 0)
 
+            # for backward compatibility, unitless values are understood to be
+            # arcsec. otherwise, accept arcsec-like or pixel-like units
+            if isinstance(off_x, units.Quantity):
+                if off_x.unit.is_equivalent(units.arcsec):
+                    off_x = off_x.to(units.arcsec).value
+                elif off_x.unit.is_equivalent(units.pixel):
+                    off_x = off_x.to(units.pixel).value * self.pixelscale
+                else:
+                    raise ValueError('source_offset_x units must be in '
+                                     'arcsec (default) or pixel')
+            if isinstance(off_y, units.Quantity):
+                if off_y.unit.is_equivalent(units.arcsec):
+                    off_y = off_y.to(units.arcsec).value
+                elif off_y.unit.is_equivalent(units.pixel):
+                    off_y = off_y.to(units.pixel).value * self.pixelscale
+                else:
+                    raise ValueError('source_offset_y units must be in '
+                                     'arcsec (default) or pixel')
+
+            _log.debug('Cartesian source offset in arcsec is X,Y = '
+                       f"({off_x}, {off_y}) (pixel scale = {self.pixelscale} "
+                       'arcsec/pixel)')
+
+            # poppy ultimately takes offsets in radial coords
+            optsys.source_offset_r = np.sqrt(off_x**2 + off_y**2)
+            optsys.source_offset_theta = np.rad2deg(np.arctan2(-off_x, off_y))
         if found_radial_keys:
-            optsys.source_offset_r = options.get('source_offset_r', 0)  # OK to assume 0?
-            optsys.source_offset_theta = options.get('source_offset_theta', 0)  # OK to assume 0?
-        elif found_pixel_keys or found_cartesian_keys:
-            optsys.source_offset_r = np.sqrt(offx**2 + offy**2)
-            optsys.source_offset_theta = np.rad2deg(np.arctan2(-offx, offy))
-            _log.debug("Source offset from "
-                       f"{'pixels ' if found_pixel_keys else ''}"
-                       f"X,Y = ({offx}, {offy}) is "
-                       f"({optsys.source_offset_r}, {optsys.source_offset_theta})")
+            off_r = options.get('source_offset_r', 0)  # OK to assume 0?
+            off_theta = options.get('source_offset_theta', 0)  # OK to assume 0?
+
+            # for backward compatibility, unitless values are understood to be
+            # arcsec (r) and degrees (theta). otherwise, allow r to accept
+            # arcsec-like or pixel-like units. theta can have degree-like units
+            if isinstance(off_r, units.Quantity):
+                if off_r.unit.is_equivalent(units.arcsec):
+                    off_r = off_r.to(units.arcsec).value
+                elif off_r.unit.is_equivalent(units.pixel):
+                    off_r = off_r.to(units.pixel).value * self.pixelscale
+                else:
+                    raise ValueError('source_offset_r units must be in '
+                                     'arcsec (default) or pixel')
+            if isinstance(off_theta, units.Quantity):
+                if off_theta.unit.is_equivalent(units.deg):
+                    off_theta = off_theta.to(units.deg).value
+                else:
+                    raise ValueError('source_offset_theta units must be in deg')
+
+            optsys.source_offset_r = off_r
+            optsys.source_offset_theta = off_theta
+        if found_cartesian_keys or found_radial_keys:
+            _log.debug('Radial source offset in (arcsec, deg) is R,θ = '
+                       f"({optsys.source_offset_r}, {optsys.source_offset_theta}) "
+                       f"(pixel scale = {self.pixelscale} arcsec/pixel)")
 
         # Telescope entrance pupil
         pupil_optic = self._get_telescope_pupil_and_aberrations()
