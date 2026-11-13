@@ -8,11 +8,11 @@ from .. import hst
 import stpsf
 
 
-def _pupil_map(**kwargs):
+def _pupil_map(cls=hst.HSTPupil, **kwargs):
     # 512 pixel grid with the pupil radius spanning 128 pixels, as in TinyTim
     wave = poppy.Wavefront(diam=4.8, npix=512)
     wave.pixelscale = 1.2 / 128
-    return hst.HSTPupil(**kwargs).get_transmission(wave)
+    return cls(**kwargs).get_transmission(wave)
 
 
 def test_hst_pupil_geometry():
@@ -31,7 +31,7 @@ def test_hst_pupil_geometry():
 def test_hst_pupil_area():
     """The OTA pupil times the IR cold mask matches the TinyTim pupil dump area (39552 pixels at R=128)"""
     ota = _pupil_map()
-    cold = _pupil_map(cold_mask=True)
+    cold = _pupil_map(hst.WFC3IRColdMask)
     assert np.isclose((ota * cold).sum(), 39552, rtol=3e-3)
     assert np.isclose(ota.sum() / (np.pi * 128**2), 1 - 0.33**2, atol=0.03)
 
@@ -56,7 +56,7 @@ def test_hst_mirror_maps_and_field_zernikes():
     wfc3.filter = 'F160W'
     wfc3.detector_position = (507, 507)
     primary, secondary = wfc3._get_mirror_map_planes()
-    pupil = hst.HSTPupil(cold_mask=True)
+    pupil = hst.WFC3IRColdMask()
     assert np.isclose(wfc3._rms_opd_nm(pupil, primary, secondary), 21.3, atol=1.5)  # maps alone; ~19 nm after mean removal
     assert np.isclose(wfc3._rms_opd_nm(pupil, primary, secondary, wfc3._get_aberrations()), 34.8, atol=1.5)
     # TinyTim drops the field-dependent focus unless a despace is set

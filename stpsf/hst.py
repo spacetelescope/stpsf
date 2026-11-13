@@ -18,7 +18,7 @@ Each optical element is a separate poppy plane, in this order:
 2. ``HSTMirrorMap`` for the primary mirror: TinyTim's measured zonal OPD map.
 3. ``HSTMirrorMap`` for the secondary mirror, shifted with field position (the beam footprint moves on the secondary).
 4. ``HSTAnnularZernikeWFE``: instrument aberrations, from field-dependent polynomials for Z4-Z8 (plus despace).
-5. For WFC3 IR only, ``HSTPupil(cold_mask=True)``: the cold pupil mask (outer 0.9755 R, secondary 0.354 R,
+5. For WFC3 IR only, ``WFC3IRColdMask`` (a subclass of ``HSTPupil``): the cold pupil mask (outer 0.9755 R, secondary 0.354 R,
    spiders 0.061 R). It is applied in addition to the OTA pupil.
 
 Everything is evaluated in TinyTim's frame: the OTA V2/V3 frame with +V3 along array columns (poppy x) and +V2
@@ -88,11 +88,12 @@ def _in_spiders(v2, v3, half_width):
 
 
 class HSTPupil(poppy.AnalyticOpticalElement):
-    """Analytic HST OTA entrance pupil, or the WFC3 IR cold mask, in TinyTim's geometry.
+    """Analytic HST OTA entrance pupil in TinyTim's geometry.
 
     The geometry is defined in the OTA V2/V3 frame, with +V3 along the array columns (poppy x) and
     +V2 along the array rows (poppy y), and is then rotated clockwise by ``rotation`` degrees to
-    the camera frame, following TinyTim's convention.
+    the camera frame, following TinyTim's convention. Subclasses (e.g. `WFC3IRColdMask`) override
+    `_transmission_at` to model other binary masks in the same frame.
 
     Parameters
     ----------
@@ -100,29 +101,23 @@ class HSTPupil(poppy.AnalyticOpticalElement):
         Outer radius of the OTA pupil in meters.
     rotation : float
         Clockwise rotation in degrees.
-    cold_mask : bool
-        If True, model the WFC3 IR cold pupil mask (outer edge, secondary and spiders) rather than the OTA.
     subsample : int
         Each pixel is evaluated on a subsample x subsample grid of points and averaged.
     """
 
+    default_name = 'HST OTA pupil'
+
     def __init__(self, radius=constants.HST_PUPIL_DIAMETER / 2, rotation=constants.HST_TINYTIM_WFC3_ROTATION,
-                 cold_mask=False, subsample=4, name=None, **kwargs):
-        if name is None:
-            name = 'WFC3 IR cold mask' if cold_mask else 'HST OTA pupil'
-        super().__init__(name=name, planetype=poppy.poppy_core.PlaneType.pupil, **kwargs)
+                 subsample=4, name=None, **kwargs):
+        super().__init__(name=name or self.default_name, planetype=poppy.poppy_core.PlaneType.pupil, **kwargs)
         self.pupil_diam = 2 * radius
         self.radius = radius
         self.rotation_cw = rotation
-        self.cold_mask = cold_mask
         self.subsample = subsample
 
     def _transmission_at(self, v2, v3):
         """Binary transmission at points given in units of the pupil radius, in the OTA V2/V3 frame"""
         r = np.hypot(v2, v3)
-        if self.cold_mask:
-            cm = constants.HST_WFC3_IR_COLD_MASK
-            return (r <= cm['outer_radius']) & (r >= cm['secondary_radius']) & ~_in_spiders(v2, v3, cm['spider_width'] / 2)
         trans = (r <= 1) & (r >= constants.HST_OTA_SECONDARY_RADIUS)
         trans &= ~_in_spiders(v2, v3, constants.HST_OTA_SPIDER_WIDTH / 2)
         for pad_v3, pad_v2, pad_r in constants.HST_OTA_PADS:
@@ -140,6 +135,23 @@ class HSTPupil(poppy.AnalyticOpticalElement):
                 v2, v3 = _ota_frame(x + dx * pix, y + dy * pix, self.radius, self.rotation_cw)
                 total += self._transmission_at(v2, v3)
         return total / n**2
+
+
+class WFC3IRColdMask(HSTPupil):
+    """The WFC3 IR channel's cold pupil mask, a physical element separate from the OTA pupil.
+
+    It sits in the WFC3 IR optical path, undersizing the OTA pupil slightly (outer edge, a larger secondary
+    obscuration and wider spiders), and is applied in addition to `HSTPupil`. It is registered with the OTA pupil
+    through the shared V2/V3 frame and rotation. Dimensions are in ``constants.HST_WFC3_IR_COLD_MASK``; there are no
+    support pads in the mask.
+    """
+
+    default_name = 'WFC3 IR cold mask'
+
+    def _transmission_at(self, v2, v3):
+        cm = constants.HST_WFC3_IR_COLD_MASK
+        r = np.hypot(v2, v3)
+        return (r <= cm['outer_radius']) & (r >= cm['secondary_radius']) & ~_in_spiders(v2, v3, cm['spider_width'] / 2)
 
 
 def _ota_frame(x, y, radius, rotation):
@@ -389,8 +401,8 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         self._extra_keywords['TEL_WFE'] = (self._rms_opd_nm(self.pupil, primary, secondary),
                                            '[nm] Telescope pupil RMS wavefront error')
         if self.channel == 'IR':
-            cold_mask = HSTPupil(
-                radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION, cold_mask=True
+            cold_mask = WFC3IRColdMask(
+                radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION
             )
             optsys.planes.insert(len(optsys.planes) - 1, cold_mask)  # just before the detector
         return optsys
