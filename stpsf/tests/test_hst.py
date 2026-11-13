@@ -37,14 +37,14 @@ def test_hst_pupil_area():
 
 
 def test_tinytim_annular_zernikes_orthonormal():
-    """TinyTim's annular Zernikes (j=2-22) are orthonormal over the annulus 0.33 < rho < 1"""
+    """TinyTim's annular Zernikes (terms 1-22) are orthonormal over the annulus 0.33 < rho < 1"""
     x = np.linspace(-1, 1, 801)
     v3, v2 = np.meshgrid(x, x)
     rho = np.hypot(v2, v3)
     annulus = (rho > 0.33) & (rho < 1)
-    basis = np.array([hst.tinytim_annular_zernike(j, v2, v3)[annulus] for j in range(2, 23)])
+    basis = np.array([term[annulus] for term in hst.tinytim_annular_zernike_basis(22, rho=rho, theta=np.arctan2(v3, v2))])
     gram = basis @ basis.T / annulus.sum()
-    assert np.allclose(gram, np.eye(21), atol=0.02)
+    assert np.allclose(gram, np.eye(22), atol=0.02)
 
 
 def test_hst_mirror_maps_and_field_zernikes():

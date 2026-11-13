@@ -233,15 +233,47 @@ _TT_ZERNIKES = {
 }
 
 
-def tinytim_annular_zernike(j, v2, v3):
-    """TinyTim's annular Zernike term ``j`` (2-22) at (V2, V3) in units of the pupil radius"""
+def _tinytim_annular_term(j, rho, theta):
     norm, m, radial, trig = _TT_ZERNIKES[j]
-    rho = np.hypot(v2, v3)
     value = norm * sum(c * rho**p for p, c in radial.items())
     if trig is not None:
-        theta = np.arctan2(v3, v2)
         value = value * (np.cos(m * theta) if trig == 'cos' else np.sin(m * theta))
     return value
+
+
+def tinytim_annular_zernike_basis(nterms=22, npix=512, rho=None, theta=None, outside=None):
+    """Basis set of TinyTim's annular Zernikes, in the style of `poppy.zernike.zernike_basis`.
+
+    Parameters
+    ----------
+    nterms : int
+        Number of terms, 1 to 22. The returned list is indexed so that element ``j - 1`` is TinyTim term ``j``
+        (as for the Noll indexing of `poppy.zernike.zernike_basis`). Element 0 is piston, which is 1 everywhere.
+    npix : int
+        Size of the square grid, used only if ``rho`` and ``theta`` are not given. The grid then spans
+        -1 to 1 pupil radii.
+    rho, theta : array_like, optional
+        Radius in units of the pupil radius, and azimuth in radians measured from +V2 toward +V3.
+    outside : float, optional
+        If given, the value used where ``rho > 1`` (as in poppy's basis functions). By default terms
+        are evaluated everywhere, which is what TinyTim does.
+
+    Returns
+    -------
+    list of ndarray
+        The terms, orthonormal on the annulus 0.33 < rho < 1.
+    """
+    if not 1 <= nterms <= len(_TT_ZERNIKES) + 1:
+        raise ValueError(f'nterms must be between 1 and {len(_TT_ZERNIKES) + 1}')
+    if rho is None or theta is None:
+        v3, v2 = np.meshgrid(*[np.linspace(-1, 1, npix)] * 2)
+        rho, theta = np.hypot(v2, v3), np.arctan2(v3, v2)
+    rho, theta = np.asarray(rho, dtype=float), np.asarray(theta, dtype=float)
+    basis = [np.ones(rho.shape)] + [_tinytim_annular_term(j, rho, theta) for j in range(2, nterms + 1)]
+    if outside is not None:
+        for term in basis:
+            term[rho > 1] = outside
+    return basis
 
 
 class HSTAnnularZernikeWFE(poppy.AnalyticOpticalElement):
@@ -255,8 +287,9 @@ class HSTAnnularZernikeWFE(poppy.AnalyticOpticalElement):
     Notes
     -----
     These are the Mahajan annular Zernikes with obscuration ratio 0.33, orthonormal on 0.33 < rho < 1, as in
-    TinyTim's ``opd.c``. They are not the Noll/circular Zernikes of `poppy.zernike`, and the term numbering and
-    azimuth convention differ (see the module docstring). Term 1 (piston) is not used.
+    TinyTim's ``opd.c``, provided by `tinytim_annular_zernike_basis`. They are not the Noll/circular Zernikes of
+    `poppy.zernike`, and the term numbering and azimuth convention differ (see the module docstring). Term 1
+    (piston) is not used.
     """
 
     def __init__(self, coefficients, radius=constants.HST_PUPIL_DIAMETER / 2,
@@ -273,9 +306,11 @@ class HSTAnnularZernikeWFE(poppy.AnalyticOpticalElement):
         y, x = self.get_coordinates(wave)
         v2, v3 = _ota_frame(x, y, self.radius, self.rotation_cw)
         opd = np.zeros(wave.shape)
-        for j, coeff in self.coefficients.items():
-            if coeff != 0:
-                opd += coeff * tinytim_annular_zernike(j, v2, v3)
+        used = [j for j, coeff in self.coefficients.items() if coeff != 0]
+        if used:
+            basis = tinytim_annular_zernike_basis(max(used), rho=np.hypot(v2, v3), theta=np.arctan2(v3, v2))
+            for j in used:
+                opd += self.coefficients[j] * basis[j - 1]
         return opd * constants.HST_TINYTIM_REFERENCE_WAVELENGTH
 
 
