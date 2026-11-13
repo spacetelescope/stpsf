@@ -18,6 +18,7 @@ import astropy.units as u
 import numpy as np
 import poppy
 from astropy.io import ascii as ioascii
+from scipy import ndimage
 
 from . import constants, stpsf_core, utils
 from .distortion import _siaf_mean_pixelscale
@@ -77,17 +78,134 @@ class HSTPupil(poppy.AnalyticOpticalElement):
         n = self.subsample
         pix = wave.pixelscale.to_value(u.m / u.pixel) if hasattr(wave.pixelscale, 'unit') else wave.pixelscale
         offsets = (np.arange(n) + 0.5) / n - 0.5
-        theta = np.deg2rad(self.rotation_cw)
-        cth, sth = np.cos(theta), np.sin(theta)
         total = np.zeros(x.shape)
         for dy in offsets:
             for dx in offsets:
-                xs = (x + dx * pix) / self.radius
-                ys = (y + dy * pix) / self.radius
-                v3 = xs * cth - ys * sth
-                v2 = xs * sth + ys * cth
+                v2, v3 = _ota_frame(x + dx * pix, y + dy * pix, self.radius, self.rotation_cw)
                 total += self._transmission_at(v2, v3)
         return total / n**2
+
+
+def _ota_frame(x, y, radius, rotation):
+    """Convert pupil-plane coordinates (x, y) in meters to TinyTim's unrotated OTA (V2, V3) frame, in units of
+    the pupil radius. The camera frame is rotated clockwise by ``rotation`` degrees relative to that frame."""
+    theta = np.deg2rad(rotation)
+    xs, ys = x / radius, y / radius
+    return xs * np.sin(theta) + ys * np.cos(theta), xs * np.cos(theta) - ys * np.sin(theta)
+
+
+class HSTMirrorMap(poppy.AnalyticOpticalElement):
+    """OPD of one HST OTA mirror, from a TinyTim zonal error map, in the OTA V2/V3 frame rotated like the pupil.
+
+    Parameters
+    ----------
+    opd_map : ndarray
+        Square map in meters of OPD; its center, at index ``n/2``, is the pupil center.
+    pupil_radius_pix : float
+        Radius of the HST pupil in map pixels.
+    shift : tuple of float
+        (V2, V3) shift of the map contents, in units of the pupil radius, in the OTA frame. For the secondary
+        mirror this is the shift of the beam footprint with field position.
+    """
+
+    def __init__(self, opd_map, pupil_radius_pix, shift=(0.0, 0.0), radius=constants.HST_PUPIL_DIAMETER / 2,
+                 rotation=constants.HST_TINYTIM_WFC3_ROTATION, name='HST mirror map', **kwargs):
+        super().__init__(name=name, planetype=poppy.poppy_core.PlaneType.pupil, **kwargs)
+        self.opd_map = np.asarray(opd_map, dtype=float)
+        self.pupil_radius_pix = pupil_radius_pix
+        self.shift = shift
+        self.radius = radius
+        self.rotation_cw = rotation
+
+    def get_transmission(self, wave):
+        return np.ones(wave.shape)
+
+    def get_opd(self, wave):
+        y, x = self.get_coordinates(wave)
+        v2, v3 = _ota_frame(x, y, self.radius, self.rotation_cw)
+        center = self.opd_map.shape[0] / 2
+        rows = center + (v2 + self.shift[0]) * self.pupil_radius_pix
+        cols = center + (v3 + self.shift[1]) * self.pupil_radius_pix
+        return ndimage.map_coordinates(self.opd_map, [rows, cols], order=1, mode='constant', cval=0.0)
+
+
+# Annular Zernikes from TinyTim opd.c, orthonormal on 0.33 < rho < 1. Each entry is
+# (normalization, azimuthal order m, radial polynomial coefficients as {power of rho: coefficient}, trig function).
+# The azimuth is measured from +V2 toward +V3.
+_TT_ZERNIKES = {
+    2: (1.8992573, 1, {1: 1.0}, 'cos'),
+    3: (1.8992573, 1, {1: 1.0}, 'sin'),
+    4: (3.8874443, 0, {2: 1.0, 0: -0.554450}, None),
+    5: (2.3137662, 2, {2: 1.0}, 'cos'),
+    6: (2.3137662, 2, {2: 1.0}, 'sin'),
+    7: (8.3345629, 1, {3: 1.0, 1: -0.673796}, 'cos'),
+    8: (8.3345629, 1, {3: 1.0, 1: -0.673796}, 'sin'),
+    9: (2.6701691, 3, {3: 1.0}, 'cos'),
+    10: (2.6701691, 3, {3: 1.0}, 'sin'),
+    11: (16.895979, 0, {4: 1.0, 2: -1.1089, 0: 0.241243}, None),
+    12: (12.033645, 2, {4: 1.0, 2: -0.750864}, 'cos'),
+    13: (12.033645, 2, {4: 1.0, 2: -0.750864}, 'sin'),
+    14: (2.9851527, 4, {4: 1.0}, 'cos'),
+    15: (2.9851527, 4, {4: 1.0}, 'sin'),
+    16: (36.321412, 1, {5: 1.0, 3: -1.230566, 1: 0.323221}, 'cos'),
+    17: (36.321412, 1, {5: 1.0, 3: -1.230566, 1: 0.323221}, 'sin'),
+    18: (16.372202, 3, {5: 1.0, 3: -0.8001}, 'cos'),
+    19: (16.372202, 3, {5: 1.0, 3: -0.8001}, 'sin'),
+    20: (3.2700486, 5, {5: 1.0}, 'cos'),
+    21: (3.2700486, 5, {5: 1.0}, 'sin'),
+    22: (74.82446, 0, {6: 1.0, 4: -1.663350, 2: 0.803136, 0: -0.104406}, None),
+}
+
+
+def tinytim_annular_zernike(j, v2, v3):
+    """TinyTim's annular Zernike term ``j`` (2-22) at (V2, V3) in units of the pupil radius"""
+    norm, m, radial, trig = _TT_ZERNIKES[j]
+    rho = np.hypot(v2, v3)
+    value = norm * sum(c * rho**p for p, c in radial.items())
+    if trig is not None:
+        theta = np.arctan2(v3, v2)
+        value = value * (np.cos(m * theta) if trig == 'cos' else np.sin(m * theta))
+    return value
+
+
+class HSTAnnularZernikeWFE(poppy.AnalyticOpticalElement):
+    """Wavefront error as a sum of TinyTim's annular Zernikes (j = 2-22), in the rotated OTA frame.
+
+    Parameters
+    ----------
+    coefficients : dict
+        Coefficients keyed by TinyTim term number, in waves RMS at 547 nm.
+    """
+
+    def __init__(self, coefficients, radius=constants.HST_PUPIL_DIAMETER / 2,
+                 rotation=constants.HST_TINYTIM_WFC3_ROTATION, name='HST SI aberrations', **kwargs):
+        super().__init__(name=name, planetype=poppy.poppy_core.PlaneType.pupil, **kwargs)
+        self.coefficients = dict(coefficients)
+        self.radius = radius
+        self.rotation_cw = rotation
+
+    def get_transmission(self, wave):
+        return np.ones(wave.shape)
+
+    def get_opd(self, wave):
+        y, x = self.get_coordinates(wave)
+        v2, v3 = _ota_frame(x, y, self.radius, self.rotation_cw)
+        opd = np.zeros(wave.shape)
+        for j, coeff in self.coefficients.items():
+            if coeff != 0:
+                opd += coeff * tinytim_annular_zernike(j, v2, v3)
+        return opd * constants.HST_TINYTIM_REFERENCE_WAVELENGTH
+
+
+@lru_cache(maxsize=2)
+def _load_hst_mirror_maps(datapath):
+    """Load the HST primary and secondary mirror OPD maps (meters) and the pupil radius in map pixels"""
+    with fits.open(os.path.join(datapath, 'HST', 'HST_primary_mirror_map.fits')) as hdul:
+        primary = np.array(hdul[0].data, dtype=float)
+        radius_pix = hdul[0].header['PUPRADPX']
+    with fits.open(os.path.join(datapath, 'HST', 'HST_secondary_mirror_map.fits')) as hdul:
+        secondary = np.array(hdul[0].data, dtype=float)
+    return primary, secondary, radius_pix
 
 
 @lru_cache(maxsize=4)
@@ -143,6 +261,8 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         # Analytic OTA pupil; OPD maps and the IR cold mask are separate planes added in get_optical_system
         self.pupil = HSTPupil(radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION)
         self._aperturename = None
+        self.despace_microns = 0.0  # secondary mirror despace; adds focus to the aberrations
+        self.tinytim_skip_zero_terms = True  # reproduce TinyTim, which drops field terms whose static value is 0
 
     def _default_pixelscale(self, detector):
         """Default pixel scale in arcsec/pixel for the given detector. Implemented in subclasses."""
@@ -175,12 +295,80 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     def get_optical_system(self, *args, **kwargs):
         optsys = super().get_optical_system(*args, **kwargs)
+        # The OTA mirror OPDs follow the pupil. The SI aberrations (added by the base class) come after them.
+        primary, secondary = self._get_mirror_map_planes()
+        optsys.planes[1:1] = [primary, secondary]
+        self._extra_keywords['TEL_WFE'] = (self._rms_opd_nm(self.pupil, primary, secondary),
+                                           '[nm] Telescope pupil RMS wavefront error')
         if self.channel == 'IR':
             cold_mask = HSTPupil(
                 radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION, cold_mask=True
             )
             optsys.planes.insert(len(optsys.planes) - 1, cold_mask)  # just before the detector
         return optsys
+
+    def _rms_opd_nm(self, pupil, *opd_planes):
+        """RMS OPD in nm of the given planes over the open aperture of the pupil, on a 256-pixel grid"""
+        wave = poppy.Wavefront(diam=self.pupil_radius.to_value(u.m) * 2.1, npix=256)
+        mask = pupil.get_transmission(wave) > 0.5
+        opd = sum(plane.get_opd(wave) for plane in opd_planes)
+        return float(np.sqrt(np.mean(opd[mask] ** 2)) * 1e9)
+
+    def _get_pupil_v2v3(self):
+        """(V2, V3) in arcsec of the current detector position in TinyTim's "pupil" convention, i.e. minus the
+        usual field V2, V3 of the SIAF."""
+        ap = self.siaf[self._aperturename]
+        v2, v3 = ap.sci_to_tel(self.detector_position[0] + 1, self.detector_position[1] + 1)
+        return -v2, -v3
+
+    def _get_mirror_map_planes(self):
+        """OPD planes for the OTA primary mirror and the secondary mirror, whose map is shifted with field position"""
+        primary_map, secondary_map, radius_pix = _load_hst_mirror_maps(self._STPSF_basepath)
+        v2, v3 = self._get_pupil_v2v3()
+        v2_ref, v3_ref = constants.HST_SECONDARY_SHIFT_REF_V2V3
+        beam_radius_mm = constants.HST_SECONDARY_BEAM_DIAMETER_MM / 2
+        shift = tuple(
+            constants.HST_SECONDARY_SHIFT_MM_PER_TAN * np.tan(np.deg2rad((a - a_ref) / 3600)) / beam_radius_mm
+            for a, a_ref in ((v2, v2_ref), (v3, v3_ref))
+        )
+        radius = self.pupil_radius.to_value(u.m)
+        rotation = constants.HST_TINYTIM_WFC3_ROTATION
+        return (
+            HSTMirrorMap(primary_map, radius_pix, radius=radius, rotation=rotation, name='HST primary mirror map'),
+            HSTMirrorMap(secondary_map, radius_pix, shift=shift, radius=radius, rotation=rotation,
+                         name='HST secondary mirror map'),
+        )
+
+    def _get_field_zernikes(self):
+        """Annular Zernike coefficients (waves at 547 nm, keyed by TinyTim term number) at the detector position.
+
+        Like TinyTim, a field-dependent term is only applied if its static value is nonzero. TinyTim's tiny1 rewrites
+        the Z4 table entry as ``%f`` after adding the despace, so the 1e-12 placeholder becomes exactly 0: the
+        field-dependent focus is dropped unless the despace is nonzero. Set ``tinytim_skip_zero_terms = False`` to
+        always apply it.
+        """
+        model = self._tinytim_model[self.detector]
+        coeffs = {j + 1: float(value) for j, value in enumerate(model['static_zernikes']) if value != 0}
+        coeffs[4] = round(coeffs.get(4, 0.0) + constants.HST_DESPACE_FOCUS_WAVES_PER_MICRON * self.despace_microns, 6)
+        if coeffs[4] == 0 and not self.tinytim_skip_zero_terms:
+            coeffs[4] = 1e-12
+        x = self.detector_position[0] / model['scale_d']
+        y = (self.detector_position[1] + model['y_offset']) / model['scale_d']
+        for k, j in enumerate((4, 5, 6, 7, 8)):
+            if coeffs.get(j, 0.0) == 0:
+                continue
+            field = np.polynomial.polynomial.polyval2d(x, y, model['field_coeffs'][k]) / model['convert']
+            coeffs[j] = coeffs.get(j, 0.0) + field
+        return coeffs
+
+    def _get_aberrations(self):
+        """Field-dependent aberrations of the instrument plus any secondary mirror despace"""
+        if not getattr(self, 'include_si_wfe', True):
+            return None
+        return HSTAnnularZernikeWFE(
+            self._get_field_zernikes(), radius=self.pupil_radius.to_value(u.m),
+            rotation=constants.HST_TINYTIM_WFC3_ROTATION, name=f'{self.name} aberrations',
+        )
 
     def _addAdditionalOptics(self, optsys, oversample=2):
         _log.debug(f'   No additional optics added for {self.name}')
