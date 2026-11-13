@@ -448,7 +448,8 @@ class SpaceTelescopeInstrument(poppy.instrument.Instrument):
             self._extra_keywords.update(pupil_optic.header_keywords())
 
         # JWST: add coord transform from entrance pupil to exit pupil + rotate
-        if self.name != 'WFI':
+        # (not applicable to Roman WFI or HST, which handle orientation in their own subclasses)
+        if self.name != 'WFI' and self.telescope != 'HST':
             # for JWST the telescope is called the OT*E*
             optsys.add_inversion(axis='y', name='OTE exit pupil', hide=True)
 

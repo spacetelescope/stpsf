@@ -375,6 +375,24 @@ JWST_INSCRIBED_DIAMETER = 5.47334  # meters. Middle corners of C segments
 
 ROMAN_PUPIL_DIAMETER = 2.36312  # meters
 
+# HST OTA geometry and TinyTim model constants (see dev_utils/make_hst_data.py and the TinyTim .pup files).
+# Lengths are in units of the pupil radius R unless noted.
+HST_PUPIL_DIAMETER = 2.4  # meters
+HST_OTA_SECONDARY_RADIUS = 0.330  # central obscuration; also the epsilon of the annular Zernike basis
+HST_OTA_SPIDER_WIDTH = 0.022  # full width of each of the 4 spiders, which lie along V2 and V3
+HST_OTA_PADS = (  # (V3, V2, radius) of the 3 primary mirror support pads
+    (0.8921, 0.0000, 0.065),
+    (-0.4615, 0.7555, 0.065),
+    (-0.4564, -0.7606, 0.065),
+)
+HST_WFC3_IR_COLD_MASK = {'outer_radius': 0.9755, 'secondary_radius': 0.354, 'spider_width': 0.061}
+HST_TINYTIM_REFERENCE_WAVELENGTH = 547e-9  # meters; wavelength for TinyTim's waves-based OPD and Zernike units
+HST_TINYTIM_WFC3_ROTATION = 135.0  # degrees, clockwise; TinyTim camera rotation for WFC3 IR and UVIS
+HST_SECONDARY_SHIFT_MM_PER_TAN = 4906.071  # secondary mirror footprint shift, mm per tan(field angle)
+HST_SECONDARY_BEAM_DIAMETER_MM = 267.3  # beam footprint diameter on the secondary
+HST_SECONDARY_SHIFT_REF_V2V3 = (-2.374, 30.268)  # arcsec, TinyTim "pupil" frame (= -field); WFPC2 PC reference
+HST_DESPACE_FOCUS_WAVES_PER_MICRON = 0.011  # Z4 waves at 547 nm per micron of secondary despace
+
 JWST_TYPICAL_LOS_JITTER_PER_AXIS = 0.0008  # milliarcseconds jitter, 1 sigma per axis. = approx 1 mas rms radial, typically
 
 ROMAN_TYPICAL_LOS_JITTER_PER_AXIS = 0.0060  # milliarcseconds jitter, 1 sigma per axis. See https://github.com/spacetelescope/stpsf/issues/111
