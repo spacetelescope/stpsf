@@ -1,8 +1,11 @@
 """Tests for the HST / WFC3 models that do not require the STPSF data package."""
 
+import os
+
 import numpy as np
 import poppy
 import pytest
+from astropy.io import fits
 
 from .. import hst
 import stpsf
@@ -67,3 +70,28 @@ def test_hst_mirror_maps_and_field_zernikes():
     wfc3.include_si_wfe = False
     assert wfc3._get_aberrations() is None
     assert 'WFC3 aberrations' not in [plane.name for plane in wfc3.get_optical_system(fov_pixels=16).planes]
+
+
+@pytest.mark.parametrize(('x', 'y', 'label'), [(507, 507, 'ctr'), (50, 50, 'll'), (960, 960, 'ur')])
+def test_wfc3_ir_monochromatic_vs_tinytim(x, y, label):
+    """A monochromatic WFC3 IR PSF matches TinyTim's tiny2 output (needs $TINYTIM_REF, from make_reference_psfs.sh)"""
+    ref_dir = os.environ.get('TINYTIM_REF')
+    if not ref_dir:
+        pytest.skip('TinyTim reference PSFs not available ($TINYTIM_REF)')
+    with fits.open(os.path.join(ref_dir, f'ir_mono1600_{label}00_psf.fits')) as hdul:
+        tt = hdul[0].data.astype(float)
+        pixscale = hdul[0].header['PIXSCALE']
+    n = tt.shape[0]
+    try:
+        wfc3 = stpsf.WFC3()
+    except IOError:
+        pytest.skip('HST data not available')
+    wfc3.filter = 'F160W'
+    wfc3.detector_position = (x, y)
+    wfc3.pixelscale = pixscale
+    # An odd field of view centers the PSF on a pixel, as in TinyTim. TinyTim normalizes to the sum of its own field.
+    psf = wfc3.calc_psf(monochromatic=1.6e-6, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
+    diff = psf / psf.sum() - tt / tt.sum()
+    peak = tt.max() / tt.sum()
+    assert np.abs(diff).max() / peak < 0.005
+    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4

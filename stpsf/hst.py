@@ -60,7 +60,14 @@ Conventions and TinyTim quirks to be aware of
 Validation
 ----------
 The wavefront (pupil, mirror maps, Zernikes, secondary shift) was checked against TinyTim's dumped
-``tinytim_wave.fits`` at two IR field positions, agreeing to better than 0.05 nm RMS. See
+``tinytim_wave.fits`` at two IR field positions, agreeing to better than 0.05 nm RMS.
+
+Monochromatic WFC3 IR PSFs (1.6 micron, at (507, 507), (50, 50) and (960, 960)) match TinyTim's undistorted ``tiny2``
+output to ~0.01% of the peak RMS (and 0.04% maximum at the center position; the test allows 0.5%), with PSF centroids agreeing to 0.001 pixel. This requires
+``detector_oversample >= 8`` (TinyTim's output is the PSF integrated over its pixels), an odd ``fov_pixels`` so the
+PSF is centered on a pixel as in TinyTim, and normalizing both images to their own field sum (TinyTim normalizes to
+the field it writes, whereas STPSF keeps flux outside the field, about 15% at 3 arcsec). The regression test needs
+the reference PSFs from ``make_reference_psfs.sh`` and skips unless ``$TINYTIM_REF`` points at them. See
 ``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
 (``notes/03_wfc3_ir_porting_guide.md``) for the full validation plan.
 """
