@@ -6,7 +6,63 @@ HST Instruments
 A re-implementation of the TinyTim optical model for the Hubble Space Telescope, built on poppy and
 the STPSF instrument framework. Currently this covers WFC3 (IR and UVIS channels).
 
-WARNING: Work in progress. The goal of this first phase is to reproduce TinyTim's outputs.
+WARNING: Work in progress. The goal of this first phase is to reproduce TinyTim's outputs, *not* to improve on
+them. Where TinyTim does something questionable, we do the same by default and flag it below.
+
+Optical model
+-------------
+Each optical element is a separate poppy plane, in this order:
+
+1. ``HSTPupil``: analytic OTA pupil (R = 1.2 m, central obscuration 0.330 R, 4 spiders of width 0.022 R along V2/V3,
+   3 mirror support pads). Pixels are antialiased by 4x4 subsampling.
+2. ``HSTMirrorMap`` for the primary mirror: TinyTim's measured zonal OPD map.
+3. ``HSTMirrorMap`` for the secondary mirror, shifted with field position (the beam footprint moves on the secondary).
+4. ``HSTAnnularZernikeWFE``: instrument aberrations, from field-dependent polynomials for Z4-Z8 (plus despace).
+5. For WFC3 IR only, ``HSTPupil(cold_mask=True)``: the cold pupil mask (outer 0.9755 R, secondary 0.354 R,
+   spiders 0.061 R). It is applied in addition to the OTA pupil.
+
+Everything is evaluated in TinyTim's frame: the OTA V2/V3 frame with +V3 along array columns (poppy x) and +V2
+along rows (poppy y), rotated clockwise by 135 degrees for both WFC3 channels. The pupil, mirror maps and Zernikes
+are all evaluated through the same coordinate transform (``_ota_frame``), so they are always mutually registered;
+no poppy rotation plane is used. TinyTim's FFT and phase sign conventions are identical to poppy's, so no flips
+are needed.
+
+Data files (not yet in the released STPSF data package)
+------------------------------------------------------
+Generated from a TinyTim installation by ``dev_utils/make_hst_data.py``, written under ``$STPSF_PATH``:
+``HST/HST_{primary,secondary}_mirror_map.fits`` (OPD in meters; the primary header gives the pupil radius in map
+pixels), and ``WFC3/`` with ``filters.tsv``, ``filters/*_throughput.fits`` and ``WFC3_tinytim_model.fits``
+(field polynomials, static Zernikes, pad geometry, detector kernels, per detector).
+
+Conventions and TinyTim quirks to be aware of
+---------------------------------------------
+* **Units.** TinyTim Zernike coefficients are RMS waves at 547 nm (``constants.HST_TINYTIM_REFERENCE_WAVELENGTH``).
+  The mirror map files here are converted to meters. TinyTim's dumped wave map is in waves at the *current*
+  wavelength, not 547 nm.
+* **Detector positions are 0-based** (X, Y), as in TinyTim. SIAF calls are made with 1 added.
+* **Pupil V2/V3 = minus field V2/V3.** TinyTim's "pupil" coordinates are the negative of the SIAF V2, V3. This
+  matters for the secondary mirror shift, which is measured relative to the WFPC2 PC position.
+* **Zernike azimuth** is measured from +V2 toward +V3, so "cos" terms align with V2 and "sin" terms with V3.
+  Z5 is therefore minus the usual Noll Z6, and Z6 is Noll Z5.
+* **Zero-focus quirk.** TinyTim only applies a field-dependent Zernike term if the static table value of that term is
+  nonzero. The WFC3 tables use 1e-12 placeholders to switch the terms on, but ``tiny1`` rewrites the Z4 entry with
+  ``%f`` (to add the despace), which turns the placeholder into exactly 0. So with zero despace, the
+  field-dependent *focus* (about +-9 nm RMS over the detector) is silently dropped; Z5-Z8 are kept. We reproduce this
+  by default (``tinytim_skip_zero_terms = True``). With a nonzero despace the field focus is applied. Set
+  ``tinytim_skip_zero_terms = False`` to always include it.
+* **Half-pixel centering.** TinyTim's 512x512 pupil and wave maps are centered on pixel 256, half a pixel from the
+  poppy grid center. We center everything on the poppy grid, which has no effect on PSF intensities. Edge pixels
+  differ slightly from TinyTim's because the antialiasing differs.
+* **Annular Zernikes use epsilon = 0.33 even for the IR cold mask** (whose obscuration is 0.354), as TinyTim does.
+* **Pixel scale.** SIAF HST apertures do not define ``XSciScale``; the mean scale is measured from the SIAF
+  transform. TinyTim's nominal scales (0.13 and 0.04 arcsec) are available with ``use_tinytim_pixelscale``.
+
+Validation
+----------
+The wavefront (pupil, mirror maps, Zernikes, secondary shift) was checked against TinyTim's dumped
+``tinytim_wave.fits`` at two IR field positions, agreeing to better than 0.05 nm RMS. See
+``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
+(``notes/03_wfc3_ir_porting_guide.md``) for the full validation plan.
 """
 
 import logging
@@ -104,8 +160,16 @@ class HSTMirrorMap(poppy.AnalyticOpticalElement):
     pupil_radius_pix : float
         Radius of the HST pupil in map pixels.
     shift : tuple of float
-        (V2, V3) shift of the map contents, in units of the pupil radius, in the OTA frame. For the secondary
-        mirror this is the shift of the beam footprint with field position.
+        (V2, V3) shift, in units of the pupil radius and in the unrotated OTA frame, of the point of the map that is
+        sampled at the pupil center. For the secondary mirror this is the displacement of the beam footprint,
+        4906.071 mm * tan(field offset from the WFPC2 PC position) / (267.3 mm / 2), using TinyTim's "pupil"
+        (minus field) V2, V3. The map contents therefore move by minus this shift on the pupil, matching TinyTim.
+
+    Notes
+    -----
+    The map is bilinearly interpolated, and is zero outside its 344 x 344 pixel extent (1.27 pupil radii). Both maps
+    share one pixel scale, set by the primary's pupil radius of 135.15 map pixels (from the phase retrieval used to
+    derive the primary map). The OPD is added as given, i.e. these maps include the factor of two for reflection.
     """
 
     def __init__(self, opd_map, pupil_radius_pix, shift=(0.0, 0.0), radius=constants.HST_PUPIL_DIAMETER / 2,
@@ -175,6 +239,12 @@ class HSTAnnularZernikeWFE(poppy.AnalyticOpticalElement):
     ----------
     coefficients : dict
         Coefficients keyed by TinyTim term number, in waves RMS at 547 nm.
+
+    Notes
+    -----
+    These are the Mahajan annular Zernikes with obscuration ratio 0.33, orthonormal on 0.33 < rho < 1, as in
+    TinyTim's ``opd.c``. They are not the Noll/circular Zernikes of `poppy.zernike`, and the term numbering and
+    azimuth convention differ (see the module docstring). Term 1 (piston) is not used.
     """
 
     def __init__(self, coefficients, radius=constants.HST_PUPIL_DIAMETER / 2,
@@ -246,6 +316,22 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     Detector positions for HST instruments are **0-based** pixel indices (X, Y), matching Python indexing and
     TinyTim's input convention. SIAF science coordinates are 1-based, so 1 is added in SIAF calls.
+
+    The telescope model (see the module docstring for details) is shared by all HST instruments: an analytic OTA
+    pupil, then the primary and secondary mirror OPD maps, then instrument aberrations, all in TinyTim's rotated
+    OTA frame. The JWST OTE exit-pupil inversion and rotation are not applied.
+
+    Attributes
+    ----------
+    despace_microns : float
+        Secondary mirror despace in microns, which adds ``0.011`` waves RMS (547 nm) of focus per micron.
+        Nonzero despace also switches on the field-dependent focus term; see ``tinytim_skip_zero_terms``.
+    tinytim_skip_zero_terms : bool
+        Default True. Reproduces a TinyTim quirk: with zero despace, the field-dependent focus (Z4) of the
+        instrument is dropped, because TinyTim only applies a field-dependent term when its static table value is
+        nonzero, and the Z4 table value is rewritten as exactly 0. Set False to always apply the field focus.
+    include_si_wfe : bool, optional
+        If set to False, the instrument aberration plane is omitted (the mirror maps are still included).
     """
 
     telescope = 'HST'
@@ -389,6 +475,16 @@ class WFC3(HSTInstrument):
 
     Changing the detector resets ``detector_position`` to the center of the new detector.
     A custom ``pixelscale`` is preserved when the detector changes.
+
+    The IR channel adds the cold pupil mask (a slightly smaller outer radius, a larger secondary obscuration and
+    thicker spiders than the OTA). The UVIS channel has no extra pupil mask. Field-dependent aberrations
+    (focus, astigmatism and coma, Z4-Z8) come from 2-D polynomials in detector position, one set per detector;
+    UVIS1 uses the same polynomial as UVIS2 with the y position offset by 2048 pixels, as in TinyTim.
+
+    .. warning::
+        The model currently reproduces TinyTim, including its quirks. Notably the field-dependent focus is not applied
+        unless ``despace_microns`` is nonzero (see `HSTInstrument`). Requires the WFC3 and HST data files described in
+        the ``stpsf.hst`` module docstring.
 
     Parameters
     ----------
