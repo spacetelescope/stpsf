@@ -125,11 +125,11 @@ def write_filters(tinytim, outdir):
             h['FILTER'] = (name, 'Bandpass filter identifier')
             h['SOURCE'] = (fil, 'TinyTim filter table, peak-normalized')
             tbl.writeto(os.path.join(wdir, 'filters', f'{name}_throughput.fits'), overwrite=True)
-            rows.append((name, nlambda_for(name)))
+            rows.append((name, nlambda_for(name), channel))
     with open(os.path.join(wdir, 'filters.tsv'), 'w') as f:
-        f.write('filter\tnlambda\n')
-        for name, n in rows:
-            f.write(f'{name}\t{n}\n')
+        f.write('filter\tnlambda\tchannel\n')
+        for name, n, channel in rows:
+            f.write(f'{name}\t{n}\t{channel}\n')
     return rows
 
 
