@@ -63,3 +63,7 @@ def test_hst_mirror_maps_and_field_zernikes():
     assert wfc3._get_field_zernikes()[4] == 0
     wfc3.despace_microns = 10
     assert np.isclose(wfc3._get_field_zernikes()[4], 0.11 + 0.0075, atol=2e-3)
+
+    wfc3.include_si_wfe = False
+    assert wfc3._get_aberrations() is None
+    assert 'WFC3 aberrations' not in [plane.name for plane in wfc3.get_optical_system(fov_pixels=16).planes]

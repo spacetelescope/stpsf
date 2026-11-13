@@ -330,8 +330,9 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         Default True. Reproduces a TinyTim quirk: with zero despace, the field-dependent focus (Z4) of the
         instrument is dropped, because TinyTim only applies a field-dependent term when its static table value is
         nonzero, and the Z4 table value is rewritten as exactly 0. Set False to always apply the field focus.
-    include_si_wfe : bool, optional
-        If set to False, the instrument aberration plane is omitted (the mirror maps are still included).
+    include_si_wfe : bool
+        Default True. If False, the instrument's field-dependent aberration plane (``HSTAnnularZernikeWFE``) is
+        omitted, as for the JWST instruments. The OTA mirror maps are still included.
     """
 
     telescope = 'HST'
@@ -348,6 +349,7 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         self.pupil = HSTPupil(radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION)
         self._aperturename = None
         self.despace_microns = 0.0  # secondary mirror despace; adds focus to the aberrations
+        self.include_si_wfe = True  # include the instrument's field-dependent aberrations, as for JWST
         self.tinytim_skip_zero_terms = True  # reproduce TinyTim, which drops field terms whose static value is 0
 
     def _default_pixelscale(self, detector):
@@ -449,7 +451,7 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
 
     def _get_aberrations(self):
         """Field-dependent aberrations of the instrument plus any secondary mirror despace"""
-        if not getattr(self, 'include_si_wfe', True):
+        if not self.include_si_wfe:
             return None
         return HSTAnnularZernikeWFE(
             self._get_field_zernikes(), radius=self.pupil_radius.to_value(u.m),
