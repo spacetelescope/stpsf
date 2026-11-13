@@ -16,12 +16,78 @@ from functools import lru_cache
 import astropy.io.fits as fits
 import astropy.units as u
 import numpy as np
+import poppy
 from astropy.io import ascii as ioascii
 
 from . import constants, stpsf_core, utils
 from .distortion import _siaf_mean_pixelscale
 
 _log = logging.getLogger('stpsf')
+
+
+def _in_spiders(v2, v3, half_width):
+    """True where a point lies on one of the 4 spiders, which run along the V2 and V3 axes"""
+    return (np.abs(v2) < half_width) | (np.abs(v3) < half_width)
+
+
+class HSTPupil(poppy.AnalyticOpticalElement):
+    """Analytic HST OTA entrance pupil, or the WFC3 IR cold mask, in TinyTim's geometry.
+
+    The geometry is defined in the OTA V2/V3 frame, with +V3 along the array columns (poppy x) and
+    +V2 along the array rows (poppy y), and is then rotated clockwise by ``rotation`` degrees to
+    the camera frame, following TinyTim's convention.
+
+    Parameters
+    ----------
+    radius : float
+        Outer radius of the OTA pupil in meters.
+    rotation : float
+        Clockwise rotation in degrees.
+    cold_mask : bool
+        If True, model the WFC3 IR cold pupil mask (outer edge, secondary and spiders) rather than the OTA.
+    subsample : int
+        Each pixel is evaluated on a subsample x subsample grid of points and averaged.
+    """
+
+    def __init__(self, radius=constants.HST_PUPIL_DIAMETER / 2, rotation=constants.HST_TINYTIM_WFC3_ROTATION,
+                 cold_mask=False, subsample=4, name=None, **kwargs):
+        if name is None:
+            name = 'WFC3 IR cold mask' if cold_mask else 'HST OTA pupil'
+        super().__init__(name=name, planetype=poppy.poppy_core.PlaneType.pupil, **kwargs)
+        self.pupil_diam = 2 * radius
+        self.radius = radius
+        self.rotation_cw = rotation
+        self.cold_mask = cold_mask
+        self.subsample = subsample
+
+    def _transmission_at(self, v2, v3):
+        """Binary transmission at points given in units of the pupil radius, in the OTA V2/V3 frame"""
+        r = np.hypot(v2, v3)
+        if self.cold_mask:
+            cm = constants.HST_WFC3_IR_COLD_MASK
+            return (r <= cm['outer_radius']) & (r >= cm['secondary_radius']) & ~_in_spiders(v2, v3, cm['spider_width'] / 2)
+        trans = (r <= 1) & (r >= constants.HST_OTA_SECONDARY_RADIUS)
+        trans &= ~_in_spiders(v2, v3, constants.HST_OTA_SPIDER_WIDTH / 2)
+        for pad_v3, pad_v2, pad_r in constants.HST_OTA_PADS:
+            trans &= np.hypot(v3 - pad_v3, v2 - pad_v2) > pad_r
+        return trans
+
+    def get_transmission(self, wave):
+        y, x = self.get_coordinates(wave)
+        n = self.subsample
+        pix = wave.pixelscale.to_value(u.m / u.pixel) if hasattr(wave.pixelscale, 'unit') else wave.pixelscale
+        offsets = (np.arange(n) + 0.5) / n - 0.5
+        theta = np.deg2rad(self.rotation_cw)
+        cth, sth = np.cos(theta), np.sin(theta)
+        total = np.zeros(x.shape)
+        for dy in offsets:
+            for dx in offsets:
+                xs = (x + dx * pix) / self.radius
+                ys = (y + dy * pix) / self.radius
+                v3 = xs * cth - ys * sth
+                v2 = xs * sth + ys * cth
+                total += self._transmission_at(v2, v3)
+        return total / n**2
 
 
 @lru_cache(maxsize=4)
@@ -74,6 +140,8 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
 
         super().__init__(name, pixelscale=pixelscale)
         self.pupil_radius = constants.HST_PUPIL_DIAMETER / 2 * u.meter
+        # Analytic OTA pupil; OPD maps and the IR cold mask are separate planes added in get_optical_system
+        self.pupil = HSTPupil(radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION)
         self._aperturename = None
 
     def _default_pixelscale(self, detector):
@@ -104,6 +172,15 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         result[0].header['DET_Y'] = (self.detector_position[1], 'Detector Y pixel position (0-based)')
         result[0].header['DETECTOR'] = (self.detector, 'Detector selected')
         result[0].header['APERNAME'] = (self._aperturename, 'SIAF aperture name')
+
+    def get_optical_system(self, *args, **kwargs):
+        optsys = super().get_optical_system(*args, **kwargs)
+        if self.channel == 'IR':
+            cold_mask = HSTPupil(
+                radius=self.pupil_radius.to_value(u.m), rotation=constants.HST_TINYTIM_WFC3_ROTATION, cold_mask=True
+            )
+            optsys.planes.insert(len(optsys.planes) - 1, cold_mask)  # just before the detector
+        return optsys
 
     def _addAdditionalOptics(self, optsys, oversample=2):
         _log.debug(f'   No additional optics added for {self.name}')
