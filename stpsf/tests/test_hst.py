@@ -5,6 +5,8 @@ import os
 import numpy as np
 import poppy
 import pytest
+import synphot
+from astropy import units as u
 from astropy.io import fits
 
 from .. import hst
@@ -91,6 +93,92 @@ def test_wfc3_ir_monochromatic_vs_tinytim(x, y, label):
     wfc3.pixelscale = pixscale
     # An odd field of view centers the PSF on a pixel, as in TinyTim. TinyTim normalizes to the sum of its own field.
     psf = wfc3.calc_psf(monochromatic=1.6e-6, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
+    diff = psf / psf.sum() - tt / tt.sum()
+    peak = tt.max() / tt.sum()
+    assert np.abs(diff).max() / peak < 0.005
+    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+
+
+def test_wfc3_default_weights():
+    """Default weights use nlambda bins across the filter; a filter tabulated at one wavelength is monochromatic"""
+    try:
+        wfc3 = stpsf.WFC3()
+    except IOError:
+        pytest.skip('HST data not available')
+    wfc3.filter = 'F160W'
+    wavelengths, weights = wfc3._get_weights()
+    assert len(wavelengths) == 21
+    assert np.isclose(weights.sum(), 1)
+    wfc3.filter = 'F164N'
+    wavelengths, weights = wfc3._get_weights()
+    assert np.allclose(wavelengths * 1e6, 1.64336, atol=1e-4)
+    assert np.allclose(weights, 1)
+
+
+def test_tinytim_weights():
+    """TinyTim weights are throughput * photlam * dlambda, with full-spacing dlambda at the ends, then smart-skip"""
+    wave = np.array([1000.0, 1100.0, 1300.0, 1400.0])
+    wavelengths, weights = hst._tinytim_weights(wave, np.ones(4), np.ones(4))
+    assert np.allclose(wavelengths, wave * 1e-10)
+    assert np.allclose(weights, np.array([100, 150, 150, 100]) / 500)
+    # a wavelength with less than 1% of the peak weight is dropped and the rest renormalized
+    wavelengths, weights = hst._tinytim_weights(wave, np.array([1, 1, 1, 0.005]), np.ones(4))
+    assert len(wavelengths) == 3
+    assert np.isclose(weights.sum(), 1)
+
+
+def _tinytim_inputs():
+    """Reference PSF directory, and the G8V spectrum TinyTim used, as a synphot source; skips if unavailable"""
+    ref_dir, tinytim_dir = os.environ.get('TINYTIM_REF'), os.environ.get('TINYTIM')
+    if not (ref_dir and tinytim_dir):
+        pytest.skip('TinyTim reference PSFs and install not available ($TINYTIM_REF, $TINYTIM)')
+    spec = np.loadtxt(os.path.join(tinytim_dir, 'bpgs_53.dat'), skiprows=7)
+    g8v = synphot.SourceSpectrum(
+        synphot.models.Empirical1D, points=spec[:, 0] * u.AA, lookup_table=spec[:, 1] * synphot.units.PHOTLAM
+    )
+    return ref_dir, g8v
+
+
+def _par_value(par_file, comment):
+    with open(par_file) as f:
+        return next(line.split()[0] for line in f if comment in line)
+
+
+@pytest.mark.parametrize('filt', ['F105W', 'F125W', 'F160W'])
+def test_wfc3_ir_weights_vs_tinytim(filt):
+    """The wavelengths and weights match those TinyTim wrote to its .par file (which has 6 digits)"""
+    ref_dir, g8v = _tinytim_inputs()
+    with open(os.path.join(ref_dir, f'ir_{filt.lower()}_ctr.par')) as f:
+        expected = np.array([line.split()[:2] for line in f if '# Wavelength' in line], dtype=float)
+    try:
+        wfc3 = stpsf.WFC3()
+    except IOError:
+        pytest.skip('HST data not available')
+    wfc3.filter = filt
+    wfc3.tinytim_wavelengths = True
+    wavelengths, weights = wfc3._get_weights(source=g8v)
+    assert np.allclose(wavelengths * 1e6, expected[:, 0], atol=1e-5)
+    assert np.allclose(weights, expected[:, 1], atol=2e-6)
+
+
+@pytest.mark.parametrize(
+    ('filt', 'x', 'y', 'label'), [('F160W', 507, 507, 'ctr'), ('F160W', 50, 50, 'll'), ('F105W', 960, 960, 'ur')]
+)
+def test_wfc3_ir_polychromatic_vs_tinytim(filt, x, y, label):
+    """A polychromatic WFC3 IR PSF with TinyTim's wavelengths matches its tiny2 output for a G8V star"""
+    ref_dir, g8v = _tinytim_inputs()
+    root = os.path.join(ref_dir, f'ir_{filt.lower()}_{label}')
+    tt = fits.getdata(root + '00_psf.fits').astype(float)
+    n = tt.shape[0]
+    try:
+        wfc3 = stpsf.WFC3()
+    except IOError:
+        pytest.skip('HST data not available')
+    wfc3.filter = filt
+    wfc3.detector_position = (x, y)
+    wfc3.pixelscale = float(_par_value(root + '.par', 'Integrated PSF scaling'))  # the FITS header is rounded
+    wfc3.tinytim_wavelengths = True
+    psf = wfc3.calc_psf(source=g8v, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
     diff = psf / psf.sum() - tt / tt.sum()
     peak = tt.max() / tt.sum()
     assert np.abs(diff).max() / peak < 0.005

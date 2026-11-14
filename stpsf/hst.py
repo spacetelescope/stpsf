@@ -63,11 +63,23 @@ The wavefront (pupil, mirror maps, Zernikes, secondary shift) was checked agains
 ``tinytim_wave.fits`` at two IR field positions, agreeing to better than 0.05 nm RMS.
 
 Monochromatic WFC3 IR PSFs (1.6 micron, at (507, 507), (50, 50) and (960, 960)) match TinyTim's undistorted ``tiny2``
-output to ~0.01% of the peak RMS (and 0.04% maximum at the center position; the test allows 0.5%), with PSF centroids agreeing to 0.001 pixel. This requires
+output to ~0.01% of the peak RMS (and 0.04% maximum at the center position; the test allows 0.5%), with PSF
+centroids agreeing to 0.001 pixel. This requires
 ``detector_oversample >= 8`` (TinyTim's output is the PSF integrated over its pixels), an odd ``fov_pixels`` so the
 PSF is centered on a pixel as in TinyTim, and normalizing both images to their own field sum (TinyTim normalizes to
 the field it writes, whereas STPSF keeps flux outside the field, about 15% at 3 arcsec). The regression test needs
-the reference PSFs from ``make_reference_psfs.sh`` and skips unless ``$TINYTIM_REF`` points at them. See
+the reference PSFs from ``make_reference_psfs.sh`` and skips unless ``$TINYTIM_REF`` points at them.
+
+Polychromatic PSFs (set ``tinytim_wavelengths = True``) use TinyTim's wavelengths, which are the points tabulated in the
+filter file (generated from ``wfc3ir.fil`` / ``wfc3uvis.fil``), and its weights, throughput * photlam * dlambda. They
+reproduce the wavelengths and weights in TinyTim's ``.par`` files to their 6 printed digits for F105W, F125W and F160W
+with a G8V spectrum. The resulting PSFs agree with TinyTim's ``tiny2`` output to 0.004% of the peak RMS and 0.05%
+maximum for F160W at the center when using its exact 0.046241 arcsec pixel scale, and to at most 0.27% of the peak
+for the other filters and positions tested, where the scale was the rounded value in the FITS header (0.0462).
+The tests need ``$TINYTIM`` as well, for the G8V spectrum. Quirks reproduced: TinyTim's dlambda uses the full
+spacing, not half, at the two ends of the table; wavelengths below 1% of the peak weight are skipped; and filters
+tabulated at one wavelength are monochromatic. Without ``tinytim_wavelengths``, STPSF's usual ``nlambda`` equal-width
+bins and synphot weights are used. See
 ``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
 (``notes/03_wfc3_ir_porting_guide.md``) for the full validation plan.
 """
@@ -80,6 +92,7 @@ import astropy.io.fits as fits
 import astropy.units as u
 import numpy as np
 import poppy
+import synphot
 from astropy.io import ascii as ioascii
 from scipy import ndimage
 
@@ -321,6 +334,41 @@ class HSTAnnularZernikeWFE(poppy.AnalyticOpticalElement):
         return opd * constants.HST_TINYTIM_REFERENCE_WAVELENGTH
 
 
+def _tinytim_weights(wave_angstrom, throughput, photlam, weight_limit=0.01):
+    """Wavelengths and weights for a polychromatic PSF, computed as TinyTim does (``spectrum.c``, ``polypsf.c``).
+
+    Parameters
+    ----------
+    wave_angstrom, throughput : array_like
+        The tabulated filter curve; its wavelengths are the ones used for the PSFs.
+    photlam : array_like
+        The source spectrum in photons per unit wavelength, at ``wave_angstrom``.
+    weight_limit : float
+        TinyTim's "smart skip": wavelengths with a weight below this fraction of the largest are dropped.
+
+    Returns
+    -------
+    wavelengths_m, weights : ndarray
+        Wavelengths in meters, and weights normalized to sum to 1.
+
+    Notes
+    -----
+    The weight is throughput * photlam * dlambda, normalized. TinyTim's dlambda is half the span between the two
+    neighboring wavelengths for interior points, but the *full* spacing to the single neighbor at either end of the
+    table, which we reproduce. The weights are renormalized after skipping low-weight wavelengths.
+    """
+    wave = np.asarray(wave_angstrom, dtype=float)
+    if wave.size == 1:
+        return wave * 1e-10, np.ones(1)
+    dlambda = np.empty_like(wave)
+    dlambda[1:-1] = np.abs(wave[:-2] - wave[2:]) / 2
+    dlambda[0], dlambda[-1] = abs(wave[1] - wave[0]), abs(wave[-1] - wave[-2])
+    weights = np.asarray(throughput, dtype=float) * np.asarray(photlam, dtype=float) * dlambda
+    weights /= weights.sum()
+    keep = weights >= weight_limit * weights.max()
+    return wave[keep] * 1e-10, weights[keep] / weights[keep].sum()
+
+
 @lru_cache(maxsize=2)
 def _load_hst_mirror_maps(datapath):
     """Load the HST primary and secondary mirror OPD maps (meters) and the pupil radius in map pixels"""
@@ -387,6 +435,10 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
     include_si_wfe : bool
         Default True. If False, the instrument's field-dependent aberration plane (``HSTAnnularZernikeWFE``) is
         omitted, as for the JWST instruments. The OTA mirror maps are still included.
+    tinytim_wavelengths : bool
+        Default False, which uses STPSF's usual ``nlambda`` equal-width bins and synphot weights. If True, a
+        polychromatic calculation uses TinyTim's wavelengths (the points tabulated in the filter file) and TinyTim's
+        weights, for reproducing TinyTim; see ``_tinytim_weights``.
     """
 
     telescope = 'HST'
@@ -405,6 +457,7 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         self.despace_microns = 0.0  # secondary mirror despace; adds focus to the aberrations
         self.include_si_wfe = True  # include the instrument's field-dependent aberrations, as for JWST
         self.tinytim_skip_zero_terms = True  # reproduce TinyTim, which drops field terms whose static value is 0
+        self.tinytim_wavelengths = False  # use TinyTim's wavelengths and weights rather than nlambda bins
 
     def _default_pixelscale(self, detector):
         """Default pixel scale in arcsec/pixel for the given detector. Implemented in subclasses."""
@@ -434,6 +487,28 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
         result[0].header['DET_Y'] = (self.detector_position[1], 'Detector Y pixel position (0-based)')
         result[0].header['DETECTOR'] = (self.detector, 'Detector selected')
         result[0].header['APERNAME'] = (self._aperturename, 'SIAF aperture name')
+
+    def _get_weights(self, source=None, nlambda=None, monochromatic=None, verbose=False):
+        """Wavelengths and weights for a polychromatic calculation.
+
+        By default this is the generic STPSF behavior: ``nlambda`` bins across the filter, weighted with synphot.
+        With ``tinytim_wavelengths`` set, the wavelengths are instead TinyTim's, i.e. the points tabulated in the
+        filter throughput file, weighted as TinyTim does (see ``_tinytim_weights``). Filters tabulated at a single
+        wavelength are always treated as monochromatic, as in TinyTim.
+        """
+        if monochromatic is not None:
+            return super()._get_weights(source=source, nlambda=nlambda, monochromatic=monochromatic, verbose=verbose)
+        with fits.open(self._filters[self.filter].filename) as hdul:
+            wave_angstrom, throughput = hdul[1].data['WAVELENGTH'], hdul[1].data['THROUGHPUT']
+        if len(wave_angstrom) == 1:
+            return _tinytim_weights(wave_angstrom, throughput, [1.0])
+        if not self.tinytim_wavelengths or not (source is None or isinstance(source, synphot.SourceSpectrum)):
+            return super()._get_weights(source=source, nlambda=nlambda, monochromatic=monochromatic, verbose=verbose)
+        if source is None:
+            source = synphot.SourceSpectrum(synphot.models.BlackBodyNorm1D, temperature=5700 * u.K)
+            _log.info('No source spectrum supplied, therefore defaulting to 5700 K blackbody')
+        photlam = source(wave_angstrom * u.AA, flux_unit='photlam').value
+        return _tinytim_weights(wave_angstrom, throughput, photlam)
 
     def get_optical_system(self, *args, **kwargs):
         optsys = super().get_optical_system(*args, **kwargs)
