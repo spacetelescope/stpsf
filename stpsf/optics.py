@@ -11,6 +11,8 @@ import poppy.utils
 from astropy.table import Table
 from scipy.interpolate import RegularGridInterpolator, griddata
 from scipy.ndimage import rotate, zoom
+from scipy.optimize import curve_fit
+from functools import partial
 
 from . import constants, stpsf_core, utils
 
@@ -1305,80 +1307,18 @@ class WebbFieldDependentAberration(poppy.OpticalElement):
             zkey = f'Zernike_{i}'
             zvals = self.ztable[zkey]
 
+            M_data = (v2, v3)
+            # define poly deg
+            deg = 1
+            fit_model = partial(utils.poly2d_model, deg=deg)
+            # initial conditions, this needs to match the poly deg
+            p0 = np.ones((deg + 1)**2)#inital guess
+
+            # Fit the data to the model
+            popt, pcov = curve_fit(fit_model, M_data, zvals, p0=p0, maxfev=5000)
+
             # Cubic interpolation of of non-uniform 2D grid
-            cf = griddata((v2, v3), zvals, (v2_tel, v3_tel), method='cubic').tolist()
-
-            # Want to perform extrapolation if field point outside of bounds
-            if np.isnan(cf):
-                if i == 1:
-                    self.si_wfe_type = ('Extrapolated', 'SI WFE was extrapolated outside available meas.')
-
-                # To extrapolate outside the measured field points, we proceed
-                # in two steps.  This first creates a fine-meshed cubic fit
-                # over the known field points, fixes any NaN's using
-                # RegularGridInterpolator, then again uses RegularGridInterpolator
-                # on the fixed data to extrapolate the requested field point.
-
-                # In principle, the first call of RegularGridInterpolator can be
-                # used to extrapolate the requested field point to eliminate
-                # the intermediate step, but this method enables use of all the
-                # real data rather than the trimmed data set. RGI is a rather
-                # quick process, so added overheads should be negligible.
-
-                # Full field V2/V3 limits for each instrument.
-                # Produces better initial extrapolation with fewer
-                # interpolation artifacts in RGI.
-                if lookup_name == 'Guider1':
-                    v2_min, v2_max, v3_min, v3_max = (2.2, 4.7, -12.9, -10.4)
-                elif lookup_name == 'Guider2':
-                    v2_min, v2_max, v3_min, v3_max = (-0.8, 1.6, -12.9, -10.4)
-                elif lookup_name == 'NIRISS':
-                    v2_min, v2_max, v3_min, v3_max = (-6.0, -3.6, -12.9, -10.4)
-                elif lookup_name == 'MIRI':
-                    v2_min, v2_max, v3_min, v3_max = (-8.3, -6.1, -7.3, -5.2)
-                elif lookup_name == 'NIRSpec':
-                    v2_min, v2_max, v3_min, v3_max = (3.7, 9.0, -9.8, -4.5)
-                elif (lookup_name == 'NIRCamLWA') or (lookup_name == 'NIRCamSWA'):
-                    v2_min, v2_max, v3_min, v3_max = (0.2, 2.7, -9.5, -7.0)
-                elif (lookup_name == 'NIRCamLWB') or (lookup_name == 'NIRCamSWB'):
-                    v2_min, v2_max, v3_min, v3_max = (-2.7, -0.2, -9.5, -7.0)
-                else:
-                    v2_min, v2_max, v3_min, v3_max = (v2.min(), v2.max(), v3.min(), v3.max())
-
-                # For NIRCam coronagraphy, add 50" to V3 limits
-                if is_nrc_coron:
-                    v3_min += 50.0 / 60.0
-                    v3_max += 50.0 / 60.0
-
-                # Create fine mesh grid
-                dstep = 1.0 / 60.0  # 1" steps
-                xgrid = np.arange(v2_min, v2_max + dstep, dstep)
-                ygrid = np.arange(v3_min, v3_max + dstep, dstep)
-                X, Y = np.meshgrid(xgrid, ygrid)
-
-                # Cubic interpolation of all points
-                # Will produce a number of NaN's that need to be extrapolated over
-                zgrid = griddata((v2, v3), zvals, (X, Y), method='cubic')
-
-                # Want to rotate zgrid image of some SIs to minimize NaN clipping
-                if 'NIRSpec' in lookup_name:
-                    rot_ang = 43
-                elif 'MIRI' in lookup_name:
-                    rot_ang = -5
-                elif 'NIRISS' in lookup_name:
-                    rot_ang = 2
-                else:
-                    rot_ang = 0
-
-                # Fix the NaN's within zgrid array
-                # Perform specified rotation for certain SIs
-                # Trim rows/cols
-                zgrid = _fix_zgrid_NaNs(xgrid, ygrid, zgrid, rot_ang=rot_ang)
-
-                # Create final function for extrapolation
-                func = RegularGridInterpolator((ygrid, xgrid), zgrid, method='linear', bounds_error=False, fill_value=None)
-                # Extrapolate at requested (V2,V3) coordinates
-                cf = func((v3_tel, v2_tel)).tolist()
+            cf = fit_model((v2_tel, v3_tel), *popt)
 
             coeffs.append(cf)
 

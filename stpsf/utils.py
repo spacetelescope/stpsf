@@ -1113,3 +1113,12 @@ def get_target_phase_map_filename(apername):
         not found under {}.".format(apername.split('_')[1].lower(),path))
 
     return was_targ_file
+
+def poly2d_model(M,*coeffs, deg):
+    """
+    Helper function for polynomial model
+    """
+    x, y = M
+    # Assume a 2nd-degree polynomial (deg=2), so 3x3 coefficients
+    c = np.array(coeffs).reshape(deg +1,deg+1)
+    return np.polynomial.polynomial.polyval2d(x, y, c)
