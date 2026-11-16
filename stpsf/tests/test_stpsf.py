@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import poppy
+import pytest
 
 from .. import stpsf_core
 from .test_errorhandling import _exception_message_starts_with
