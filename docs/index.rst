@@ -2,7 +2,7 @@ Documentation for STPSF
 ===============================
 `(Formerly WebbPSF, for versions < 2.0) <webbpsf_to_stpsf.ipynb>`_
 
-STPSF is a Python package that computes simulated point spread functions (PSFs) for NASA's James Webb Space Telescope (JWST) and Nancy Grace Roman Space Telescope. STPSF transforms models of telescope and instrument optical state into PSFs, taking into account detector pixel scales, rotations, filter profiles, and point source spectra. It is rather a tool for transforming optical path difference (OPD) maps, created with observatory systems engineering models, into the resulting PSFs as observed with JWST's or Roman's instruments.
+STPSF is a Python package that computes simulated point spread functions (PSFs) for NASA's James Webb Space Telescope (JWST), Nancy Grace Roman Space Telescope, and Hubble Space Telescope. STPSF transforms models of telescope and instrument optical state into PSFs, taking into account detector pixel scales, rotations, filter profiles, and point source spectra. It is rather a tool for transforming optical path difference (OPD) maps, created with observatory systems engineering models, into the resulting PSFs as observed with JWST's, Roman's, or Hubble's instruments.
 
 .. figure:: ./fig_instrument_comparison.png
    :scale: 45 %
@@ -79,6 +79,13 @@ Contents
    roman.rst
    STPSF_Roman_Multi_Field.ipynb
    STPSF_Roman_Pupil_Orientation.ipynb
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Modeling Hubble PSFs
+
+   hst.rst
+   hst_validation_vs_tinytim.rst
 
 .. toctree::
    :maxdepth: 1

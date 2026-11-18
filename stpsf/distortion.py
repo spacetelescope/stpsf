@@ -47,6 +47,21 @@ def _get_default_siaf(instrument, aper_name):
 
 
 # Functions for applying distortion from SIAF polynomials
+def _siaf_mean_pixelscale(aper):
+    """Mean pixel scale [arcsec/pix] of a SIAF aperture.
+
+    Uses XSciScale and YSciScale when defined. Some apertures (e.g. all HST ones) leave them as None, so
+    in that case the scale is measured from the aperture's sci-to-ideal transform at its reference pixel.
+    """
+    if aper.XSciScale is not None and aper.YSciScale is not None:
+        return 0.5 * (aper.XSciScale + aper.YSciScale)
+    x0, y0 = aper.XSciRef, aper.YSciRef
+    xi0, yi0 = aper.sci_to_idl(x0, y0)
+    xi1, yi1 = aper.sci_to_idl(x0 + 1, y0)
+    xi2, yi2 = aper.sci_to_idl(x0, y0 + 1)
+    return 0.5 * (np.hypot(xi1 - xi0, yi1 - yi0) + np.hypot(xi2 - xi0, yi2 - yi0))
+
+
 def distort_image(
     hdulist_or_filename,
     ext=0,
@@ -119,7 +134,7 @@ def distort_image(
     # oversampling relative to the SCI coordinate frame will not simply be the OVERSAMP keyword
     # value. To accomodate that edge case, compute here the oversampling as the ratio of the
     # computed pixelscale relative to the nominal average scale used in SIAF.
-    osamp = 0.5*(aper.XSciScale + aper.YSciScale) / pixelscale
+    osamp = _siaf_mean_pixelscale(aper) / pixelscale
 
     # Get 'sci' reference location where PSF is observed
     xcen_sci = hdu_list[ext].header['DET_X']  # center x location in pixels ('sci')

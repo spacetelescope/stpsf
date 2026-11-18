@@ -8,6 +8,8 @@ Introduction
 * For JWST, computes PSF images with requested properties for any of JWST's instruments. Supports imaging, coronagraphy, and most spectrographic modes with all of JWST's instruments. IFUs are yet to come.
 * For Roman, computes PSFs with the Wide Field Imager, based on recent GSFC optical models, including field- and wavelength-dependent aberrations.
   A preliminary version of the Coronagraph Instrument is also available.
+* For Hubble, computes PSFs for the WFC3 IR and UVIS channels, reproducing the optical model of the "Tiny Tim" PSF simulator
+  (see :doc:`hst`).
 * Provides a suite of tools for quantifying PSF properties such as FWHM, Strehl ratio, etc.
 
 **What this software does NOT do:**
@@ -21,7 +23,7 @@ Introduction
 Conceptually, this simulation code has two layers of abstraction:
 
  * A base package for wavefront propagation through generic optical systems (provided by :py:mod:`POPPY <poppy>`)
- * Models of the JWST and Roman instruments implemented on top of that base system (provided by :py:mod:`STPSF <stpsf>`)
+ * Models of the JWST, Roman, and Hubble instruments implemented on top of that base system (provided by :py:mod:`STPSF <stpsf>`)
 
 .. _intro_why_stpsf:
 
@@ -34,7 +36,7 @@ range of preparatory science studies and tool development.
 Tools for producing high
 quality model PSFs must be easily accessible to the entire astronomical
 community.
-STPSF provides an easy-to-use tool for PSF simulations of JWST and Roman, in
+STPSF provides an easy-to-use tool for PSF simulations of JWST, Roman, and Hubble, in
 the style of the highly successful "Tiny Tim" PSF simulator for Hubble.
 
 STPSF
