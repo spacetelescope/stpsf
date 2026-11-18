@@ -119,9 +119,9 @@ def _plot_vs_tinytim(tt, psf, title):
     r = np.hypot(x - cen_tt[0], y - cen_tt[1])
     bins = np.arange(0, r.max(), 1.0)
     idx = np.digitize(r.ravel(), bins)
-    for img, name in ((tt_n, 'TinyTim'), (psf_n, 'STPSF')):
+    for img, name, style in ((tt_n, 'TinyTim', '-'), (psf_n, 'STPSF', '--')):
         prof = [img.ravel()[idx == i].mean() for i in range(1, len(bins))]
-        axes[3].semilogy(bins[:-1] + 0.5, prof, label=name)
+        axes[3].semilogy(bins[:-1] + 0.5, prof, style, label=name)
     axes[3].set_xlabel('radius (pixels)')
     axes[3].set_title(f'Radial profile\ncentroid offset ({cen_psf[0] - cen_tt[0]:+.4f}, {cen_psf[1] - cen_tt[1]:+.4f}) px')
     axes[3].legend()
@@ -290,3 +290,94 @@ def test_wfc3_ir_distortion_and_ipc_options():
     assert 'IPCINST' not in no_ipc['DET_DIST'].header
     assert both['DET_DIST'].data.max() < no_ipc['DET_DIST'].data.max()
     assert np.isclose(both['DET_DIST'].data.sum(), no_ipc['DET_DIST'].data.sum(), rtol=2e-3)
+
+
+_UVIS_CASES = [
+    ('UVIS2', 2048, 1024, 'ctr'), ('UVIS2', 100, 100, 'll'), ('UVIS1', 2048, 1024, 'ctr'), ('UVIS1', 4000, 1950, 'ur')
+]
+
+
+def _uvis_instrument(det, x, y, filt):
+    try:
+        wfc3 = stpsf.WFC3()
+    except IOError:
+        pytest.skip('HST data not available')
+    wfc3.detector = det
+    wfc3.filter = filt
+    wfc3.detector_position = (x, y)
+    return wfc3
+
+
+@pytest.mark.parametrize(('det', 'x', 'y', 'label'), _UVIS_CASES)
+def test_wfc3_uvis_monochromatic_vs_tinytim(det, x, y, label, plot=False):
+    """A monochromatic WFC3 UVIS PSF matches TinyTim's tiny2 output (needs $TINYTIM_REF)"""
+    ref_dir = os.environ.get('TINYTIM_REF')
+    if not ref_dir:
+        pytest.skip('TinyTim reference PSFs not available ($TINYTIM_REF)')
+    root = os.path.join(ref_dir, f'{det.lower()}_mono600_{label}')
+    tt = fits.getdata(root + '00_psf.fits').astype(float)
+    n = tt.shape[0]
+    wfc3 = _uvis_instrument(det, x, y, 'F606W')
+    wfc3.pixelscale = float(_par_value(root + '.par', 'Integrated PSF scaling'))
+    psf = wfc3.calc_psf(monochromatic=0.6e-6, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
+    if plot:
+        _plot_vs_tinytim(tt, psf, f'WFC3/{det} 0.6 micron monochromatic, {label} {x, y}: tiny2')
+    diff = psf / psf.sum() - tt / tt.sum()
+    peak = tt.max() / tt.sum()
+    assert np.abs(diff).max() / peak < 0.005
+    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+
+
+@pytest.mark.parametrize(
+    ('filt', 'det', 'x', 'y', 'label'),
+    [('F275W', 'UVIS2', 2048, 1024, 'ctr'), ('F438W', 'UVIS1', 2048, 1024, 'ctr'), ('F606W', 'UVIS1', 4000, 1950, 'ur'),
+     ('F814W', 'UVIS2', 2048, 1024, 'ctr')],
+)
+def test_wfc3_uvis_polychromatic_vs_tinytim(filt, det, x, y, label, plot=False):
+    """Polychromatic UVIS PSFs with TinyTim's wavelengths match tiny2 (tiny3, with distortion and charge diffusion,
+    to the level that the SIAF and TinyTim distortion models agree, as the PSF is undersampled)"""
+    ref_dir, g8v = _tinytim_inputs()
+    root = os.path.join(ref_dir, f'{det.lower()}_{filt.lower()}_{label}')
+    tt = fits.getdata(root + '00_psf.fits').astype(float)
+    t3 = fits.getdata(root + '00.fits').astype(float)
+    n = tt.shape[0]
+    wfc3 = _uvis_instrument(det, x, y, filt)
+    wfc3.tinytim_wavelengths = True
+    wfc3.pixelscale = float(_par_value(root + '.par', 'Integrated PSF scaling'))
+    psf = wfc3.calc_psf(source=g8v, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
+    if plot:
+        _plot_vs_tinytim(tt, psf, f'WFC3/{det} {filt} G8V, {label} {x, y}: tiny2')
+    diff = psf / psf.sum() - tt / tt.sum()
+    peak = tt.max() / tt.sum()
+    assert np.abs(diff).max() / peak < 0.005
+    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+
+    wfc3 = _uvis_instrument(det, x, y, filt)  # the detector image uses the SIAF pixel scale
+    wfc3.tinytim_wavelengths = True
+    psf = wfc3.calc_psf(source=g8v, fov_pixels=t3.shape[0], oversample=8)['DET_DIST'].data
+    assert psf.shape == t3.shape
+    if plot:
+        _plot_vs_tinytim(t3, psf, f'WFC3/{det} {filt} G8V, {label} {x, y}: tiny3 (SIAF distortion + charge diffusion)')
+    diff = psf / psf.sum() - t3 / t3.sum()
+    peak = t3.max() / t3.sum()
+    assert np.abs(diff).max() / peak < 0.06
+    assert np.sqrt(np.mean(diff**2)) / peak < 2e-3
+
+
+def test_wfc3_uvis_charge_diffusion():
+    """The UVIS kernel is normalized, follows the wavelength, and conserves flux; it can be turned off"""
+    wfc3 = _uvis_instrument('UVIS2', 2048, 1024, 'F606W')
+    mono = dict(fov_pixels=21, oversample=4)
+    psf_400 = wfc3.calc_psf(monochromatic=0.4e-6, **mono)
+    kernel_400 = wfc3._uvis_diffusion_kernel(psf_400[0].header)
+    psf_800 = wfc3.calc_psf(monochromatic=0.8e-6, **mono)
+    kernel_800 = wfc3._uvis_diffusion_kernel(psf_800[0].header)
+    assert np.isclose(kernel_400.sum(), 1) and np.isclose(kernel_800.sum(), 1)
+    assert kernel_400[2, 2] < kernel_800[2, 2]  # less diffusion at long wavelengths
+    wfc3.options['add_charge_diffusion'] = False
+    no_diffusion = wfc3.calc_psf(monochromatic=0.4e-6, **mono)
+    assert 'DETKERN' in psf_400['DET_DIST'].header
+    assert 'DETKERN' not in no_diffusion['DET_DIST'].header
+    assert psf_400['DET_DIST'].data.max() < no_diffusion['DET_DIST'].data.max()
+    # some flux leaves the small field
+    assert np.isclose(psf_400['DET_DIST'].data.sum(), no_diffusion['DET_DIST'].data.sum(), rtol=2e-2)

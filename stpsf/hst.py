@@ -108,8 +108,18 @@ compare to TinyTim's ``tiny3`` output at that scale, not 0.13) and, for the IR c
 0.006 pixel, with residuals of about 0.1% of the peak RMS and at most 2.7% at the peak. The largest differences
 are near the peak and at the edges. TinyTim and SIAF use different distortion models, and the ``tiny3`` images have
 dark bands along some edges that are not present in ``tiny2``, apparently from its distortion mapping. Disable with
-``options['add_distortion']`` and ``options['add_ipc']``. See
-``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
+``options['add_distortion']`` and ``options['add_ipc']``.
+
+For the UVIS channel the detector step instead convolves with TinyTim's 3x3 charge diffusion kernel (disable with
+``options['add_charge_diffusion']``), built as in ``tiny3``: the kernels tabulated at 0.4, 0.6 and 0.8 micron,
+interpolated linearly in wavelength and weighted by the spectral weights (retained from the calculation), then
+convolved with a field-dependent Gaussian kernel evaluated at the first wavelength (sigma 0.45816 pixel everywhere,
+as the tabulated field polynomials are constant). ``tiny3`` quirks reproduced: wavelengths above 0.4 micron all
+use the 0.6 and 0.8 micron kernel pair, so shorter ones are extrapolated. As for the IR IPC, the kernel is applied
+to the oversampled image after upsampling it. UVIS PSFs match ``tiny2`` to under 0.15% of the peak (rms
+< 2e-5 of the peak) for monochromatic and F275W/F438W/F606W/F814W G8V cases on both detectors, and ``tiny3`` to
+2-3% of the peak (rms < 5e-4), the difference being in the undersampled core from the distortion resampling.
+See ``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
 (``notes/03_wfc3_ir_porting_guide.md``) for the full validation plan.
 """
 
@@ -611,6 +621,62 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
             for extname in ('DET_DIST', 'OVERDIST'):
                 if extname in result:
                     self._apply_ir_ipc(result[extname])
+        if options.get('add_charge_diffusion', True) and add_distortion and self.channel == 'UVIS':
+            kernel = self._uvis_diffusion_kernel(result[0].header)
+            for extname in ('DET_DIST', 'OVERDIST'):
+                if extname in result:
+                    self._apply_kernel(result[extname], kernel, 'WFC3-UVIS', 'charge diffusion')
+
+    def _uvis_diffusion_kernel(self, header):
+        """Combined 3x3 UVIS charge diffusion kernel, as TinyTim's ``tiny3`` builds it (``Compute_wfc3_kernel``,
+        ``Compute_kernel_xy``): the tabulated kernels interpolated linearly in wavelength and weighted by the
+        spectral weights (the ``WAVE#``, ``WGHT#`` keywords of the PSF header), convolved with the field-dependent
+        Gaussian kernel evaluated at the *first* wavelength.
+        """
+        model = self._tinytim_model[self.detector]
+        nwaves = header['NWAVES']
+        waves_m = np.array([header[f'WAVE{i}'] for i in range(nwaves)])
+        weights = np.array([header[f'WGHT{i}'] for i in range(nwaves)])
+        waves_um = waves_m * 1e6
+
+        kernel_waves, kernels = model['kernel_waves_um'], model['kernels']
+        weighted = np.zeros((3, 3))
+        for wave, weight in zip(waves_um, weights):
+            # tiny3 quirk, reproduced: any wavelength above the first tabulated one uses the second and third kernels
+            iw = 0
+            while wave > kernel_waves[iw] and iw < len(kernel_waves) - 2:
+                iw += 1
+            frac = (wave - kernel_waves[iw]) / (kernel_waves[iw + 1] - kernel_waves[iw])
+            kernel = kernels[iw] + frac * (kernels[iw + 1] - kernels[iw])
+            weighted += weight * kernel / kernel.sum()
+
+        # field-dependent Gaussian; polynomial coefficients are tabulated at two wavelengths
+        x = self.detector_position[0] / model['scale_d'] + 4
+        y = (self.detector_position[1] + model['y_offset']) / model['scale_d'] + 4
+        sigmas = [np.polynomial.polynomial.polyval2d(x, y, c) for c in model['kfield_coeffs']]
+        wave0, kfield_waves = waves_um[0], model['kfield_waves_um']
+        if wave0 < kfield_waves[0]:
+            sigma = sigmas[0] + (sigmas[1] - sigmas[0]) / (kfield_waves[1] - kfield_waves[0]) * (wave0 - kfield_waves[0])
+        else:
+            sigma = sigmas[-1]
+        if sigma > 0:
+            offsets = np.arange(-1, 2)
+            r2 = offsets[:, None] ** 2 + offsets[None, :] ** 2
+            gauss = np.exp(-0.5 * r2 / sigma**2)
+            gauss /= gauss.sum()
+        else:
+            gauss = np.zeros((3, 3))
+            gauss[1, 1] = 1
+        return signal.convolve2d(weighted, gauss)
+
+    def _apply_kernel(self, hdu, kernel, instrument, description):
+        """Convolve an extension, in place, with a detector kernel defined at detector pixel sampling"""
+        oversample = hdu.header['OVERSAMP']
+        if oversample != 1:
+            kernel = detectors.oversample_ipc_model(kernel, oversample)
+        hdu.data = signal.fftconvolve(hdu.data, kernel, mode='same')
+        hdu.header['DETKERN'] = (instrument, f'Detector {description} kernel applied')
+        hdu.header.add_history(f'Applied {description} kernel, from TinyTim')
 
     def _apply_siaf_distortion(self, hdu):
         """Resample an image from the ideal frame onto the detector pixel grid of this SIAF aperture.
