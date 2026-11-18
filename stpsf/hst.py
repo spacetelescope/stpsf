@@ -64,7 +64,8 @@ Validation
 ----------
 The wavefront (pupil mask, mirror maps, Zernikes, secondary shift) was checked against TinyTim's dumped
 ``tinytim_wave.fits`` at the IR center position (the OPD in nm is independent of wavelength): 34.80 nm RMS versus
-TinyTim's 34.84 nm, with a smooth, low-order difference of 0.14 nm RMS (at most 0.3 nm). Within the pupil, a plain
+TinyTim's 34.84 nm. After removing piston, the regression test finds the OPD maps differ by 0.03-0.04 nm RMS (at most
+0.23 nm). Within the pupil, a plain
 inverse FFT of TinyTim's dumped pupil and wave map reproduces its dumped critical PSF, and swapping in STPSF's OPD
 changes the peak by only 0.02%.
 
