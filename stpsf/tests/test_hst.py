@@ -99,6 +99,86 @@ def test_wfc3_default_weights():
     assert np.allclose(weights, 1)
 
 
+def _wfc3():
+    try:
+        return stpsf.WFC3()
+    except IOError:
+        pytest.skip('HST data not available')
+
+
+def test_wfc3_channel_and_detector_switching():
+    """Setting the filter switches between the IR and UVIS channels, keeping the UVIS chip; detector names are checked"""
+    wfc3 = _wfc3()
+    assert (wfc3.detector, wfc3.channel, wfc3.aperturename) == ('IR', 'IR', 'IIRFIX')
+    assert 'F160W' in wfc3.ir_filter_list and 'F606W' in wfc3.uvis_filter_list
+    assert not set(wfc3.ir_filter_list) & set(wfc3.uvis_filter_list)
+    wfc3.filter = 'F606W'
+    assert (wfc3.detector, wfc3.channel, wfc3.aperturename) == ('UVIS1', 'UVIS', 'IUVIS1FIX')
+    wfc3.detector = 'uvis2'
+    wfc3.filter = 'F814W'
+    assert (wfc3.detector, wfc3.aperturename) == ('UVIS2', 'IUVIS2FIX')
+    wfc3.filter = 'F160W'
+    assert (wfc3.detector, wfc3.channel) == ('IR', 'IR')
+    wfc3.detector = 'UVIS'
+    assert wfc3.detector == 'UVIS1'
+    with pytest.raises(ValueError):
+        wfc3.detector = 'UVIS3'
+    with pytest.raises(ValueError):
+        wfc3.filter = 'F999W'
+    with pytest.raises(RuntimeError):
+        wfc3.channel = 'IR'
+
+
+def test_wfc3_detector_position():
+    """Positions are 0-based, are limited to the detector, and reset to the detector center on a detector change"""
+    wfc3 = _wfc3()
+    assert wfc3.detector_position == (511, 511)
+    wfc3.detector_position = (1013, 1013)  # the far corner
+    with pytest.raises(ValueError):
+        wfc3.detector_position = (1014, 0)
+    with pytest.raises(ValueError):
+        wfc3.detector_position = (-1, 0)
+    wfc3.detector = 'UVIS2'
+    x, y = wfc3.detector_position
+    assert 1500 < x < 2500 and 800 < y < 1300
+    wfc3.detector_position = (4095, 2047)
+    with pytest.raises(ValueError):
+        wfc3.detector_position = (4096, 0)
+    with pytest.raises(ValueError):
+        wfc3.detector_position = (0, 2048)
+    wfc3.detector = 'IR'
+    assert wfc3.detector_position == (511, 511)
+
+
+def test_wfc3_pixelscale_options():
+    """The pixel scale is the SIAF mean by default, or TinyTim's nominal one, and follows the detector unless customized"""
+    wfc3 = _wfc3()
+    assert np.isclose(wfc3.pixelscale, 0.128, atol=1e-3)
+    wfc3.filter = 'F606W'
+    assert np.isclose(wfc3.pixelscale, 0.0395, atol=1e-4)
+    wfc3 = stpsf.WFC3(use_tinytim_pixelscale=True)
+    assert wfc3.pixelscale == 0.13
+    wfc3.filter = 'F606W'
+    assert wfc3.pixelscale == 0.04
+    wfc3 = stpsf.WFC3()
+    wfc3.pixelscale = 0.05
+    wfc3.filter = 'F606W'
+    assert wfc3.pixelscale == 0.05  # a customized value is kept
+
+
+def test_wfc3_tinytim_wavelengths():
+    """With tinytim_wavelengths, F160W uses TinyTim's 13 wavelengths (as checked against tiny2 in
+    dev_utils/run_hst_regression_tests.py). The weighting formula is tested in test_tinytim_weights."""
+    wfc3 = _wfc3()
+    wfc3.filter = 'F160W'
+    wfc3.tinytim_wavelengths = True
+    wavelengths, weights = wfc3._get_weights()
+    expected_angstrom = [13989.0, 14205.3, 14424.9, 14648.0, 14874.4, 15104.4, 15338.0,
+                         15575.1, 15815.9, 16060.5, 16308.8, 16561.0, 16817.0]
+    assert np.allclose(wavelengths * 1e10, expected_angstrom, atol=1e-3)
+    assert np.isclose(weights.sum(), 1)
+
+
 def test_tinytim_weights():
     """TinyTim weights are throughput * photlam * dlambda, with full-spacing dlambda at the ends, then smart-skip"""
     wave = np.array([1000.0, 1100.0, 1300.0, 1400.0])
@@ -151,6 +231,8 @@ def test_wfc3_uvis_charge_diffusion():
     wfc3.options['add_charge_diffusion'] = False
     no_diffusion = wfc3.calc_psf(monochromatic=0.4e-6, **mono)
     assert 'DETKERN' in psf_400['DET_DIST'].header
+    assert [ext.name for ext in psf_400] == ['OVERSAMP', 'DET_SAMP', 'OVERDIST', 'DET_DIST']
+    assert psf_400[0].header['DETECTOR'] == 'UVIS2' and psf_400[0].header['APERNAME'] == 'IUVIS2FIX'
     assert 'DETKERN' not in no_diffusion['DET_DIST'].header
     assert psf_400['DET_DIST'].data.max() < no_diffusion['DET_DIST'].data.max()
     # some flux leaves the small field
