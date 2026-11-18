@@ -119,7 +119,8 @@ use the 0.6 and 0.8 micron kernel pair, so shorter ones are extrapolated. As for
 to the oversampled image after upsampling it. UVIS PSFs match ``tiny2`` to under 0.15% of the peak (rms
 < 2e-5 of the peak) for monochromatic and F275W/F438W/F606W/F814W G8V cases on both detectors, and ``tiny3`` to
 2-3% of the peak (rms < 5e-4), the difference being in the undersampled core from the distortion resampling.
-See ``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
+See ``stpsf/tests/test_hst.py`` for the tests that run in CI, ``dev_utils/run_hst_regression_tests.py`` for the
+regression tests against TinyTim output (which need a TinyTim installation), and the TinyTim notes
 (``notes/03_wfc3_ir_porting_guide.md``) for the full validation plan.
 """
 
