@@ -10,7 +10,7 @@ Setup:
 1. ``$TINYTIM`` points at the TinyTim installation (with ``tiny2`` compiled and ``bpgs_53.dat``).
 2. ``$TINYTIM_REF`` points at a directory of reference PSFs, made with::
 
-       bash "$TINYTIM/notes/tools/make_reference_psfs.sh" -S -o /tmp/tinytim_ref
+       dev_utils/hst_make_tinytim_reference_psfs.sh -S -o /tmp/tinytim_ref
 
 3. ``$STPSF_PATH`` points at the STPSF data, including the HST files made by ``make_hst_data.py``.
 
@@ -134,7 +134,7 @@ _UVIS_CASES = [
 
 @pytest.mark.parametrize(('x', 'y', 'label'), [(507, 507, 'ctr'), (50, 50, 'll'), (960, 960, 'ur')])
 def test_wfc3_ir_monochromatic_vs_tinytim(x, y, label, plot=False):
-    """A monochromatic WFC3 IR PSF matches TinyTim's tiny2 output (needs $TINYTIM_REF, from make_reference_psfs.sh)"""
+    """A monochromatic WFC3 IR PSF matches TinyTim's tiny2 output (needs $TINYTIM_REF, from hst_make_tinytim_reference_psfs.sh)"""
     ref_dir = os.environ.get('TINYTIM_REF')
     if not ref_dir:
         pytest.skip('TinyTim reference PSFs not available ($TINYTIM_REF)')

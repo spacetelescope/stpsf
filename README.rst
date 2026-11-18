@@ -1,5 +1,5 @@
-STPSF: Simulated Point Spread Functions for the James Webb and Nancy Grace Roman Space Telescopes
-===================================================================================================
+STPSF: Simulated Point Spread Functions for the James Webb, Nancy Grace Roman, and Hubble Space Telescopes
+===========================================================================================================
 
 .. image:: https://github.com/spacetelescope/stpsf/blob/stable/docs/readme_fig.png?raw=true
 
@@ -34,6 +34,9 @@ imaging, coronagraphic, and spectroscopic modes.
 
 STPSF also supports simulating PSFs for the upcoming Nancy Grace Roman Space Telescope (formerly WFIRST),
 including its Wide Field Instrument and a preliminary version of the Coronagraph Instrument.
+
+STPSF also supports simulating PSFs for the Hubble Space Telescope's Wide Field Camera 3 (WFC3), in both
+its IR and UVIS channels, reproducing the optical model of the "Tiny Tim" PSF simulator.
 
 .. note::
 

@@ -74,7 +74,7 @@ centroids agreeing to 0.001 pixel. This requires
 ``detector_oversample >= 8`` (TinyTim's output is the PSF integrated over its pixels), an odd ``fov_pixels`` so the
 PSF is centered on a pixel as in TinyTim, and normalizing both images to their own field sum (TinyTim normalizes to
 the field it writes, whereas STPSF keeps flux outside the field, about 15% at 3 arcsec). The regression test needs
-the reference PSFs from ``make_reference_psfs.sh`` and skips unless ``$TINYTIM_REF`` points at them.
+the reference PSFs from ``dev_utils/hst_make_tinytim_reference_psfs.sh`` and skips unless ``$TINYTIM_REF`` points at them.
 
 Polychromatic PSFs (set ``tinytim_wavelengths = True``) use TinyTim's wavelengths, which are the points tabulated in the
 filter file (generated from ``wfc3ir.fil`` / ``wfc3uvis.fil``), and its weights, throughput * photlam * dlambda. They
