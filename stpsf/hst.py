@@ -14,7 +14,8 @@ Optical model
 Each optical element is a separate poppy plane, in this order:
 
 1. ``HSTPupil``: analytic OTA pupil (R = 1.2 m, central obscuration 0.330 R, 4 spiders of width 0.022 R along V2/V3,
-   3 mirror support pads). Pixels are antialiased by 4x4 subsampling.
+   3 mirror support pads). Edge pixels get exact fractional coverage (poppy's ``filled_circle_aa`` for circles, an
+   analytic strip formula for the spiders).
 2. ``HSTMirrorMap`` for the primary mirror: TinyTim's measured zonal OPD map.
 3. ``HSTMirrorMap`` for the secondary mirror, shifted with field position (the beam footprint moves on the secondary).
 4. ``HSTAnnularZernikeWFE``: instrument aberrations, from field-dependent polynomials for Z4-Z8 (plus despace).
@@ -50,20 +51,25 @@ Conventions and TinyTim quirks to be aware of
   field-dependent *focus* (about +-9 nm RMS over the detector) is silently dropped; Z5-Z8 are kept. We reproduce this
   by default (``tinytim_skip_zero_terms = True``). With a nonzero despace the field focus is applied. Set
   ``tinytim_skip_zero_terms = False`` to always include it.
-* **Half-pixel centering.** TinyTim's 512x512 pupil and wave maps are centered on pixel 256, half a pixel from the
-  poppy grid center. We center everything on the poppy grid, which has no effect on PSF intensities. Edge pixels
-  differ slightly from TinyTim's because the antialiasing differs.
+* **Pupil edges.** TinyTim's 512x512 pupil and wave maps are centered on pixel 256, half a pixel from the
+  poppy grid center. We center everything on the poppy grid, which has no effect on PSF intensities. TinyTim draws
+  its pupil (256 pixels across) with 8x8 subsampling and then rotates it by 135 degrees with bilinear
+  interpolation, which softens the edges. Its open area is about 0.09% larger than the exact geometry (39552 versus
+  39517 pixels at R=128); we use the exact geometry.
 * **Annular Zernikes use epsilon = 0.33 even for the IR cold mask** (whose obscuration is 0.354), as TinyTim does.
 * **Pixel scale.** SIAF HST apertures do not define ``XSciScale``; the mean scale is measured from the SIAF
   transform. TinyTim's nominal scales (0.13 and 0.04 arcsec) are available with ``use_tinytim_pixelscale``.
 
 Validation
 ----------
-The wavefront (pupil, mirror maps, Zernikes, secondary shift) was checked against TinyTim's dumped
-``tinytim_wave.fits`` at two IR field positions, agreeing to better than 0.05 nm RMS.
+The wavefront (pupil mask, mirror maps, Zernikes, secondary shift) was checked against TinyTim's dumped
+``tinytim_wave.fits`` at the IR center position (the OPD in nm is independent of wavelength): 34.80 nm RMS versus
+TinyTim's 34.84 nm, with a smooth, low-order difference of 0.14 nm RMS (at most 0.3 nm). Within the pupil, a plain
+inverse FFT of TinyTim's dumped pupil and wave map reproduces its dumped critical PSF, and swapping in STPSF's OPD
+changes the peak by only 0.02%.
 
 Monochromatic WFC3 IR PSFs (1.6 micron, at (507, 507), (50, 50) and (960, 960)) match TinyTim's undistorted ``tiny2``
-output to ~0.01% of the peak RMS (and 0.04% maximum at the center position; the test allows 0.5%), with PSF
+output to ~0.006% of the peak RMS (and 0.06% maximum at the center position; the test allows 0.5%), with PSF
 centroids agreeing to 0.001 pixel. This requires
 ``detector_oversample >= 8`` (TinyTim's output is the PSF integrated over its pixels), an odd ``fov_pixels`` so the
 PSF is centered on a pixel as in TinyTim, and normalizing both images to their own field sum (TinyTim normalizes to
@@ -73,13 +79,36 @@ the reference PSFs from ``make_reference_psfs.sh`` and skips unless ``$TINYTIM_R
 Polychromatic PSFs (set ``tinytim_wavelengths = True``) use TinyTim's wavelengths, which are the points tabulated in the
 filter file (generated from ``wfc3ir.fil`` / ``wfc3uvis.fil``), and its weights, throughput * photlam * dlambda. They
 reproduce the wavelengths and weights in TinyTim's ``.par`` files to their 6 printed digits for F105W, F125W and F160W
-with a G8V spectrum. The resulting PSFs agree with TinyTim's ``tiny2`` output to 0.004% of the peak RMS and 0.05%
-maximum for F160W at the center when using its exact 0.046241 arcsec pixel scale, and to at most 0.27% of the peak
-for the other filters and positions tested, where the scale was the rounded value in the FITS header (0.0462).
-The tests need ``$TINYTIM`` as well, for the G8V spectrum. Quirks reproduced: TinyTim's dlambda uses the full
+with a G8V spectrum. The resulting PSFs agree with TinyTim's ``tiny2`` output (using the exact pixel scale from the
+``.par`` file; the FITS header's rounded scale gives worse agreement) to about 0.003% of the peak RMS, and at most
+0.12% (F105W), 0.08% (F125W) and 0.04% (F160W) of the peak at the center position. The tests need ``$TINYTIM`` as well,
+for the G8V spectrum. Quirks reproduced: TinyTim's dlambda uses the full
 spacing, not half, at the two ends of the table; wavelengths below 1% of the peak weight are skipped; and filters
 tabulated at one wavelength are monochromatic. Without ``tinytim_wavelengths``, STPSF's usual ``nlambda`` equal-width
-bins and synphot weights are used. See
+bins and synphot weights are used.
+
+Residual differences from TinyTim (IR, ``tiny2``). The remaining differences are small and depend on the filter,
+not on detector position. STPSF puts 0.05-0.13% less of the flux in the core (r < 0.3 arcsec) and 0.03% more
+in the wings (r > 1.5 arcsec); the peak pixel is lower by 0.04-0.12%, shorter wavelengths being worse. The PSF
+centroids agree to 0.003 pixel, and a fitted scale (<= 0.12%), shift (<= 0.001 pixel) and blur account for little
+of it. Tested and ruled out as the cause: flux normalization (also per wavelength), the pupil grid size (TinyTim's
+256 pixel pupil gives a *larger* difference), the wavefront (see above), and the
+details of TinyTim's resampling (an emulation of its FFT sinc-MTF resampling, which reproduces ``tiny2`` exactly
+when fed TinyTim's own pupil, does not move STPSF toward TinyTim). The identified origin is the pupil mask: TinyTim's
+open area is 0.09% larger than the exact geometry, from its 8x8 subsampled, bilinearly rotated pupil, and
+feeding TinyTim's dumped pupil into the emulation removes the difference completely. Poppy's resampling of the
+PSF onto pixels differs from TinyTim's and partly offsets this, so the current agreement should not be taken to
+improve with more oversampling: ``detector_oversample=8`` is closest, partly by cancellation, and finer
+oversampling moves the peak by about 0.1% in the other direction.
+
+Detector effects: ``DET_DIST`` / ``OVERDIST`` extensions add SIAF geometric distortion (resampled onto the SIAF
+detector grid; the SIAF pixel scale of 0.1282 arcsec is the mean of anisotropic 0.1355 x 0.1211 arcsec pixels, so
+compare to TinyTim's ``tiny3`` output at that scale, not 0.13) and, for the IR channel, TinyTim's 3x3 IPC kernel
+(centre 0.897, edges 0.025, corners 0.0007). Against ``tiny3`` for F160W at three positions, centroids agree to
+0.006 pixel, with residuals of about 0.1% of the peak RMS and at most 2.7% at the peak. The largest differences
+are near the peak and at the edges. TinyTim and SIAF use different distortion models, and the ``tiny3`` images have
+dark bands along some edges that are not present in ``tiny2``, apparently from its distortion mapping. Disable with
+``options['add_distortion']`` and ``options['add_ipc']``. See
 ``stpsf/tests/test_hst.py`` for the tests that run in CI, and the TinyTim notes
 (``notes/03_wfc3_ir_porting_guide.md``) for the full validation plan.
 """
@@ -94,17 +123,45 @@ import numpy as np
 import poppy
 import synphot
 from astropy.io import ascii as ioascii
-from scipy import ndimage
+from scipy import ndimage, signal
 
-from . import constants, stpsf_core, utils
+from . import constants, detectors, distortion, stpsf_core, utils
 from .distortion import _siaf_mean_pixelscale
 
 _log = logging.getLogger('stpsf')
 
 
-def _in_spiders(v2, v3, half_width):
-    """True where a point lies on one of the 4 spiders, which run along the V2 and V3 axes"""
-    return (np.abs(v2) < half_width) | (np.abs(v3) < half_width)
+def _sum_of_uniforms_cdf(z, a, b):
+    """CDF of ``a*U1 + b*U2``, with U1 and U2 independent and uniform on [-1/2, 1/2] and ``a >= b >= 0``."""
+    if b < 1e-9:
+        return np.clip(z / a + 0.5, 0, 1)
+
+    def ramp2(t):
+        return np.maximum(t, 0) ** 2
+
+    return (ramp2(z + (a + b) / 2) - ramp2(z + (a - b) / 2) - ramp2(z - (a - b) / 2) + ramp2(z - (a + b) / 2)) / (
+        2 * a * b
+    )
+
+
+def _strip_coverage(x, y, normal, half_width):
+    """Exact fraction of each unit-square pixel covered by an infinite strip through the origin.
+
+    Parameters
+    ----------
+    x, y : ndarray
+        Pixel center coordinates, in pixels.
+    normal : (float, float)
+        Unit vector (x, y) perpendicular to the strip.
+    half_width : float
+        Half the strip width, in pixels.
+    """
+    # The strip covers the pixel where |d0 + s| < half_width, with s the projection onto the normal of a point
+    # uniformly distributed within the pixel, relative to its center.
+    nx, ny = normal
+    a, b = max(abs(nx), abs(ny)), min(abs(nx), abs(ny))
+    d0 = nx * x + ny * y
+    return _sum_of_uniforms_cdf(half_width - d0, a, b) - _sum_of_uniforms_cdf(-half_width - d0, a, b)
 
 
 class HSTPupil(poppy.AnalyticOpticalElement):
@@ -113,7 +170,12 @@ class HSTPupil(poppy.AnalyticOpticalElement):
     The geometry is defined in the OTA V2/V3 frame, with +V3 along the array columns (poppy x) and
     +V2 along the array rows (poppy y), and is then rotated clockwise by ``rotation`` degrees to
     the camera frame, following TinyTim's convention. Subclasses (e.g. `WFC3IRColdMask`) override
-    `_transmission_at` to model other binary masks in the same frame.
+    `_geometry` to model other masks in the same frame.
+
+    Edge pixels are given their exact fractional coverage: circles use `poppy.geometry.filled_circle_aa` and the
+    spiders, which are strips of any orientation, use an analytic formula. The fractions of the different features
+    are multiplied, which is only approximate for a pixel touched by more than one feature (e.g. where a pad
+    meets a spider).
 
     Parameters
     ----------
@@ -121,40 +183,48 @@ class HSTPupil(poppy.AnalyticOpticalElement):
         Outer radius of the OTA pupil in meters.
     rotation : float
         Clockwise rotation in degrees.
-    subsample : int
-        Each pixel is evaluated on a subsample x subsample grid of points and averaged.
     """
 
     default_name = 'HST OTA pupil'
 
     def __init__(self, radius=constants.HST_PUPIL_DIAMETER / 2, rotation=constants.HST_TINYTIM_WFC3_ROTATION,
-                 subsample=4, name=None, **kwargs):
+                 name=None, **kwargs):
         super().__init__(name=name or self.default_name, planetype=poppy.poppy_core.PlaneType.pupil, **kwargs)
         self.pupil_diam = 2 * radius
         self.radius = radius
         self.rotation_cw = rotation
-        self.subsample = subsample
 
-    def _transmission_at(self, v2, v3):
-        """Binary transmission at points given in units of the pupil radius, in the OTA V2/V3 frame"""
-        r = np.hypot(v2, v3)
-        trans = (r <= 1) & (r >= constants.HST_OTA_SECONDARY_RADIUS)
-        trans &= ~_in_spiders(v2, v3, constants.HST_OTA_SPIDER_WIDTH / 2)
-        for pad_v3, pad_v2, pad_r in constants.HST_OTA_PADS:
-            trans &= np.hypot(v3 - pad_v3, v2 - pad_v2) > pad_r
-        return trans
+    def _geometry(self):
+        """Dimensions in units of the pupil radius: outer and secondary radii, spider width, and the pads as
+        (V3, V2, radius) tuples, all in the OTA V2/V3 frame"""
+        return {
+            'outer_radius': 1.0,
+            'secondary_radius': constants.HST_OTA_SECONDARY_RADIUS,
+            'spider_width': constants.HST_OTA_SPIDER_WIDTH,
+            'pads': constants.HST_OTA_PADS,
+        }
 
     def get_transmission(self, wave):
+        geom = self._geometry()
         y, x = self.get_coordinates(wave)
-        n = self.subsample
         pix = wave.pixelscale.to_value(u.m / u.pixel) if hasattr(wave.pixelscale, 'unit') else wave.pixelscale
-        offsets = (np.arange(n) + 0.5) / n - 0.5
-        total = np.zeros(x.shape)
-        for dy in offsets:
-            for dx in offsets:
-                v2, v3 = _ota_frame(x + dx * pix, y + dy * pix, self.radius, self.rotation_cw)
-                total += self._transmission_at(v2, v3)
-        return total / n**2
+        # Work in pixel units so that filled_circle_aa, which assumes unit pixels, is exact
+        x, y = x / pix, y / pix
+        radius_pix = self.radius / pix
+        sin_t, cos_t = np.sin(np.deg2rad(self.rotation_cw)), np.cos(np.deg2rad(self.rotation_cw))
+
+        def disk(xc, yc, radius):
+            return poppy.geometry.filled_circle_aa(x.shape, xc, yc, radius * radius_pix, xarray=x, yarray=y)
+
+        trans = disk(0, 0, geom['outer_radius']) * (1 - disk(0, 0, geom['secondary_radius']))
+        for pad_v3, pad_v2, pad_r in geom['pads']:
+            # the frame conversion is its own inverse, so it also maps pad centers from OTA to camera coordinates
+            xc, yc = pad_v2 * sin_t + pad_v3 * cos_t, pad_v2 * cos_t - pad_v3 * sin_t
+            trans *= 1 - disk(xc * radius_pix, yc * radius_pix, pad_r)
+        half_width = geom['spider_width'] / 2 * radius_pix
+        for normal in ((sin_t, cos_t), (cos_t, -sin_t)):  # normals to the spiders along V3 and along V2
+            trans *= 1 - _strip_coverage(x, y, normal, half_width)
+        return trans
 
 
 class WFC3IRColdMask(HSTPupil):
@@ -168,10 +238,14 @@ class WFC3IRColdMask(HSTPupil):
 
     default_name = 'WFC3 IR cold mask'
 
-    def _transmission_at(self, v2, v3):
+    def _geometry(self):
         cm = constants.HST_WFC3_IR_COLD_MASK
-        r = np.hypot(v2, v3)
-        return (r <= cm['outer_radius']) & (r >= cm['secondary_radius']) & ~_in_spiders(v2, v3, cm['spider_width'] / 2)
+        return {
+            'outer_radius': cm['outer_radius'],
+            'secondary_radius': cm['secondary_radius'],
+            'spider_width': cm['spider_width'],
+            'pads': (),
+        }
 
 
 def _ota_frame(x, y, radius, rotation):
@@ -509,6 +583,55 @@ class HSTInstrument(stpsf_core.SpaceTelescopeInstrument):
             _log.info('No source spectrum supplied, therefore defaulting to 5700 K blackbody')
         photlam = source(wave_angstrom * u.AA, flux_unit='photlam').value
         return _tinytim_weights(wave_angstrom, throughput, photlam)
+
+    def _calc_psf_format_output(self, result, options):
+        """Format the output HDUList, adding detector effects.
+
+        As for the JWST instruments, if ``options['add_distortion']`` is True (the default) copies of the
+        extensions are made with names ending in ``DIST`` (``OVERDIST``, ``DET_DIST``). SIAF geometric distortion
+        is applied to these, and then for the IR channel the IPC kernel is applied if ``options['add_ipc']`` is
+        True (the default), after binning to detector pixels.
+        """
+        add_distortion = options.get('add_distortion', True)
+        add_ipc = options.get('add_ipc', True)
+
+        if add_distortion:
+            _log.info('Adding SIAF distortion')
+            n_exts = len(result)
+            for ext in range(n_exts):
+                hdu_new = fits.ImageHDU(result[ext].data.copy(), result[ext].header.copy())
+                hdu_new.header['EXTNAME'] = result[ext].header['EXTNAME'][0:4] + 'DIST'
+                hdu_new.data = self._apply_siaf_distortion(hdu_new)
+                hdu_new.header.add_history('Applied SIAF geometric distortion')
+                result.append(hdu_new)
+
+        super()._calc_psf_format_output(result, options)
+
+        if add_ipc and add_distortion and self.channel == 'IR':
+            for extname in ('DET_DIST', 'OVERDIST'):
+                if extname in result:
+                    self._apply_ir_ipc(result[extname])
+
+    def _apply_siaf_distortion(self, hdu):
+        """Resample an image from the ideal frame onto the detector pixel grid of this SIAF aperture.
+
+        The PSF header's DET_X, DET_Y are 0-based, while pysiaf science coordinates are 1-based.
+        """
+        hdu_tmp = fits.ImageHDU(hdu.data, hdu.header.copy())
+        hdu_tmp.header['DET_X'] += 1
+        hdu_tmp.header['DET_Y'] += 1
+        return distortion.distort_image(fits.HDUList([fits.PrimaryHDU(), hdu_tmp]), ext=1,
+                                        aper=self.siaf[self._aperturename])
+
+    def _apply_ir_ipc(self, hdu):
+        """Convolve an extension with TinyTim's WFC3/IR interpixel capacitance kernel, in place"""
+        kernel = self._tinytim_model['IR']['kernels'][0]  # identical at all tabulated wavelengths
+        oversample = hdu.header['OVERSAMP']
+        if oversample != 1:
+            kernel = detectors.oversample_ipc_model(kernel, oversample)
+        hdu.data = signal.fftconvolve(hdu.data, kernel, mode='same')
+        hdu.header['IPCINST'] = ('WFC3-IR', 'Instrument whose IPC kernel was applied')
+        hdu.header.add_history('Applied detector interpixel capacitance (IPC) model, from TinyTim')
 
     def get_optical_system(self, *args, **kwargs):
         optsys = super().get_optical_system(*args, **kwargs)
