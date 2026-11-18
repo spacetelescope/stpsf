@@ -47,6 +47,16 @@ def _centroid(img):
     return (img * x).sum() / img.sum(), (img * y).sum() / img.sum()
 
 
+def _assert_psfs_match(psf, tt, max_tol, rms_tol):
+    """Compare unit-sum PSFs; the max and rms differences, as fractions of the TinyTim peak, must be under the tolerances"""
+    diff = psf / psf.sum() - tt / tt.sum()
+    peak = tt.max() / tt.sum()
+    max_diff, rms_diff = np.abs(diff).max() / peak, np.sqrt(np.mean(diff**2)) / peak
+    print(f'PSF difference vs TinyTim: max {max_diff:.2e} (tol {max_tol:.0e}), rms {rms_diff:.2e} (tol {rms_tol:.0e})')
+    assert max_diff < max_tol
+    assert rms_diff < rms_tol
+
+
 def _plot_vs_tinytim(tt, psf, title):
     """Show the TinyTim PSF, the STPSF PSF, their difference and the radial profiles, all normalized to unit sum.
 
@@ -138,10 +148,7 @@ def test_wfc3_ir_monochromatic_vs_tinytim(x, y, label, plot=False):
     psf = wfc3.calc_psf(monochromatic=1.6e-6, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
     if plot:
         _plot_vs_tinytim(tt, psf, f'WFC3/IR 1.6 micron monochromatic, {label} {x, y}: tiny2')
-    diff = psf / psf.sum() - tt / tt.sum()
-    peak = tt.max() / tt.sum()
-    assert np.abs(diff).max() / peak < 0.005
-    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+    _assert_psfs_match(psf, tt, 1e-3, 1e-4)
 
 
 def test_wfc3_field_zernikes_vs_tinytim_manifest():
@@ -206,13 +213,13 @@ def test_wfc3_pupil_and_opd_vs_tinytim(root, det, filt, x, y, tmp_path):
             opd += plane.get_opd(wave)
     pupil, opd = pupil[:dim, :dim], opd[:dim, :dim] * 1e9
 
-    assert np.isclose(pupil.sum(), tt_pupil.sum(), rtol=2e-3)
-    assert np.abs(pupil - tt_pupil).mean() < 2e-3
-    assert np.abs(pupil - tt_pupil).max() < 0.4
+    assert np.isclose(pupil.sum(), tt_pupil.sum(), rtol=1.5e-3)
+    assert np.abs(pupil - tt_pupil).mean() < 1.5e-3
+    assert np.abs(pupil - tt_pupil).max() < 0.3
     both = (pupil > 0.5) & (tt_pupil > 0.5)
     diff = (opd - opd[both].mean() - (tt_opd - tt_opd[both].mean()))[both]
     assert np.sqrt(np.mean(diff**2)) < 0.05
-    assert np.abs(diff).max() < 0.4
+    assert np.abs(diff).max() < 0.3
     assert np.isclose(np.std(opd[both]), np.std(tt_opd[both]), atol=0.05)
 
 
@@ -244,16 +251,13 @@ def test_wfc3_ir_polychromatic_vs_tinytim(filt, x, y, label, plot=False):
     psf = wfc3.calc_psf(source=g8v, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
     if plot:
         _plot_vs_tinytim(tt, psf, f'WFC3/IR {filt} G8V, {label} {x, y}: tiny2')
-    diff = psf / psf.sum() - tt / tt.sum()
-    peak = tt.max() / tt.sum()
-    assert np.abs(diff).max() / peak < 0.005
-    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+    _assert_psfs_match(psf, tt, 2.5e-3, 1e-4)
 
 
 @pytest.mark.parametrize(('x', 'y', 'label'), [(507, 507, 'ctr'), (50, 50, 'll'), (960, 960, 'ur')])
 def test_wfc3_ir_detector_vs_tinytim(x, y, label, plot=False):
     """DET_DIST (SIAF distortion and IPC) matches the tiny3 detector image, to the accuracy that the SIAF
-    and TinyTim distortion models agree: centroids within 0.02 pixel, residuals under 0.2% rms and 3% max of peak"""
+    and TinyTim distortion models agree: centroids within 0.02 pixel, residuals under 0.15% rms and 3% max of peak"""
     ref_dir, g8v = _tinytim_inputs()
     tt = fits.getdata(os.path.join(ref_dir, f'ir_f160w_{label}00.fits')).astype(float)
     n = tt.shape[0]
@@ -264,10 +268,7 @@ def test_wfc3_ir_detector_vs_tinytim(x, y, label, plot=False):
     if plot:
         _plot_vs_tinytim(tt, psf, f'WFC3/IR F160W G8V, {label} {x, y}: tiny3 (SIAF distortion + IPC)')
     assert np.allclose(_centroid(psf), _centroid(tt), atol=0.02)
-    diff = psf / psf.sum() - tt / tt.sum()
-    peak = tt.max() / tt.sum()
-    assert np.abs(diff).max() / peak < 0.03
-    assert np.sqrt(np.mean(diff**2)) / peak < 2e-3
+    _assert_psfs_match(psf, tt, 3e-2, 1.5e-3)
 
 
 @pytest.mark.parametrize(('det', 'x', 'y', 'label'), _UVIS_CASES)
@@ -284,10 +285,7 @@ def test_wfc3_uvis_monochromatic_vs_tinytim(det, x, y, label, plot=False):
     psf = wfc3.calc_psf(monochromatic=0.6e-6, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
     if plot:
         _plot_vs_tinytim(tt, psf, f'WFC3/{det} 0.6 micron monochromatic, {label} {x, y}: tiny2')
-    diff = psf / psf.sum() - tt / tt.sum()
-    peak = tt.max() / tt.sum()
-    assert np.abs(diff).max() / peak < 0.005
-    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+    _assert_psfs_match(psf, tt, 1e-3, 1e-4)
 
 
 @pytest.mark.parametrize(
@@ -309,10 +307,7 @@ def test_wfc3_uvis_polychromatic_vs_tinytim(filt, det, x, y, label, plot=False):
     psf = wfc3.calc_psf(source=g8v, fov_pixels=n + 1, oversample=8)['DET_SAMP'].data[:n, :n]
     if plot:
         _plot_vs_tinytim(tt, psf, f'WFC3/{det} {filt} G8V, {label} {x, y}: tiny2')
-    diff = psf / psf.sum() - tt / tt.sum()
-    peak = tt.max() / tt.sum()
-    assert np.abs(diff).max() / peak < 0.005
-    assert np.sqrt(np.mean(diff**2)) / peak < 5e-4
+    _assert_psfs_match(psf, tt, 2.5e-3, 5e-5)
 
     wfc3 = _wfc3(det, x, y, filt)  # the detector image uses the SIAF pixel scale
     wfc3.tinytim_wavelengths = True
@@ -320,7 +315,4 @@ def test_wfc3_uvis_polychromatic_vs_tinytim(filt, det, x, y, label, plot=False):
     assert psf.shape == t3.shape
     if plot:
         _plot_vs_tinytim(t3, psf, f'WFC3/{det} {filt} G8V, {label} {x, y}: tiny3 (SIAF distortion + charge diffusion)')
-    diff = psf / psf.sum() - t3 / t3.sum()
-    peak = t3.max() / t3.sum()
-    assert np.abs(diff).max() / peak < 0.06
-    assert np.sqrt(np.mean(diff**2)) / peak < 2e-3
+    _assert_psfs_match(psf, t3, 5e-2, 1e-3)
